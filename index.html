@@ -247,20 +247,10 @@
         <div id="mode-free-won" class="screen">
             <button class="return-button" onclick="returnToActionScreen()">Return to Actions</button>
             <h3>Select Mode for Free Won</h3>
-            <button class="mode-button" aria-label="Select mode Own Half" onclick="selectMode('Own Half')">Own Half</button>
-            <button class="mode-button" aria-label="Select mode Opp. Half" onclick="selectMode('Opp. Half')">Opp. Half</button>
-            <button class="mode-button" aria-label="Select mode Scoring Zone" onclick="selectMode('Scoring Zone')">Scoring Zone</button>
-            <button class="mode-button" aria-label="Select mode Other" onclick="selectMode('Other')">Other</button>
-        </div>
-
-        <!-- Definition screen for Free Won -->
-        <div id="definition-free-won" class="screen">
-            <button class="return-button" onclick="returnToModeScreen()">Return to Mode</button>
-            <h3>Select Definition for Free Won</h3>
-            <button class="definition-button" aria-label="Select definition No Card" onclick="selectDefinition('No Card')">No Card</button>
-            <button class="definition-button" aria-label="Select definition Opp. Yellow" onclick="selectDefinition('Opp. Yellow')">Opp. Yellow</button>
-            <button class="definition-button" aria-label="Select definition Opp. Black" onclick="selectDefinition('Opp. Black')">Opp. Black</button>
-            <button class="definition-button" aria-label="Select definition Opp. Red" onclick="selectDefinition('Opp. Red')">Opp. Red</button>
+            <button class="mode-button" aria-label="Select mode No Card" onclick="selectMode('No Card')">No Card</button>
+            <button class="mode-button" aria-label="Select mode Opp. Yellow" onclick="selectMode('Opp. Yellow')">Opp. Yellow</button>
+            <button class="mode-button" aria-label="Select mode Opp. Black" onclick="selectMode('Opp. Black')">Opp. Black</button>
+            <button class="mode-button" aria-label="Select mode Opp. Red" onclick="selectMode('Opp. Red')">Opp. Red</button>
         </div>
 
         <!-- Mode screen for Ball - Won -->
@@ -292,12 +282,22 @@
         <div id="mode-foul" class="screen">
             <button class="return-button" onclick="returnToActionScreen()">Return to Actions</button>
             <h3>Select Mode for Foul</h3>
+            <button class="mode-button" aria-label="Select mode Tackle" onclick="selectMode('Tackle')">Tackle</button>
             <button class="mode-button" aria-label="Select mode Overcarry" onclick="selectMode('Overcarry')">Overcarry</button>
             <button class="mode-button" aria-label="Select mode 2 Hops" onclick="selectMode('2 Hops')">2 Hops</button>
             <button class="mode-button" aria-label="Select mode Off Ground" onclick="selectMode('Off Ground')">Off Ground</button>
             <button class="mode-button" aria-label="Select mode Square Ball" onclick="selectMode('Square Ball')">Square Ball</button>
-            <button class="mode-button" aria-label="Select mode Tackle" onclick="selectMode('Tackle')">Tackle</button>
             <button class="mode-button" aria-label="Select mode Other" onclick="selectMode('Other')">Other</button>
+        </div>
+
+        <!-- Definition Screen for Foul -->
+        <div id="definition-foul" class="screen">
+            <button class="return-button" onclick="returnToModeScreen()">Return to Mode</button>
+            <h3>Select Shot Definition for Foul</h3>
+            <button class="definition-button" aria-label="Select definition No Card" onclick="selectDefinition('No Card')">No Card</button>
+            <button class="definition-button" aria-label="Select definition Yellow Card" onclick="selectDefinition('Yellow Card')">Yellow Card</button>
+            <button class="definition-button" aria-label="Select definition Black Card" onclick="selectDefinition('Black Card')">Black Card</button>
+            <button class="definition-button" aria-label="Select definition Red Card" onclick="selectDefinition('Red card')">Red Card</button>
         </div>
 
         <!-- Mode screen for Kickout -->
@@ -395,7 +395,7 @@
             <button class="mode-button" aria-label="Select 5+ Take On" onclick="selectMode('5+ Take On')">5+ Take On</button>
         </div>
 
-        <!-- Coordinate screen for Point - Score -->
+        <!-- Coordinate screen -->
         <div id="coordinate-screen" class="screen">
             <button class="return-button" onclick="returnToModeScreen()">Return to Mode</button>
             <div class="coordinate-container">
