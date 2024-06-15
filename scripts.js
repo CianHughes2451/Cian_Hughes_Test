@@ -73,7 +73,6 @@ function selectMode(mode) {
     const actionDefinitionMap = {
         'Point - Miss': 'definition-point-miss',
         'Goal - Miss': 'definition-goal-miss',
-        'Free Won': 'definition-free-won',
         'Kickout': 'definition-kickout',
         'Ball - Won': 'definition-ball-won',
         'Ball - Lost': 'definition-ball-lost'
@@ -99,8 +98,8 @@ function selectMode(mode) {
         } else {
             logAction(); // Log action directly for Miss - Against
         }
-    } else if (coordinatesEnabled && (currentAction === 'Point - Score' || currentAction === 'Goal - Score' || currentAction === 'Ball - Won' || currentAction === 'Ball - Lost' || currentAction === 'Kickout')) {
-        switchScreen(actionDefinitionMap[currentAction] || 'coordinate-screen'); // Go to definition screen or coordinate screen
+    } else if (coordinatesEnabled && (currentAction === 'Point - Score' || currentAction === 'Goal - Score' || currentAction === 'Ball - Won' || currentAction === 'Ball - Lost' || currentAction === 'Kickout' || currentAction === 'Free Won')) {
+        switchScreen('coordinate-screen'); // Go to coordinate screen for specified actions
     } else if (actionDefinitionMap[currentAction]) {
         switchScreen(actionDefinitionMap[currentAction]);
     } else {
@@ -120,7 +119,7 @@ function selectDefinition(definition) {
 
 function selectPlayer(player) {
     currentPlayer = player;
-    if (currentAction === 'Handpass' || currentAction === 'Kickpass' || currentAction === 'Kickout') {
+    if (currentAction === 'Handpass' || currentAction === 'Kickpass') {
         switchScreen('player-buttons-second');
     } else {
         logAction();
@@ -488,6 +487,19 @@ const drawPitch = () => {
     drawLine(36.5, 140, 36.5, 143);
     drawLine(43.5, 140, 43.5, 143);
     drawLine(36.5, 143, 43.5, 143);
+    // Draw the semicircle
+    drawSemicircle1(40, 21, 13);
+};
+
+// Function to draw a semicircle
+const drawSemicircle1 = (centerX, centerY, radius) => {
+    const mappedCenterX = mapX(centerX);
+    const mappedCenterY = mapY(centerY);
+    const mappedRadius = (radius / 140) * canvas.height; // Map radius to canvas scale (use height for consistency)
+
+    ctx.beginPath();
+    ctx.arc(mappedCenterX, mappedCenterY, mappedRadius, Math.PI, 2 * Math.PI);
+    ctx.stroke();
 };
 
 // Draw the marker
@@ -577,3 +589,4 @@ function exportSummaryToCSV() {
     link.click();
     document.body.removeChild(link);
 }
+
