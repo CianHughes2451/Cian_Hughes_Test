@@ -78,6 +78,7 @@
                         <button class="action-button" data-action="Point - Miss" aria-label="Select Point - Miss" onclick="selectAction('Point - Miss')">Point - Miss</button>
                         <button class="action-button" data-action="Goal - Score" aria-label="Select Goal - Score" onclick="selectAction('Goal - Score')">Goal - Score</button>
                         <button class="action-button" data-action="Goal - Miss" aria-label="Select Goal - Miss" onclick="selectAction('Goal - Miss')">Goal - Miss</button>
+                        <button class="action-button" data-action="45 Entry" aria-label="Select 45 Entry" onclick="selectAction('45 Entry')">45 Entry</button>
                         <button class="action-button" data-action="Free Won" aria-label="Select Free Won" onclick="selectAction('Free Won')">Free Won</button>
                     </div>
                 </div>
@@ -172,8 +173,6 @@
             </div>
         </div>
 
-
-
         <!-- Mode Screens -->
         <!-- Mode screen for Point - Score -->
         <div id="mode-point-score" class="screen">
@@ -243,14 +242,33 @@
             <button class="definition-button" aria-label="Select definition Other" onclick="selectDefinition('Other')">Other</button>
         </div>
 
+        <!-- Mode screen for 45 Entry -->
+        <div id="mode-45-entry" class="screen">
+            <button class="return-button" onclick="returnToActionScreen()">Return to Actions</button>
+            <h3>Select Mode for 45 Entry</h3>
+            <button class="mode-button" aria-label="Select mode Success" onclick="selectMode('Success')">Success</button>
+            <button class="mode-button" aria-label="Select mode Ball Retained" onclick="selectMode('Success')">Success</button>
+            <button class="mode-button" aria-label="Select mode Failure" onclick="selectMode('Failure')">Failure</button>
+        </div>
+
         <!-- Mode screen for Free Won -->
         <div id="mode-free-won" class="screen">
             <button class="return-button" onclick="returnToActionScreen()">Return to Actions</button>
             <h3>Select Mode for Free Won</h3>
-            <button class="mode-button" aria-label="Select mode No Card" onclick="selectMode('No Card')">No Card</button>
-            <button class="mode-button" aria-label="Select mode Opp. Yellow" onclick="selectMode('Opp. Yellow')">Opp. Yellow</button>
-            <button class="mode-button" aria-label="Select mode Opp. Black" onclick="selectMode('Opp. Black')">Opp. Black</button>
-            <button class="mode-button" aria-label="Select mode Opp. Red" onclick="selectMode('Opp. Red')">Opp. Red</button>
+            <button class="mode-button" aria-label="Select mode Tackle" onclick="selectMode('Tackle')">Tackle</button>
+            <button class="mode-button" aria-label="Select mode Technical Foul" onclick="selectMode('Technical Foul')">Technical Foul</button>
+            <button class="mode-button" aria-label="Select mode Aggresive Foul" onclick="selectMode('Aggresive Foul')">Aggresive Foul</button>
+            <button class="mode-button" aria-label="Select mode Other" onclick="selectMode('Other')">Other</button>
+        </div>
+
+        <!-- Definition screen for Free Won -->
+        <div id="definition-free-won" class="screen">
+            <button class="return-button" onclick="returnToModeScreen()">Return to Mode</button>
+            <h3>Select Definition for Free Won</h3>
+            <button class="definition-button" aria-label="Select definition No Card" onclick="selectDefinition('No Card')">No Card</button>
+            <button class="definition-button" aria-label="Select definition Opp. Yellow" onclick="selectDefinition('Opp. Yellow')">Opp. Yellow</button>
+            <button class="definition-button" aria-label="Select definition Opp. Black" onclick="selectDefinition('Opp. Black')">Opp. Black</button>
+            <button class="definition-button" aria-label="Select definition Opp. Red" onclick="selectDefinition('Opp. Red')">Opp. Red</button>
         </div>
 
         <!-- Mode screen for Ball - Won -->
@@ -402,7 +420,8 @@
                 <canvas id="pitch" width="400" height="500"></canvas>
                 <div class="coordinate-controls">
                     <button id="confirmCoordinatesButton">Confirm Coordinates</button>
-                    <p id="coordinate-display">X: -, Y: -</p>
+                    <p id="coordinate-display-1">X1: -, Y1: -</p>
+                    <p id="coordinate-display-2" style="display:none;">X2: -, Y2: -</p> <!-- Initially hidden -->
                 </div>
             </div>    
         </div>
