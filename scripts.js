@@ -10,6 +10,10 @@ let team1Points = 0;
 let team2Goals = 0;
 let team2Points = 0;
 
+let marker1 = { x: null, y: null };
+let marker2 = { x: null, y: null };
+let firstMarkerConfirmed = false;
+
 let playerNames = {
     1: 'Player 1',
     2: 'Player 2',
@@ -42,11 +46,14 @@ document.addEventListener('DOMContentLoaded', function() {
 function selectAction(action) {
     currentAction = action;
     currentCoordinates1 = '';
+    currentCoordinates2 = '';
+    firstMarkerConfirmed = false; // Reset the marker confirmation for every action
     const actionScreenMap = {
         'Point - Score': 'mode-point-score',
         'Point - Miss': 'mode-point-miss',
         'Goal - Score': 'mode-goal-score',
         'Goal - Miss': 'mode-goal-miss',
+        '45 Entry': 'mode-45-entry', // Added new action
         'Free Won': 'mode-free-won',
         'Ball - Won': 'mode-ball-won',
         'Ball - Lost': 'mode-ball-lost',
@@ -61,8 +68,8 @@ function selectAction(action) {
 
     if (actionScreenMap[action]) {
         switchScreen(actionScreenMap[action]);
-    } else if (action === 'Handpass' || action === 'Kickpass') {
-        switchScreen('player-buttons');
+    } else if ((action === 'Handpass' || action === 'Kickpass') && coordinatesEnabled) {
+        switchScreen('coordinate-screen'); // Go to coordinate screen for Handpass or Kickpass if toggled
     } else {
         switchScreen('player-buttons');
     }
@@ -73,12 +80,15 @@ function selectMode(mode) {
     const actionDefinitionMap = {
         'Point - Miss': 'definition-point-miss',
         'Goal - Miss': 'definition-goal-miss',
+        'Free Won': 'definition-free-won',
         'Kickout': 'definition-kickout',
         'Ball - Won': 'definition-ball-won',
         'Ball - Lost': 'definition-ball-lost'
     };
 
-    if (currentAction === 'Point - Against' || currentAction === 'Goal - Against') {
+    if (currentAction === '45 Entry') {
+        logAction(); // Directly log the action for 45 Entry
+    } else if (currentAction === 'Point - Against' || currentAction === 'Goal - Against') {
         if (mode === 'Mistake') {
             if (coordinatesEnabled) {
                 switchScreen('coordinate-screen'); // Go to coordinate screen for Mistake
@@ -98,10 +108,16 @@ function selectMode(mode) {
         } else {
             logAction(); // Log action directly for Miss - Against
         }
-    } else if (coordinatesEnabled && (currentAction === 'Point - Score' || currentAction === 'Goal - Score' || currentAction === 'Ball - Won' || currentAction === 'Ball - Lost' || currentAction === 'Kickout' || currentAction === 'Free Won')) {
-        switchScreen('coordinate-screen'); // Go to coordinate screen for specified actions
+    } else if (currentAction === 'Carry') {
+        if (coordinatesEnabled) {
+            switchScreen('coordinate-screen'); // Go to coordinate screen for Carry after mode screen
+        } else {
+            switchScreen('player-buttons');
+        }
     } else if (actionDefinitionMap[currentAction]) {
         switchScreen(actionDefinitionMap[currentAction]);
+    } else if (coordinatesEnabled && (currentAction === 'Point - Score' || currentAction === 'Goal - Score' || currentAction === '45 Entry')) {
+        switchScreen('coordinate-screen'); // Go to coordinate screen for specified actions
     } else {
         switchScreen('player-buttons');
     }
@@ -110,7 +126,7 @@ function selectMode(mode) {
 function selectDefinition(definition) {
     currentDefinition = definition;
 
-    if (coordinatesEnabled && (currentAction === 'Point - Miss' || currentAction === 'Goal - Miss' || currentAction === 'Ball - Won' || currentAction === 'Ball - Lost' || currentAction === 'Kickout')) {
+    if (coordinatesEnabled && (currentAction === 'Point - Miss' || currentAction === 'Goal - Miss' || currentAction === 'Ball - Won' || currentAction === 'Ball - Lost' || currentAction === 'Kickout' || currentAction === 'Free Won')) {
         switchScreen('coordinate-screen'); // Go to coordinate screen for specified actions after definition screen
     } else {
         switchScreen('player-buttons');
@@ -157,6 +173,7 @@ function logAction() {
 
     updateCounters();
     resetSelection();
+    resetCoordinateScreen(); // Reset the coordinate screen after logging the action
     switchScreen('action-buttons'); // Ensure to return to Stats screen
 }
 
@@ -335,9 +352,11 @@ function resetSelection() {
     currentDefinition = '';
     currentPlayer = '';
     secondPlayer = '';
-    currentCoordinates1 = ''; // Reset first coordinates
-    currentCoordinates2 = ''; // Reset second coordinates (if applicable)
-    marker = { x: null, y: null }; // Reset marker
+    currentCoordinates1 = '';
+    currentCoordinates2 = '';
+    marker1 = { x: null, y: null };
+    marker2 = { x: null, y: null };
+    firstMarkerConfirmed = false;
 }
 
 function openTab(tabName) {
@@ -487,26 +506,63 @@ const drawPitch = () => {
     drawLine(36.5, 140, 36.5, 143);
     drawLine(43.5, 140, 43.5, 143);
     drawLine(36.5, 143, 43.5, 143);
-    // Draw the semicircle
-    drawSemicircle1(40, 21, 13);
-};
+    // Draw the rotated semicircle
+    drawRotatedSemicircle(rotatedSemicircle);
+    // Draw the clockwise rotated semicircle
+    drawClockwiseRotatedSemicircle(clockwiseRotatedSemicircle);
+}
 
-// Function to draw a semicircle
-const drawSemicircle1 = (centerX, centerY, radius) => {
-    const mappedCenterX = mapX(centerX);
-    const mappedCenterY = mapY(centerY);
-    const mappedRadius = (radius / 140) * canvas.height; // Map radius to canvas scale (use height for consistency)
+function generateRotatedSemicircle(centerX, centerY, radius, points) {
+    const theta = Array.from({ length: points }, (_, i) => Math.PI + (i / (points - 1)) * Math.PI);
+    const x = theta.map(t => centerX + radius * Math.cos(t));
+    const y = theta.map(t => centerY + radius * Math.sin(t));
+    return x.map((xi, i) => ({ x: xi, y: y[i] }));
+}
 
+// Generate rotated semicircle coordinates
+const rotatedSemicircle = generateRotatedSemicircle(40, 119, 13, 100);
+
+// Function to draw the rotated semicircle
+function drawRotatedSemicircle(semicircle) {
     ctx.beginPath();
-    ctx.arc(mappedCenterX, mappedCenterY, mappedRadius, Math.PI, 2 * Math.PI);
+    semicircle.forEach((point, index) => {
+        if (index === 0) {
+            ctx.moveTo(mapX(point.x), mapY(point.y));
+        } else {
+            ctx.lineTo(mapX(point.x), mapY(point.y));
+        }
+    });
     ctx.stroke();
-};
+}
+
+function generateClockwiseRotatedSemicircle(centerX, centerY, radius, points) {
+    const theta = Array.from({ length: points }, (_, i) => Math.PI + (i / (points - 1)) * Math.PI);
+    const x = theta.map(t => centerX - radius * Math.cos(t));
+    const y = theta.map(t => centerY - radius * Math.sin(t));
+    return x.map((xi, i) => ({ x: xi, y: y[i] }));
+}
+
+// Generate clockwise rotated semicircle coordinates
+const clockwiseRotatedSemicircle = generateClockwiseRotatedSemicircle(40, 21, 13, 100);
+
+// Function to draw the clockwise rotated semicircle
+function drawClockwiseRotatedSemicircle(semicircle) {
+    ctx.beginPath();
+    semicircle.forEach((point, index) => {
+        if (index === 0) {
+            ctx.moveTo(mapX(point.x), mapY(point.y));
+        } else {
+            ctx.lineTo(mapX(point.x), mapY(point.y));
+        }
+    });
+    ctx.stroke();
+}
 
 // Draw the marker
-const drawMarker = (x, y) => {
+const drawMarker = (x, y, color) => {
     ctx.beginPath();
     ctx.arc(mapX(x), mapY(y), 5, 0, Math.PI * 2);
-    ctx.fillStyle = 'blue';
+    ctx.fillStyle = color;
     ctx.fill();
     ctx.stroke();
 };
@@ -519,36 +575,71 @@ canvas.addEventListener('click', (e) => {
     const x = ((e.clientX - rect.left) / canvas.width) * 80;
     const y = 140 - ((e.clientY - rect.top) / canvas.height) * 140;
     
-    marker.x = x.toFixed(2);
-    marker.y = y.toFixed(2);
-    
-    drawPitch();
-    drawMarker(marker.x, marker.y);
-    
-    // Update the coordinate display
-    document.getElementById('coordinate-display').textContent = `X: ${marker.x}, Y: ${marker.y}`;
+    if (!firstMarkerConfirmed) {
+        marker1.x = x.toFixed(2);
+        marker1.y = y.toFixed(2);
+        drawPitch();
+        drawMarker(marker1.x, marker1.y, 'blue'); // First marker in blue
+        document.getElementById('coordinate-display-1').textContent = `X1: ${marker1.x}, Y1: ${marker1.y}`;
+    } else {
+        marker2.x = x.toFixed(2);
+        marker2.y = y.toFixed(2);
+        drawPitch();
+        drawMarker(marker1.x, marker1.y, 'blue'); // Redraw the first marker
+        drawMarker(marker2.x, marker2.y, 'red'); // Second marker in red
+        document.getElementById('coordinate-display-2').textContent = `X2: ${marker2.x}, Y2: ${marker2.y}`;
+    }
 });
 
 confirmCoordinatesButton.addEventListener('click', () => {
-    if (marker.x !== null && marker.y !== null) {
-        currentCoordinates1 = `(${marker.x}, ${marker.y})`;
-
-        if ((currentAction === 'Point - Against' || currentAction === 'Goal - Against') && currentMode !== 'Mistake') {
-            logAction(); // Log action directly for No Mistake
-            switchScreen('action-buttons'); // Return to main stats screen
-        } else if (currentAction === 'Miss - Against') {
-            logAction(); // Log action directly for Miss - Against
-            switchScreen('action-buttons'); // Return to main stats screen
+    if (currentAction === 'Handpass' || currentAction === 'Kickpass' || currentAction === 'Carry') {
+        if (!firstMarkerConfirmed) {
+            if (marker1.x !== null && marker1.y !== null) {
+                currentCoordinates1 = `(${marker1.x}, ${marker1.y})`;
+                firstMarkerConfirmed = true;
+                document.getElementById('coordinate-display-2').style.display = 'block'; // Show second coordinate display
+            } else {
+                alert('Please place a marker on the pitch.');
+            }
         } else {
-            switchScreen('player-buttons'); // Go to player selection screen for other actions
+            if (marker2.x !== null && marker2.y !== null) {
+                currentCoordinates2 = `(${marker2.x}, ${marker2.y})`;
+                switchScreen('player-buttons'); // Go to first player selection screen after confirming the second marker
+            } else {
+                alert('Please place the second marker on the pitch.');
+            }
         }
     } else {
-        alert('Please place a marker on the pitch.');
+        if (marker1.x !== null && marker1.y !== null) {
+            currentCoordinates1 = `(${marker1.x}, ${marker1.y})`;
+
+            if ((currentAction === 'Point - Against' || currentAction === 'Goal - Against') && currentMode !== 'Mistake') {
+                logAction(); // Log action directly for No Mistake
+                switchScreen('action-buttons'); // Return to main stats screen
+            } else if (currentAction === 'Miss - Against') {
+                logAction(); // Log action directly for Miss - Against
+                switchScreen('action-buttons'); // Return to main stats screen
+            } else {
+                switchScreen('player-buttons'); // Go to player selection screen for other actions
+            }
+        } else {
+            alert('Please place a marker on the pitch.');
+        }
     }
 });
 
 function toggleCoordinates() {
     coordinatesEnabled = document.getElementById('toggle-coordinates').checked;
+}
+
+function resetCoordinateScreen() {
+    marker1 = { x: null, y: null };
+    marker2 = { x: null, y: null };
+    firstMarkerConfirmed = false;
+    document.getElementById('coordinate-display-1').textContent = 'X1: -, Y1: -';
+    document.getElementById('coordinate-display-2').textContent = 'X2: -, Y2: -';
+    document.getElementById('coordinate-display-2').style.display = 'none';
+    drawPitch(); // Redraw the pitch to clear markers
 }
 
 function exportSummaryToCSV() {
