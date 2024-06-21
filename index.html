@@ -22,6 +22,7 @@
         <button class="tab-button" onclick="openTab('home')">HOME</button>
         <button class="tab-button" onclick="openTab('stats')">STATS</button>
         <button class="tab-button" onclick="openTab('summary')">SUMMARY</button>
+        <button class="tab-button" onclick="openTab('review')">REVIEW</button>
     </div>
 
     <div id="home" class="tab-content">
@@ -91,15 +92,13 @@
                         <button class="action-button" data-action="Ball - Won" aria-label="Select Ball - Won" onclick="selectAction('Ball - Won')">Ball - Won</button>
                         <button class="action-button" data-action="Ball - Lost" aria-label="Select Ball - Lost" onclick="selectAction('Ball - Lost')">Ball - Lost</button>
                         <button class="action-button" data-action="Foul" aria-label="Select Foul" onclick="selectAction('Foul')">Foul</button>
-                        <button class="action-button" data-action="Yellow Card" aria-label="Select Yellow Card" onclick="selectAction('Yellow Card')">Yellow Card</button>
-                        <button class="action-button" data-action="Black Card" aria-label="Select Black Card" onclick="selectAction('Black Card')">Black Card</button>
-                        <button class="action-button" data-action="Red Card" aria-label="Select Red Card" onclick="selectAction('Red Card')">Red Card</button>
                     </div>
                 </div>
                 <div class="action-column">
                     <h3 class="column-title">Goalkeeping</h3>
                     <div class="action-button-container">
-                        <button class="action-button" data-action="Kickout" aria-label="Select Kickout" onclick="selectAction('Kickout')">Kickout</button>
+                        <button class="action-button" data-action="Kickout - For" aria-label="Select Kickout - For" onclick="selectAction('Kickout - For')">Kickout - For</button>
+                        <button class="action-button" data-action="Kickout - Against" aria-label="Select Kickout - Against" onclick="selectAction('Kickout - Against')">Opp. Kickout</button>
                         <button class="action-button" data-action="Shot - Saved" aria-label="Select Shot - Saved" onclick="selectAction('Shot - Saved')">Shot - Saved</button>
                         <button class="action-button" data-action="Point - Against" aria-label="Select Point - Against" onclick="selectAction('Point - Against')">Point - Against</button>
                         <button class="action-button" data-action="Goal - Against" aria-label="Select Goal - Against" onclick="selectAction('Goal - Against')">Goal - Against</button>
@@ -247,7 +246,7 @@
             <button class="return-button" onclick="returnToActionScreen()">Return to Actions</button>
             <h3>Select Mode for 45 Entry</h3>
             <button class="mode-button" aria-label="Select mode Success" onclick="selectMode('Success')">Success</button>
-            <button class="mode-button" aria-label="Select mode Ball Retained" onclick="selectMode('Success')">Success</button>
+            <button class="mode-button" aria-label="Select mode Ball Retained" onclick="selectMode('Retained')">Retained</button>
             <button class="mode-button" aria-label="Select mode Failure" onclick="selectMode('Failure')">Failure</button>
         </div>
 
@@ -271,29 +270,45 @@
             <button class="definition-button" aria-label="Select definition Opp. Red" onclick="selectDefinition('Opp. Red')">Opp. Red</button>
         </div>
 
+        <!-- Definition screen for Ball - Won (Forced) -->
+        <div id="definition-ball-won" class="screen">
+            <button class="return-button" onclick="returnToModeScreen()">Return to Mode</button>
+            <h3>Select Definition for Ball - Won</h3>
+            <button class="definition-button" aria-label="Select definition Tackle" onclick="selectDefinition('Tackle')">Tackle</button>
+            <button class="definition-button" aria-label="Select definition Group Tackle" onclick="selectDefinition('Group Tackle')">Group Tackle</button>
+            <button class="definition-button" aria-label="Select definition Handpass Int." onclick="selectDefinition('Handpass Int.')">Handpass Int.</button>
+            <button class="definition-button" aria-label="Select definition Kickpass Int." onclick="selectDefinition('Kickpass Int.')">Kickpass Int.</button>
+            <button class="definition-button" aria-label="Select definition Sideline" onclick="selectDefinition('Sideline')">Sideline</button>
+            <button class="definition-button" aria-label="Select definition Break" onclick="selectDefinition('Break')">Break</button>
+        </div>
+
         <!-- Mode screen for Ball - Won -->
         <div id="mode-ball-won" class="screen">
             <button class="return-button" onclick="returnToActionScreen()">Return to Actions</button>
-            <h3>Select Mode for Ball - Won</h3>
-            <button class="mode-button" aria-label="Select mode Tackle" onclick="selectMode('Tackle')">Tackle</button>
-            <button class="mode-button" aria-label="Select mode Group Tackle" onclick="selectMode('Group Tackle')">Group Tackle</button>
-            <button class="mode-button" aria-label="Select mode Handpass Int." onclick="selectMode('Handpass Int.')">Handpass Int.</button>
-            <button class="mode-button" aria-label="Select mode Kickpass Int." onclick="selectMode('Kickpass Int.')">Kickpass Int.</button>
-            <button class="mode-button" aria-label="Select mode High Ball" onclick="selectMode('High Ball')">High Ball</button>
-            <button class="mode-button" aria-label="Select mode Break" onclick="selectMode('Break')">Break</button>
+            <h3>Select Mode for Ball Won</h3>
+            <button class="mode-button" aria-label="Select mode Forced" onclick="selectMode('Forced')">Forced</button>
+            <button class="mode-button" aria-label="Select mode Unforced" onclick="selectMode('Unforced')">Unforced</button>
+        </div>
+
+        <!-- definition screen for Ball - Lost -->
+        <div id="definition-ball-lost" class="screen">
+            <button class="return-button" onclick="returnToModeScreen()">Return to Mode</button>
+            <h3>Select Definition for Ball - Lost</h3>
+            <button class="definition-button" aria-label="Select definition Tackle" onclick="selectDefinition('Tackle')">Tackle</button>
+            <button class="definition-button" aria-label="Select definition Handling Error" onclick="selectDefinition('Handling Error')">Handling Error</button>
+            <button class="definition-button" aria-label="Select definition Group Tackle" onclick="selectDefinition('Group Tackle')">Group Tackle</button>
+            <button class="definition-button" aria-label="Select definition Handpass Int." onclick="selectDefinition('Handpass Int.')">Handpass Int.</button>
+            <button class="definition-button" aria-label="Select definition Kickpass Int." onclick="selectDefinition('Kickpass Int.')">Kickpass Int.</button>
+            <button class="definition-button" aria-label="Select definition High Ball" onclick="selectDefinition('Sideline')">Sideline</button>
+            <button class="definition-button" aria-label="Select definition Break" onclick="selectDefinition('Break')">Break</button>
         </div>
 
         <!-- Mode screen for Ball - Lost -->
         <div id="mode-ball-lost" class="screen">
-            <button class="return-button" onclick="returnToActionScreen()">Return to Actions</button>
-            <h3>Select Mode for Ball - Lost</h3>
-            <button class="mode-button" aria-label="Select mode Tackle" onclick="selectMode('Tackle')">Tackle</button>
-            <button class="mode-button" aria-label="Select mode Handling Error" onclick="selectMode('Handling Error')">Handling Error</button>
-            <button class="mode-button" aria-label="Select mode Group Tackle" onclick="selectMode('Group Tackle')">Group Tackle</button>
-            <button class="mode-button" aria-label="Select mode Handpass Int." onclick="selectMode('Handpass Int.')">Handpass Int.</button>
-            <button class="mode-button" aria-label="Select mode Kickpass Int." onclick="selectMode('Kickpass Int.')">Kickpass Int.</button>
-            <button class="mode-button" aria-label="Select mode High Ball" onclick="selectMode('High Ball')">High Ball</button>
-            <button class="mode-button" aria-label="Select mode Break" onclick="selectMode('Break')">Break</button>
+            <button class="return-button" onclick="returnToActionScreen()">Return to Action</button>
+            <h3>Select Mode for Ball Lost</h3>
+            <button class="mode-button" aria-label="Select mode Forced" onclick="selectMode('Forced')">Forced</button>
+            <button class="mode-button" aria-label="Select mode Unforced" onclick="selectMode('Unforced')">Unforced</button>
         </div>
 
         <!-- Mode screen for Foul -->
@@ -301,10 +316,11 @@
             <button class="return-button" onclick="returnToActionScreen()">Return to Actions</button>
             <h3>Select Mode for Foul</h3>
             <button class="mode-button" aria-label="Select mode Tackle" onclick="selectMode('Tackle')">Tackle</button>
+            <button class="mode-button" aria-label="Select mode Holding" onclick="selectMode('Holding')">Holding</button>
+            <button class="mode-button" aria-label="Select mode Push" onclick="selectMode('Push')">Push</button>
             <button class="mode-button" aria-label="Select mode Overcarry" onclick="selectMode('Overcarry')">Overcarry</button>
-            <button class="mode-button" aria-label="Select mode 2 Hops" onclick="selectMode('2 Hops')">2 Hops</button>
             <button class="mode-button" aria-label="Select mode Off Ground" onclick="selectMode('Off Ground')">Off Ground</button>
-            <button class="mode-button" aria-label="Select mode Square Ball" onclick="selectMode('Square Ball')">Square Ball</button>
+            <button class="mode-button" aria-label="Select mode Aggressive Foul" onclick="selectMode('Aggressive Foul')">Aggressive Foul</button>
             <button class="mode-button" aria-label="Select mode Other" onclick="selectMode('Other')">Other</button>
         </div>
 
@@ -318,32 +334,62 @@
             <button class="definition-button" aria-label="Select definition Red Card" onclick="selectDefinition('Red card')">Red Card</button>
         </div>
 
-        <!-- Mode screen for Kickout -->
-        <div id="mode-kickout" class="screen">
+        <!-- Mode screen for Kickout - For -->
+        <div id="mode-kickout-for" class="screen">
             <button class="return-button" onclick="returnToActionScreen()">Return to Actions</button>
-            <h3>Select Mode for Kickout</h3>
-            <div class="grid-container">
-                <button class="mode-button" aria-label="Select mode Short Won Clean" onclick="selectMode('Short Won Clean')">Short Won Clean</button>
-                <button class="mode-button" aria-label="Select mode Short Won Break" onclick="selectMode('Short Won Break')">Short Won Break</button>
-                <button class="mode-button" aria-label="Select mode Short Lost Clean" onclick="selectMode('Short Lost Clean')">Short Lost Clean</button>
-                <button class="mode-button" aria-label="Select mode Short Lost Break" onclick="selectMode('Short Lost Break')">Short Lost Break</button>
-
-                <button class="mode-button" aria-label="Select mode Med Won Clean" onclick="selectMode('Med Won Clean')">Med Won Clean</button>
-                <button class="mode-button" aria-label="Select mode Med Won Break" onclick="selectMode('Med Won Break')">Med Won Break</button>
-                <button class="mode-button" aria-label="Select mode Med Lost Clean" onclick="selectMode('Med Lost Clean')">Med Lost Clean</button>
-                <button class="mode-button" aria-label="Select mode Med Lost Break" onclick="selectMode('Med Lost Break')">Med Lost Break</button>
-
-                <button class="mode-button" aria-label="Select mode Long Won Clean" onclick="selectMode('Long Won Clean')">Long Won Clean</button>
-                <button class="mode-button" aria-label="Select mode Long Won Break" onclick="selectMode('Long Won Break')">Long Won Break</button>
-                <button class="mode-button" aria-label="Select mode Long Lost Clean" onclick="selectMode('Long Lost Clean')">Long Lost Clean</button>
-                <button class="mode-button" aria-label="Select mode Long Lost Break" onclick="selectMode('Long Lost Break')">Long Lost Break</button>
+            <h3>Select Mode for Kickout - For</h3>
+            <div class="mode-columns">
+                <div class="mode-column">
+                    <h4>Kickout Won</h4>
+                    <button class="mode-button" aria-label="Select mode Won Clean" onclick="selectMode('Won Clean')">Won Clean</button>
+                    <button class="mode-button" aria-label="Select mode Won Break" onclick="selectMode('Won Break')">Won Break</button>
+                    <button class="mode-button" aria-label="Select mode Won Sideline" onclick="selectMode('Won Sideline')">Won Sideline</button>
+                    <button class="mode-button" aria-label="Select mode Won Foul" onclick="selectMode('Won Foul')">Won Foul</button>
+                </div>
+                <div class="mode-column">
+                    <h4>Kickout Lost</h4>
+                    <button class="mode-button" aria-label="Select mode Lost Clean" onclick="selectMode('Lost Clean')">Lost Clean</button>
+                    <button class="mode-button" aria-label="Select mode Lost Break" onclick="selectMode('Lost Break')">Lost Break</button>
+                    <button class="mode-button" aria-label="Select mode Lost Sideline" onclick="selectMode('Lost Sideline')">Lost Sideline</button>
+                    <button class="mode-button" aria-label="Select mode Lost Foul" onclick="selectMode('Lost Foul')">Lost Foul</button>
+                </div>
             </div>
         </div>
 
-        <!-- Definition screen for Kickout -->
-        <div id="definition-kickout" class="screen">
+        <!-- Definition screen for Kickout - For -->
+        <div id="definition-kickout-for" class="screen">
             <button class="return-button" onclick="returnToModeScreen()">Return to Mode</button>
-            <h3>Select Definition for Kickout</h3>
+            <h3>Select Definition for Kickout - For</h3>
+            <button class="definition-button" aria-label="Select definition Contested" onclick="selectDefinition('Contested')">Contested</button>
+            <button class="definition-button" aria-label="Select definition Not Contested" onclick="selectDefinition('Not Contested')">Not Contested</button>
+        </div>
+
+        <!-- Mode screen for Kickout - Against -->
+        <div id="mode-kickout-against" class="screen">
+            <button class="return-button" onclick="returnToActionScreen()">Return to Actions</button>
+            <h3>Select Mode for Kickout - Against</h3>
+            <div class="mode-columns">
+                <div class="mode-column">
+                    <h4>Kickout Won</h4>
+                    <button class="mode-button" aria-label="Select mode Won Clean" onclick="selectMode('Won Clean')">Won Clean</button>
+                    <button class="mode-button" aria-label="Select mode Won Break" onclick="selectMode('Won Break')">Won Break</button>
+                    <button class="mode-button" aria-label="Select mode Won Sideline" onclick="selectMode('Won Sideline')">Won Sideline</button>
+                    <button class="mode-button" aria-label="Select mode Won Foul" onclick="selectMode('Won Foul')">Won Foul</button>
+                </div>
+                <div class="mode-column">
+                    <h4>Kickout Lost</h4>
+                    <button class="mode-button" aria-label="Select mode Lost Clean" onclick="selectMode('Lost Clean')">Lost Clean</button>
+                    <button class="mode-button" aria-label="Select mode Lost Break" onclick="selectMode('Lost Break')">Lost Break</button>
+                    <button class="mode-button" aria-label="Select mode Lost Sideline" onclick="selectMode('Lost Sideline')">Lost Sideline</button>
+                    <button class="mode-button" aria-label="Select mode Lost Foul" onclick="selectMode('Lost Foul')">Lost Foul</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Definition screen for Kickout - Against -->
+        <div id="definition-kickout-against" class="screen">
+            <button class="return-button" onclick="returnToModeScreen()">Return to Mode</button>
+            <h3>Select Definition for Kickout - Against</h3>
             <button class="definition-button" aria-label="Select definition Contested" onclick="selectDefinition('Contested')">Contested</button>
             <button class="definition-button" aria-label="Select definition Not Contested" onclick="selectDefinition('Not Contested')">Not Contested</button>
         </div>
@@ -385,22 +431,6 @@
             <button class="mode-button" aria-label="Select mode Goal Post" onclick="selectMode('Goal Post')">Goal Post</button>
         </div>
 
-        <!-- Definition screen for Ball - Won -->
-        <div id="definition-ball-won" class="screen">
-            <button class="return-button" onclick="returnToModeScreen()">Return to Mode</button>
-            <h3>Select Definition for Ball Won</h3>
-            <button class="definition-button" aria-label="Select definition Forced" onclick="selectDefinition('Forced')">Forced</button>
-            <button class="definition-button" aria-label="Select definition Unforced" onclick="selectDefinition('Unforced')">Unforced</button>
-        </div>
-
-        <!-- Definition screen for Ball - Lost -->
-        <div id="definition-ball-lost" class="screen">
-            <button class="return-button" onclick="returnToModeScreen()">Return to Mode</button>
-            <h3>Select Definition for Ball Lost</h3>
-            <button class="definition-button" aria-label="Select definition Forced" onclick="selectDefinition('Forced')">Forced</button>
-            <button class="definition-button" aria-label="Select definition Unforced" onclick="selectDefinition('Unforced')">Unforced</button>
-        </div>
-
         <!-- Mode screen for Carry -->
         <div id="mode-carry" class="screen">
             <button class="return-button" onclick="returnToActionScreen()">Return to Actions</button>
@@ -424,6 +454,12 @@
                     <p id="coordinate-display-2" style="display:none;">X2: -, Y2: -</p> <!-- Initially hidden -->
                 </div>
             </div>    
+        </div>
+    </div>
+
+    <div id="review" class="tab-content">
+        <div class="coordinate-container">
+            <canvas id="review-pitch" width="400" height="500"></canvas>
         </div>
     </div>
 
