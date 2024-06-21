@@ -477,3 +477,48 @@ input:checked + .slider:before {
     background-color: #0056b3;
 }
 
+/* Action buttons and columns */
+.mode-columns {
+    display: flex;
+    justify-content: center; /* Center the columns container */
+    width: 100%; /* Ensure the columns container spans the full width */
+    padding: 0 20px; /* Add padding for better spacing on the sides */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+.mode-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    flex: 1; /* Allow the columns to stretch and fit the available space */
+    margin: 0 20px; /* Adjust this value to change the gap between columns */
+}
+
+.mode-column h4 {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.mode-button {
+    width: 100%; /* Ensure buttons span the full width of the column */
+    padding: 10px 0; /* Add padding for better spacing inside the buttons */
+    font-size: 16px; /* Adjust font size for better readability */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.coordinate-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Ensure it takes full height of the viewport */
+}
