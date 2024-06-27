@@ -429,6 +429,7 @@
             <button class="mode-button" aria-label="Select mode Point Post" onclick="selectMode('Point Post')">Point Post</button>
             <button class="mode-button" aria-label="Select mode Goal Wide" onclick="selectMode('Goal Wide')">Goal Wide</button>
             <button class="mode-button" aria-label="Select mode Goal Post" onclick="selectMode('Goal Post')">Goal Post</button>
+            <button class="mode-button" aria-label="Select mode Shot Short" onclick="selectMode('Shot Short')">Shot Short</button>
         </div>
 
         <!-- Mode screen for Carry -->
@@ -457,9 +458,40 @@
         </div>
     </div>
 
-    <div id="review" class="tab-content">
-        <div class="coordinate-container">
+    <div id="review" class="tab-content" onshow="refreshReviewTab()">
+        <div class="review-container">
             <canvas id="review-pitch" width="400" height="500"></canvas>
+            <div class="toggle-container">
+                <h3>Choose Actions</h3>
+                <label>
+                    <input type="checkbox" id="toggle-own-shots">
+                    Own Shots
+                </label>
+                <label>
+                    <input type="checkbox" id="toggle-fouls-won">
+                    Frees Won
+                </label>
+                <label>
+                    <input type="checkbox" id="toggle-handpasses">
+                    Handpasses
+                </label>
+                <label>
+                    <input type="checkbox" id="toggle-kickpasses">
+                    Kickpasses
+                </label>
+                <label>
+                    <input type="checkbox" id="toggle-carries">
+                    Carries
+                </label>
+                <label>
+                    <input type="checkbox" id="toggle-unforced-errors">
+                    Unforced Errors
+                </label>
+                <label>
+                    <input type="checkbox" id="toggle-forced-errors">
+                    Forced Errors
+                </label>
+            </div>
         </div>
     </div>
 
