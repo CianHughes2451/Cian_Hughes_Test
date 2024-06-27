@@ -178,6 +178,7 @@ function logAction() {
     resetSelection();
     resetCoordinateScreen(); // Reset the coordinate screen after logging the action
     switchScreen('action-buttons'); // Ensure to return to Stats screen
+    filterActions();
 }
 
 function logPointAgainst() {
@@ -368,6 +369,10 @@ function openTab(tabName) {
         tab.classList.remove('active');
     });
     document.getElementById(tabName).classList.add('active');
+
+    if (tabName === 'review') {
+        refreshReviewTab();  // Call the refresh function when the review tab is shown
+    }
 }
 
 function showRenameInput(team) {
@@ -685,3 +690,338 @@ function exportSummaryToCSV() {
     document.body.removeChild(link);
 }
 
+const reviewCanvas = document.getElementById('review-pitch');
+const reviewCtx = reviewCanvas.getContext('2d');
+
+const drawReviewPitch = () => {
+    reviewCtx.clearRect(0, 0, reviewCanvas.width, reviewCanvas.height);
+
+    const drawReviewLine = (startX, startY, endX, endY) => {
+        reviewCtx.beginPath();
+        reviewCtx.moveTo(mapX(startX), mapYReview(startY));
+        reviewCtx.lineTo(mapX(endX), mapYReview(endY));
+        reviewCtx.strokeStyle = 'black';  // Ensure the line color is black
+        reviewCtx.stroke();
+    };
+
+    drawReviewLine(0, 0, 80, 0);
+    drawReviewLine(0, 0, 0, 140);
+    drawReviewLine(0, 140, 80, 140);
+    drawReviewLine(80, 0, 80, 140);
+    drawReviewLine(0, 14, 80, 14);
+    drawReviewLine(0, 21, 80, 21);
+    drawReviewLine(0, 45, 80, 45);
+    drawReviewLine(0, 65, 80, 65);
+    drawReviewLine(0, 75, 80, 75);
+    drawReviewLine(0, 95, 80, 95);
+    drawReviewLine(0, 119, 80, 119);
+    drawReviewLine(0, 126, 80, 126);
+    drawReviewLine(35, 70, 45, 70);
+    drawReviewLine(32.5, 0, 32.5, 5);
+    drawReviewLine(47.5, 0, 47.5, 5);
+    drawReviewLine(32.5, 5, 47.5, 5);
+    drawReviewLine(30, 0, 30, 14);
+    drawReviewLine(50, 0, 50, 14);
+    drawReviewLine(32.5, 140, 32.5, 135);
+    drawReviewLine(47.5, 140, 47.5, 135);
+    drawReviewLine(32.5, 135, 47.5, 135);
+    drawReviewLine(30, 140, 30, 126);
+    drawReviewLine(50, 140, 50, 126);
+    drawReviewLine(36.5, 0, 36.5, -3);
+    drawReviewLine(43.5, 0, 43.5, -3);
+    drawReviewLine(36.5, -3, 43.5, -3);
+    drawReviewLine(36.5, 140, 36.5, 143);
+    drawReviewLine(43.5, 140, 43.5, 143);
+    drawReviewLine(36.5, 143, 43.5, 143);
+
+    drawReviewRotatedSemicircle(rotatedSemicircle);
+    drawReviewClockwiseRotatedSemicircle(clockwiseRotatedSemicircle);
+};
+
+const drawReviewRotatedSemicircle = (semicircle) => {
+    reviewCtx.beginPath();
+    semicircle.forEach((point, index) => {
+        if (index === 0) {
+            reviewCtx.moveTo(mapX(point.x), mapYReview(point.y));
+        } else {
+            reviewCtx.lineTo(mapX(point.x), mapYReview(point.y));
+        }
+    });
+    reviewCtx.strokeStyle = 'black';  // Ensure the line color is black
+    reviewCtx.stroke();
+};
+
+const drawReviewClockwiseRotatedSemicircle = (semicircle) => {
+    reviewCtx.beginPath();
+    semicircle.forEach((point, index) => {
+        if (index === 0) {
+            reviewCtx.moveTo(mapX(point.x), mapYReview(point.y));
+        } else {
+            reviewCtx.lineTo(mapX(point.x), mapYReview(point.y));
+        }
+    });
+    reviewCtx.strokeStyle = 'black';  // Ensure the line color is black
+    reviewCtx.stroke();
+};
+
+const mapYReview = y => reviewCanvas.height - (y / 140) * reviewCanvas.height;
+
+let reviewMarkers = []; // Store marker positions
+
+const drawReviewMarker = (x, y, color, entry, actionType) => {
+    reviewCtx.beginPath();
+    reviewCtx.arc(mapX(x), mapYReview(y), 5, 0, Math.PI * 2);
+    reviewCtx.fillStyle = color;
+    reviewCtx.fill();
+    reviewCtx.strokeStyle = color;
+    reviewCtx.stroke();
+
+    reviewMarkers.push({ x, y, entry, color });
+};
+
+const filterActions = () => {
+    const showOwnShots = document.getElementById('toggle-own-shots').checked;
+    const showFoulsWon = document.getElementById('toggle-fouls-won').checked;
+    const showHandpasses = document.getElementById('toggle-handpasses').checked;
+    const showKickpasses = document.getElementById('toggle-kickpasses').checked;
+    const showCarries = document.getElementById('toggle-carries').checked;
+    const showUnforcedErrors = document.getElementById('toggle-unforced-errors').checked;
+    const showForcedErrors = document.getElementById('toggle-forced-errors').checked;
+
+    // Clear the pitch and remove any existing markers
+    drawReviewPitch();
+    reviewMarkers = []; // Clear existing markers
+
+    // Iterate over actionsLog and display markers based on toggle states
+    actionsLog.forEach(entry => {
+        const [x1, y1] = entry.coordinates1.slice(1, -1).split(', ').map(Number);
+        const [x2, y2] = entry.coordinates2 ? entry.coordinates2.slice(1, -1).split(', ').map(Number) : [];
+
+        if (showOwnShots) {
+            if (entry.action === 'Point - Score') {
+                drawReviewMarker(x1, y1, 'blue', entry, 'Point - Score');
+            } else if (entry.action === 'Point - Miss') {
+                drawReviewMarker(x1, y1, 'red', entry, 'Point - Miss');
+            } else if (entry.action === 'Goal - Score') {
+                drawReviewMarker(x1, y1, 'green', entry, 'Goal - Score');
+            } else if (entry.action === 'Goal - Miss') {
+                drawReviewMarker(x1, y1, 'orange', entry, 'Goal - Miss');
+            }
+        }
+
+        if (showFoulsWon && entry.action === 'Free Won') {
+            drawReviewMarker(x1, y1, 'purple', entry, 'Free Won');
+        }
+
+        if (showHandpasses && entry.action === 'Handpass') {
+            drawPassMarkersAndArrow(x1, y1, x2, y2, 'black', entry);
+        }
+
+        if (showKickpasses && entry.action === 'Kickpass') {
+            drawPassMarkersAndArrow(x1, y1, x2, y2, 'navy', entry, 'Kickpass');
+        }
+
+        if (showCarries && entry.action === 'Carry') {
+            drawPassMarkersAndArrow(x1, y1, x2, y2, 'white', entry, 'Carry');
+        }
+
+        if (showUnforcedErrors && entry.action === 'Ball - Lost' && entry.mode === 'Unforced') {
+            drawReviewMarker(x1, y1, 'pink', entry, 'Ball - Lost');
+        }
+
+        if (showForcedErrors && entry.action === 'Ball - Lost' && entry.mode === 'Forced') {
+            drawReviewMarker(x1, y1, 'white', entry, 'Ball - Lost');
+        }
+    });
+};
+
+const handleCanvasClick = (e) => {
+    const rect = reviewCanvas.getBoundingClientRect();
+    const clickX = ((e.clientX - rect.left) / reviewCanvas.width) * 80;
+    const clickY = 140 - ((e.clientY - rect.top) / reviewCanvas.height) * 140;
+
+    let clickedMarker = null;
+
+    reviewMarkers.forEach(marker => {
+        const { x, y, entry, color } = marker;
+        if (Math.abs(clickX - x) < 2 && Math.abs(clickY - y) < 2) {
+            clickedMarker = { x, y, entry, color };
+        }
+    });
+
+    // Remove any existing summary box
+    const existingSummaryBox = document.getElementById('summary-box');
+    if (existingSummaryBox) {
+        existingSummaryBox.remove();
+    }
+
+    if (clickedMarker) {
+        showSummaryBox(e.clientX, e.clientY, clickedMarker.entry, clickedMarker.color);
+        e.stopPropagation(); // Prevent click event from propagating
+    }
+};
+
+function showSummaryBox(x, y, entry, color) {
+    const summaryBox = document.createElement('div');
+    summaryBox.id = 'summary-box';
+    summaryBox.style.position = 'absolute';
+    summaryBox.style.left = `${x}px`;
+    summaryBox.style.top = `${y}px`;
+    summaryBox.style.padding = '10px';
+    summaryBox.style.border = `2px solid ${color}`;
+    summaryBox.style.backgroundColor = 'white';
+    summaryBox.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
+    summaryBox.style.zIndex = '1000';
+
+    const [coordX1, coordY1] = entry.coordinates1.slice(1, -1).split(', ');
+    const [coordX2, coordY2] = entry.coordinates2 ? entry.coordinates2.slice(1, -1).split(', ') : [];
+    const distance = coordX2 && coordY2 ? calculateDistance(coordX1, coordY1, coordX2, coordY2) : '';
+
+    if (entry.action === 'Point - Score') {
+        summaryBox.innerHTML = `
+            <p><strong>Player:</strong> ${entry.player}</p>
+            <p><strong>Action:</strong> Point - Score</p>
+            <p><strong>Type:</strong> ${entry.mode}</p>
+            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
+        `;
+    } else if (entry.action === 'Point - Miss') {
+        summaryBox.innerHTML = `
+            <p><strong>Player:</strong> ${entry.player}</p>
+            <p><strong>Action:</strong> Point - Miss</p>
+            <p><strong>Type:</strong> ${entry.definition}</p>
+            <p><strong>How:</strong> ${entry.mode}</p>
+            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
+        `;
+    } else if (entry.action === 'Goal - Score') {
+        summaryBox.innerHTML = `
+            <p><strong>Player:</strong> ${entry.player}</p>
+            <p><strong>Action:</strong> Goal - Score</p>
+            <p><strong>Type:</strong> ${entry.mode}</p>
+            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
+        `;
+    } else if (entry.action === 'Goal - Miss') {
+        summaryBox.innerHTML = `
+            <p><strong>Player:</strong> ${entry.player}</p>
+            <p><strong>Action:</strong> Goal - Miss</p>
+            <p><strong>Type:</strong> ${entry.definition}</p>
+            <p><strong>How:</strong> ${entry.mode}</p>
+            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
+        `;
+    } else if (entry.action === 'Free Won') {
+        summaryBox.innerHTML = `
+            <p><strong>Player:</strong> ${entry.player}</p>
+            <p><strong>Action:</strong> Free Won</p>
+            <p><strong>Type:</strong> ${entry.mode}</p>
+            <p><strong>Card:</strong> ${entry.definition}</p>
+            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
+        `;
+    } else if (entry.action === 'Handpass') {
+        summaryBox.innerHTML = `
+            <p><strong>Action:</strong> Handpass</p>
+            <p><strong>Pass:</strong> ${entry.player}</p>
+            <p><strong>To:</strong> ${entry.player2}</p>
+            <p><strong>Dist:</strong> ${distance}m</p>
+            <p style="font-size: small; margin-top: 10px;"><strong>Coords_1:</strong> (${coordX1}, ${coordY1})</p>
+            <p style="font-size: small; margin-top: 10px;"><strong>Coords_2:</strong> (${coordX2}, ${coordY2})</p>
+        `;
+    } else if (entry.action === 'Kickpass') {
+        summaryBox.innerHTML = `
+            <p><strong>Action:</strong> Kickpass</p>
+            <p><strong>Pass:</strong> ${entry.player}</p>
+            <p><strong>To:</strong> ${entry.player2}</p>
+            <p><strong>Dist:</strong> ${distance}m</p>
+            <p style="font-size: small; margin-top: 10px;"><strong>Coords_1:</strong> (${coordX1}, ${coordY1})</p>
+            <p style="font-size: small; margin-top: 10px;"><strong>Coords_2:</strong> (${coordX2}, ${coordY2})</p>
+        `;
+    } else if (entry.action === 'Carry') {
+        summaryBox.innerHTML = `
+            <p><strong>Action:</strong> Carry</p>
+            <p><strong>Run:</strong> ${entry.mode}</p>
+            <p><strong>Player:</strong> ${entry.player}</p>
+            <p><strong>Dist:</strong> ${distance}m</p>
+            <p style="font-size: small; margin-top: 10px;"><strong>Coords_1:</strong> (${coordX1}, ${coordY1})</p>
+            <p style="font-size: small; margin-top: 10px;"><strong>Coords_2:</strong> (${coordX2}, ${coordY2})</p>
+        `;
+    } else if (entry.action === 'Ball - Lost' && entry.mode === 'Unforced') {
+        summaryBox.innerHTML = `
+            <p><strong>Action:</strong> Ball - Lost</p>
+            <p><strong>Type:</strong> Unforced</p>
+            <p><strong>How:</strong> ${entry.definition}</p>
+            <p><strong>Player:</strong> ${entry.player}</p>
+            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
+        `;
+    } else if (entry.action === 'Ball - Lost' && entry.mode === 'Forced') {
+        summaryBox.innerHTML = `
+            <p><strong>Action:</strong> Ball - Lost</p>
+            <p><strong>Type:</strong> Forced</p>
+            <p><strong>How:</strong> ${entry.definition}</p>
+            <p><strong>Player:</strong> ${entry.player}</p>
+            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
+        `;
+    }
+
+    document.body.appendChild(summaryBox);
+
+    // Remove any existing event listener to prevent duplication
+    document.removeEventListener('click', handleDocumentClick);
+
+    function handleDocumentClick(event) {
+        const isClickInsideSummaryBox = summaryBox.contains(event.target);
+        if (!isClickInsideSummaryBox) {
+            summaryBox.remove();
+            document.removeEventListener('click', handleDocumentClick);
+        }
+    }
+
+    document.addEventListener('click', handleDocumentClick);
+}
+
+const drawPassMarkersAndArrow = (x1, y1, x2, y2, color, entry, actionType) => {
+    // Draw the start marker
+    drawReviewMarker(x1, y1, color, entry, `${actionType} Start`);
+
+    // Draw the end marker
+    drawReviewMarker(x2, y2, color, entry, `${actionType} End`);
+
+    // Draw the arrow connecting the two markers
+    reviewCtx.beginPath();
+    reviewCtx.moveTo(mapX(x1), mapYReview(y1));
+    reviewCtx.lineTo(mapX(x2), mapYReview(y2));
+    reviewCtx.strokeStyle = color;
+    reviewCtx.stroke();
+
+    // Draw the filled arrowhead
+    const headlen = 15; // length of head in pixels
+    const angle = Math.atan2(mapYReview(y2) - mapYReview(y1), mapX(x2) - mapX(x1));
+    reviewCtx.beginPath();
+    reviewCtx.moveTo(mapX(x2), mapYReview(y2));
+    reviewCtx.lineTo(mapX(x2) - headlen * Math.cos(angle - Math.PI / 6), mapYReview(y2) - headlen * Math.sin(angle - Math.PI / 6));
+    reviewCtx.lineTo(mapX(x2) - headlen * Math.cos(angle + Math.PI / 6), mapYReview(y2) - headlen * Math.sin(angle + Math.PI / 6));
+    reviewCtx.lineTo(mapX(x2), mapYReview(y2));
+    reviewCtx.fillStyle = color;
+    reviewCtx.fill();
+};
+
+reviewCanvas.addEventListener('click', handleCanvasClick);
+
+// Event listeners for toggles
+document.getElementById('toggle-own-shots').addEventListener('change', filterActions);
+document.getElementById('toggle-fouls-won').addEventListener('change', filterActions);
+document.getElementById('toggle-handpasses').addEventListener('change', filterActions);
+document.getElementById('toggle-kickpasses').addEventListener('change', filterActions);
+document.getElementById('toggle-carries').addEventListener('change', filterActions);
+document.getElementById('toggle-unforced-errors').addEventListener('change', filterActions);
+document.getElementById('toggle-forced-errors').addEventListener('change', filterActions);
+
+// Call filterActions on load to ensure markers are managed based on initial state
+filterActions();
+
+const refreshReviewTab = () => {
+    filterActions();
+};
+
+const calculateDistance = (x1, y1, x2, y2) => {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    return Math.sqrt(dx * dx + dy * dy).toFixed(2);
+};
