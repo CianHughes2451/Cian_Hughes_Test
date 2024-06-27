@@ -362,7 +362,9 @@ button[contenteditable="true"] {
 
 .coordinate-container {
     display: flex;
-    align-items: flex-start;
+    justify-content: center;
+    align-items: center; /* Ensures proper vertical alignment */
+    height: auto;
 }
 
 #confirmCoordinatesButton {
@@ -520,5 +522,41 @@ input:checked + .slider:before {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh; /* Ensure it takes full height of the viewport */
+    height: auto; /* Ensure it takes full height of the viewport */
+}
+
+.review-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 150px); /* Adjust height as needed */
+}
+
+#review-pitch {
+    background-color: #61d94f; /* Same color as other pitch */
+    border: 1px solid #000000; /* White border */
+}
+
+#summary-box {
+    position: absolute;
+    background-color: white;
+    border: 1px solid black;
+    padding: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+.toggle-container {
+    display: flex;
+    flex-direction: column;
+    margin-left: 20px;
+}
+
+.toggle-container h4 {
+    margin-bottom: 10px;
+}
+
+.toggle-container label {
+    margin-bottom: 10px;
+    font-size: 16px;
 }
