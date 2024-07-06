@@ -307,8 +307,8 @@
         <div id="mode-ball-lost" class="screen">
             <button class="return-button" onclick="returnToActionScreen()">Return to Action</button>
             <h3>Select Mode for Ball Lost</h3>
-            <button class="mode-button" aria-label="Select mode Forced" onclick="selectMode('Forced')">Forced</button>
-            <button class="mode-button" aria-label="Select mode Unforced" onclick="selectMode('Unforced')">Unforced</button>
+            <button class="mode-button" aria-label="Select mode Forced Error" onclick="selectMode('Forced Error')">Forced Error</button>
+            <button class="mode-button" aria-label="Select mode Unforced Error" onclick="selectMode('Unforced Error')">Unforced Error</button>
         </div>
 
         <!-- Mode screen for Foul -->
@@ -490,6 +490,10 @@
                 <label>
                     <input type="checkbox" id="toggle-forced-errors">
                     Forced Errors
+                </label>
+                <label>
+                    <input type="checkbox" id="toggle-turnovers">
+                    Turnovers Won
                 </label>
                 <label>
                     <input type="checkbox" id="toggle-own-kickouts">
