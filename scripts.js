@@ -768,15 +768,29 @@ const mapYReview = y => reviewCanvas.height - (y / 140) * reviewCanvas.height;
 
 let reviewMarkers = []; // Store marker positions
 
-const drawReviewMarker = (x, y, color, entry, actionType) => {
+const drawReviewMarker = (x, y, color, entry, actionType, markerType = 'circle') => {
     reviewCtx.beginPath();
-    reviewCtx.arc(mapX(x), mapYReview(y), 5, 0, Math.PI * 2);
-    reviewCtx.fillStyle = color;
-    reviewCtx.fill();
-    reviewCtx.strokeStyle = color;
-    reviewCtx.stroke();
-
-    reviewMarkers.push({ x, y, entry, color });
+    if (markerType === 'circle') {
+        reviewCtx.arc(mapX(x), mapYReview(y), 5, 0, Math.PI * 2);
+        reviewCtx.fillStyle = color;
+        reviewCtx.fill();
+    } else if (markerType === 'cross') {
+        reviewCtx.moveTo(mapX(x) - 5, mapYReview(y) - 5);
+        reviewCtx.lineTo(mapX(x) + 5, mapYReview(y) + 5);
+        reviewCtx.moveTo(mapX(x) + 5, mapYReview(y) - 5);
+        reviewCtx.lineTo(mapX(x) - 5, mapYReview(y) + 5);
+        reviewCtx.strokeStyle = color;
+        reviewCtx.stroke();
+    } else if (markerType === 'square') {
+        reviewCtx.rect(mapX(x) - 5, mapYReview(y) - 5, 10, 10);
+        reviewCtx.fillStyle = color;
+        reviewCtx.fill();
+    } else if (markerType === 'hollowCircle') {
+        reviewCtx.arc(mapX(x), mapYReview(y), 5, 0, Math.PI * 2);
+        reviewCtx.strokeStyle = color;
+        reviewCtx.stroke();
+    }
+    reviewMarkers.push({ x, y, entry, color, markerType });
 };
 
 const filterActions = () => {
@@ -787,6 +801,11 @@ const filterActions = () => {
     const showCarries = document.getElementById('toggle-carries').checked;
     const showUnforcedErrors = document.getElementById('toggle-unforced-errors').checked;
     const showForcedErrors = document.getElementById('toggle-forced-errors').checked;
+    const showOwnKickouts = document.getElementById('toggle-own-kickouts').checked;
+    const showOppKickouts = document.getElementById('toggle-opp-kickouts').checked;
+    const showPointAgainst = document.getElementById('toggle-point-against').checked;
+    const showGoalAgainst = document.getElementById('toggle-goal-against').checked;
+    const showMissAgainst = document.getElementById('toggle-miss-against').checked;
 
     // Clear the pitch and remove any existing markers
     drawReviewPitch();
@@ -832,6 +851,49 @@ const filterActions = () => {
         if (showForcedErrors && entry.action === 'Ball - Lost' && entry.mode === 'Forced') {
             drawReviewMarker(x1, y1, 'white', entry, 'Ball - Lost');
         }
+
+        if (showOwnKickouts && entry.action === 'Kickout - For') {
+            let color = 'white';
+            let markerType = 'cross';
+
+            if (['Won Clean', 'Won Break', 'Won Sideline', 'Won Foul'].includes(entry.mode)) {
+                color = 'white';
+                markerType = 'circle';
+
+                if (entry.definition === 'Not Contested') {
+                    markerType = 'square';
+                }
+            }
+
+            drawReviewMarker(x1, y1, color, entry, 'Kickout - For', markerType);
+        }
+
+        if (showOppKickouts && entry.action === 'Kickout - Against') {
+            let color = 'black';
+            let markerType = 'cross';
+
+            if (['Won Clean', 'Won Break', 'Won Sideline', 'Won Foul'].includes(entry.mode)) {
+                markerType = 'circle';
+
+                if (entry.definition === 'Not Contested') {
+                    markerType = 'square';
+                }
+            }
+
+            drawReviewMarker(x1, y1, color, entry, 'Kickout - Against', markerType);
+        }
+
+        if (showPointAgainst && entry.action === 'Point - Against') {
+            drawReviewMarker(x1, y1, 'blue', entry, 'Point - Against', 'hollowCircle');
+        }
+
+        if (showGoalAgainst && entry.action === 'Goal - Against') {
+            drawReviewMarker(x1, y1, 'green', entry, 'Goal - Against', 'hollowCircle');
+        }
+
+        if (showMissAgainst && entry.action === 'Miss - Against') {
+            drawReviewMarker(x1, y1, 'red', entry, 'Goal - Against', 'cross');
+        }
     });
 };
 
@@ -859,6 +921,7 @@ const handleCanvasClick = (e) => {
         showSummaryBox(e.clientX, e.clientY, clickedMarker.entry, clickedMarker.color);
         e.stopPropagation(); // Prevent click event from propagating
     }
+
 };
 
 function showSummaryBox(x, y, entry, color) {
@@ -958,8 +1021,51 @@ function showSummaryBox(x, y, entry, color) {
             <p><strong>Player:</strong> ${entry.player}</p>
             <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
         `;
-    }
-
+    } else if (entry.action === 'Kickout - For') {
+        summaryBox.innerHTML = `
+            <p><strong>Action:</strong> Kickout For</p>
+            <p><strong>Won/Lost:</strong> ${entry.mode}</p>
+            <p><strong>Contest:</strong> ${entry.definition}</p>
+            <p><strong>Pass To:</strong> ${entry.player}</p>
+            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
+        `;
+    } else if (entry.action === 'Kickout - For') {
+        summaryBox.innerHTML = `
+            <p><strong>Action:</strong> Kickout For</p>
+            <p><strong>Won/Lost:</strong> ${entry.mode}</p>
+            <p><strong>Contest:</strong> ${entry.definition}</p>
+            <p><strong>Pass To:</strong> ${entry.player}</p>
+            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
+        `;
+    } else if (entry.action === 'Kickout - Against') {
+        summaryBox.innerHTML = `
+            <p><strong>Action:</strong> Opp. Kickout</p>
+            <p><strong>Won/Lost:</strong> ${entry.mode}</p>
+            <p><strong>Contest:</strong> ${entry.definition}</p>
+            <p><strong>Pass To:</strong> ${entry.player}</p>
+            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
+        `;
+    } else if (entry.action === 'Point - Against') {
+        summaryBox.innerHTML = `
+            <p><strong>Action:</strong> Point Against</p>
+            <p><strong>Type:</strong> ${entry.mode}</p>
+            <p><strong>Player:</strong> ${entry.player}</p>
+            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
+        `;
+    } else if (entry.action === 'Goal - Against') {
+        summaryBox.innerHTML = `
+            <p><strong>Action:</strong> Goal Against</p>
+            <p><strong>Type:</strong> ${entry.mode}</p>
+            <p><strong>Player:</strong> ${entry.player}</p>
+            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
+        `;
+    } else if (entry.action === 'Miss - Against') {
+        summaryBox.innerHTML = `
+            <p><strong>Action:</strong> Miss Against</p>
+            <p><strong>Type:</strong> ${entry.mode}</p>
+            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
+        `;
+    }  
     document.body.appendChild(summaryBox);
 
     // Remove any existing event listener to prevent duplication
@@ -1012,6 +1118,11 @@ document.getElementById('toggle-kickpasses').addEventListener('change', filterAc
 document.getElementById('toggle-carries').addEventListener('change', filterActions);
 document.getElementById('toggle-unforced-errors').addEventListener('change', filterActions);
 document.getElementById('toggle-forced-errors').addEventListener('change', filterActions);
+document.getElementById('toggle-own-kickouts').addEventListener('change', filterActions);
+document.getElementById('toggle-opp-kickouts').addEventListener('change', filterActions);
+document.getElementById('toggle-point-against').addEventListener('change', filterActions);
+document.getElementById('toggle-goal-against').addEventListener('change', filterActions);
+document.getElementById('toggle-miss-against').addEventListener('change', filterActions);
 
 // Call filterActions on load to ensure markers are managed based on initial state
 filterActions();
