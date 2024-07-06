@@ -806,6 +806,7 @@ const filterActions = () => {
     const showPointAgainst = document.getElementById('toggle-point-against').checked;
     const showGoalAgainst = document.getElementById('toggle-goal-against').checked;
     const showMissAgainst = document.getElementById('toggle-miss-against').checked;
+    const showTurnovers = document.getElementById('toggle-turnovers').checked;
 
     // Clear the pitch and remove any existing markers
     drawReviewPitch();
@@ -820,11 +821,11 @@ const filterActions = () => {
             if (entry.action === 'Point - Score') {
                 drawReviewMarker(x1, y1, 'blue', entry, 'Point - Score');
             } else if (entry.action === 'Point - Miss') {
-                drawReviewMarker(x1, y1, 'red', entry, 'Point - Miss');
+                drawReviewMarker(x1, y1, 'blue', entry, 'Point - Miss', 'cross');
             } else if (entry.action === 'Goal - Score') {
                 drawReviewMarker(x1, y1, 'green', entry, 'Goal - Score');
             } else if (entry.action === 'Goal - Miss') {
-                drawReviewMarker(x1, y1, 'orange', entry, 'Goal - Miss');
+                drawReviewMarker(x1, y1, 'green', entry, 'Goal - Miss', 'cross');
             }
         }
 
@@ -844,12 +845,24 @@ const filterActions = () => {
             drawPassMarkersAndArrow(x1, y1, x2, y2, 'white', entry, 'Carry');
         }
 
-        if (showUnforcedErrors && entry.action === 'Ball - Lost' && entry.mode === 'Unforced') {
-            drawReviewMarker(x1, y1, 'pink', entry, 'Ball - Lost');
+        if (showUnforcedErrors && entry.action === 'Ball - Lost' && entry.mode === 'Unforced Error') {
+            drawReviewMarker(x1, y1, 'brown', entry, 'Ball - Lost', 'hollowCircle');
         }
 
-        if (showForcedErrors && entry.action === 'Ball - Lost' && entry.mode === 'Forced') {
-            drawReviewMarker(x1, y1, 'white', entry, 'Ball - Lost');
+        if (showForcedErrors && entry.action === 'Ball - Lost' && entry.mode === 'Forced Error') {
+            drawReviewMarker(x1, y1, 'brown', entry, 'Ball - Lost', 'square');
+        }
+
+        if (showTurnovers && entry.action === 'Ball - Won') {
+            let color = 'gold';
+            let markerType = 'square';
+
+            if (['Unforced'].includes(entry.mode)) {
+                color = 'gold';
+                markerType = 'circle';
+            }
+
+            drawReviewMarker(x1, y1, color, entry, 'Ball - Won', markerType);
         }
 
         if (showOwnKickouts && entry.action === 'Kickout - For') {
@@ -1005,7 +1018,7 @@ function showSummaryBox(x, y, entry, color) {
             <p style="font-size: small; margin-top: 10px;"><strong>Coords_1:</strong> (${coordX1}, ${coordY1})</p>
             <p style="font-size: small; margin-top: 10px;"><strong>Coords_2:</strong> (${coordX2}, ${coordY2})</p>
         `;
-    } else if (entry.action === 'Ball - Lost' && entry.mode === 'Unforced') {
+    } else if (entry.action === 'Ball - Lost' && entry.mode === 'Unforced Error') {
         summaryBox.innerHTML = `
             <p><strong>Action:</strong> Ball - Lost</p>
             <p><strong>Type:</strong> Unforced</p>
@@ -1013,7 +1026,7 @@ function showSummaryBox(x, y, entry, color) {
             <p><strong>Player:</strong> ${entry.player}</p>
             <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
         `;
-    } else if (entry.action === 'Ball - Lost' && entry.mode === 'Forced') {
+    } else if (entry.action === 'Ball - Lost' && entry.mode === 'Forced Error') {
         summaryBox.innerHTML = `
             <p><strong>Action:</strong> Ball - Lost</p>
             <p><strong>Type:</strong> Forced</p>
@@ -1021,12 +1034,12 @@ function showSummaryBox(x, y, entry, color) {
             <p><strong>Player:</strong> ${entry.player}</p>
             <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
         `;
-    } else if (entry.action === 'Kickout - For') {
+    } else if (entry.action === 'Ball - Won') {
         summaryBox.innerHTML = `
-            <p><strong>Action:</strong> Kickout For</p>
-            <p><strong>Won/Lost:</strong> ${entry.mode}</p>
-            <p><strong>Contest:</strong> ${entry.definition}</p>
-            <p><strong>Pass To:</strong> ${entry.player}</p>
+            <p><strong>Action:</strong> Ball - Won</p>
+            <p><strong>Type:</strong> ${entry.mode}</p>
+            <p><strong>How:</strong> ${entry.definition}</p>
+            <p><strong>Player:</strong> ${entry.player}</p>
             <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
         `;
     } else if (entry.action === 'Kickout - For') {
@@ -1123,6 +1136,7 @@ document.getElementById('toggle-opp-kickouts').addEventListener('change', filter
 document.getElementById('toggle-point-against').addEventListener('change', filterActions);
 document.getElementById('toggle-goal-against').addEventListener('change', filterActions);
 document.getElementById('toggle-miss-against').addEventListener('change', filterActions);
+document.getElementById('toggle-turnovers').addEventListener('change', filterActions);
 
 // Call filterActions on load to ensure markers are managed based on initial state
 filterActions();
