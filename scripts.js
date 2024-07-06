@@ -854,11 +854,11 @@ const filterActions = () => {
         }
 
         if (showTurnovers && entry.action === 'Ball - Won') {
-            let color = 'gold';
+            let color = 'yellow';
             let markerType = 'square';
 
             if (['Unforced'].includes(entry.mode)) {
-                color = 'gold';
+                color = 'yellow';
                 markerType = 'circle';
             }
 
