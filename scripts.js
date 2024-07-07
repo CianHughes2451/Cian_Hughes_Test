@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('action-buttons').classList.add('active');
     updateCounters();
     updatePlayerLabels(); // Ensure player labels are updated on page load
+    filterActions(); // Ensure initial filter is applied
 });
 
 function selectAction(action) {
@@ -290,10 +291,10 @@ function updateSummary() {
         const definitionCell = document.createElement('td');
         const playerCell = document.createElement('td');
         const player2Cell = document.createElement('td');
-        const x1Cell = document.createElement('td'); // New cell for X_1
-        const y1Cell = document.createElement('td'); // New cell for Y_1
-        const x2Cell = document.createElement('td'); // New cell for X_2
-        const y2Cell = document.createElement('td'); // New cell for Y_2
+        const x1Cell = document.createElement('td'); 
+        const y1Cell = document.createElement('td'); 
+        const x2Cell = document.createElement('td'); 
+        const y2Cell = document.createElement('td'); 
 
         actionCell.textContent = entry.action;
         modeCell.textContent = entry.mode;
@@ -318,10 +319,10 @@ function updateSummary() {
         row.appendChild(definitionCell);
         row.appendChild(playerCell);
         row.appendChild(player2Cell);
-        row.appendChild(x1Cell); // Append X_1 cell
-        row.appendChild(y1Cell); // Append Y_1 cell
-        row.appendChild(x2Cell); // Append X_2 cell
-        row.appendChild(y2Cell); // Append Y_2 cell
+        row.appendChild(x1Cell);
+        row.appendChild(y1Cell);
+        row.appendChild(x2Cell);
+        row.appendChild(y2Cell);
 
         const deleteButton = document.createElement('button');
         deleteButton.classList.add('delete-button');
@@ -344,6 +345,7 @@ function updateSummary() {
 function deleteEntry(index) {
     actionsLog.splice(index, 1);
     updateSummary();
+    filterActions();
 }
 
 function updateCounters() {
@@ -690,6 +692,107 @@ function exportSummaryToCSV() {
     document.body.removeChild(link);
 }
 
+document.getElementById('upload-csv-button').addEventListener('click', () => {
+    document.getElementById('upload-csv').click();
+});
+
+document.getElementById('upload-csv').addEventListener('change', handleCSVUpload);
+
+function handleCSVUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const text = e.target.result;
+            const rows = text.split('\n').map(row => row.split(','));
+
+            // Validate CSV header
+            const expectedHeaders = ['Action', 'Mode', 'Definition', 'Player', 'Player 2', 'X_1', 'Y_1', 'X_2', 'Y_2'];
+            const headers = rows[0].map(header => header.trim());
+            const isValid = expectedHeaders.every((header, index) => header === headers[index]);
+
+            if (!isValid) {
+                alert('Invalid CSV format. Please ensure the CSV has the correct headers.');
+                return;
+            }
+
+            // Append CSV data to actions log
+            const newEntries = rows.slice(1).filter(row => row.length === 9).map(row => ({
+                action: row[0].trim(),
+                mode: row[1].trim(),
+                definition: row[2].trim(),
+                player: row[3].trim(),
+                player2: row[4].trim(),
+                coordinates1: row[5] && row[6] ? `(${row[5].trim()}, ${row[6].trim()})` : '',
+                coordinates2: row[7] && row[8] ? `(${row[7].trim()}, ${row[8].trim()})` : ''
+            }));
+
+            actionsLog.push(...newEntries);
+
+            // Append CSV data to summary table
+            const summaryTableBody = document.getElementById('summary-table').querySelector('tbody');
+            newEntries.forEach(entry => {
+                const tr = document.createElement('tr');
+                const actionCell = document.createElement('td');
+                const modeCell = document.createElement('td');
+                const definitionCell = document.createElement('td');
+                const playerCell = document.createElement('td');
+                const player2Cell = document.createElement('td');
+                const x1Cell = document.createElement('td');
+                const y1Cell = document.createElement('td');
+                const x2Cell = document.createElement('td');
+                const y2Cell = document.createElement('td');
+
+                actionCell.textContent = entry.action;
+                modeCell.textContent = entry.mode;
+                definitionCell.textContent = entry.definition;
+                playerCell.textContent = entry.player;
+                player2Cell.textContent = entry.player2;
+
+                if (entry.coordinates1) {
+                    const [x1, y1] = entry.coordinates1.slice(1, -1).split(', ');
+                    x1Cell.textContent = x1;
+                    y1Cell.textContent = y1;
+                }
+
+                if (entry.coordinates2) {
+                    const [x2, y2] = entry.coordinates2.slice(1, -1).split(', ');
+                    x2Cell.textContent = x2;
+                    y2Cell.textContent = y2;
+                }
+
+                tr.appendChild(actionCell);
+                tr.appendChild(modeCell);
+                tr.appendChild(definitionCell);
+                tr.appendChild(playerCell);
+                tr.appendChild(player2Cell);
+                tr.appendChild(x1Cell);
+                tr.appendChild(y1Cell);
+                tr.appendChild(x2Cell);
+                tr.appendChild(y2Cell);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.classList.add('delete-button');
+                deleteButton.innerHTML = '&times;';
+                deleteButton.setAttribute('aria-label', 'Delete entry');
+                deleteButton.onclick = () => {
+                    if (confirm('Are you sure you want to delete this entry?')) {
+                        deleteEntry(Array.from(summaryTableBody.children).indexOf(tr));
+                    }
+                };
+                const deleteCell = document.createElement('td');
+                deleteCell.appendChild(deleteButton);
+                tr.appendChild(deleteCell);
+                summaryTableBody.appendChild(tr);
+            });
+
+            // Refresh review markers
+            filterActions();
+        };
+        reader.readAsText(file);
+    }
+}
+
 const reviewCanvas = document.getElementById('review-pitch');
 const reviewCtx = reviewCanvas.getContext('2d');
 
@@ -854,11 +957,11 @@ const filterActions = () => {
         }
 
         if (showTurnovers && entry.action === 'Ball - Won') {
-            let color = 'yellow';
+            let color = 'gold';
             let markerType = 'square';
 
             if (['Unforced'].includes(entry.mode)) {
-                color = 'yellow';
+                color = 'gold';
                 markerType = 'circle';
             }
 
