@@ -521,7 +521,11 @@
 
     <div id="summary" class="tab-content">
         <h2>Summary</h2>
-        <button id="export-button" class="export-button" onclick="exportSummaryToCSV()">Export Summary to CSV</button>
+        <button id="export-button" class="export-button" onclick="exportSummaryToCSV()">Export to CSV</button>
+        <div class="summary-controls" style="text-align: right;">
+            <input type="file" id="upload-csv" accept=".csv" style="display:none;">
+            <button id="upload-csv-button">Upload a CSV</button>
+        </div>
         <div id="summary-content">
             <table id="summary-table">
                 <thead>
