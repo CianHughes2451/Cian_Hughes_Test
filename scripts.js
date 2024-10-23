@@ -521,6 +521,12 @@ const drawPitch = () => {
     drawRotatedSemicircle(rotatedSemicircle);
     // Draw the clockwise rotated semicircle
     drawClockwiseRotatedSemicircle(clockwiseRotatedSemicircle);
+    // Arc at the bottom
+    const arcBottom = generateArcPoints(40, 0, 40, Math.atan2(21 - 0, 6 - 40), Math.atan2(21 - 0, 74 - 40), 100);
+    drawArc(arcBottom);
+    // Arc at the top
+    const arcTop = generateArcPoints(40, 140, 40, Math.atan2(119 - 140, 74 - 40), Math.atan2(119 - 140, 6 - 40), 100);
+    drawArc(arcTop);
 }
 
 function generateRotatedSemicircle(centerX, centerY, radius, points) {
@@ -568,6 +574,46 @@ function drawClockwiseRotatedSemicircle(semicircle) {
     });
     ctx.stroke();
 }
+
+// Function to generate arc points (helper function)
+const generateArcPoints = (centerX, centerY, radius, startAngle, endAngle, points) => {
+    const arcPoints = [];
+    const thetaStep = (endAngle - startAngle) / (points - 1);
+    
+    for (let i = 0; i < points; i++) {
+        const theta = startAngle + i * thetaStep;
+        const x = centerX + radius * Math.cos(theta);
+        const y = centerY + radius * Math.sin(theta);
+        arcPoints.push({ x, y });
+    }
+    return arcPoints;
+};
+
+// Function to draw arc on the canvas
+const drawArc = (arcPoints) => {
+    ctx.beginPath();
+    arcPoints.forEach((point, index) => {
+        if (index === 0) {
+            ctx.moveTo(mapX(point.x), mapY(point.y));
+        } else {
+            ctx.lineTo(mapX(point.x), mapY(point.y));
+        }
+    });
+    ctx.stroke();
+};
+
+// Similar logic to the drawPitch function
+const drawReviewArc = (arcPoints) => {
+    reviewCtx.beginPath();
+    arcPoints.forEach((point, index) => {
+        if (index === 0) {
+            reviewCtx.moveTo(mapX(point.x), mapYReview(point.y));
+        } else {
+            reviewCtx.lineTo(mapX(point.x), mapYReview(point.y));
+        }
+    });
+    reviewCtx.stroke();
+};
 
 // Draw the marker
 const drawMarker = (x, y, color) => {
@@ -839,6 +885,14 @@ const drawReviewPitch = () => {
 
     drawReviewRotatedSemicircle(rotatedSemicircle);
     drawReviewClockwiseRotatedSemicircle(clockwiseRotatedSemicircle);
+
+    // Arc at the bottom
+    const arcBottom = generateArcPoints(40, 0, 40, Math.atan2(21 - 0, 6 - 40), Math.atan2(21 - 0, 74 - 40), 100);
+    drawReviewArc(arcBottom);
+
+    // Arc at the top
+    const arcTop = generateArcPoints(40, 140, 40, Math.atan2(119 - 140, 74 - 40), Math.atan2(119 - 140, 6 - 40), 100);
+    drawReviewArc(arcTop);
 };
 
 const drawReviewRotatedSemicircle = (semicircle) => {
