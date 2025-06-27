@@ -31,7 +31,7 @@
             <button id="rename-team-2-button" contenteditable="true">Team 2</button>
         </div>
         <div class="row">
-            <button id="player-1-button" contenteditable="true">Player 1</button>
+            <button id="player-1-button" onclick="openEditPopup(1)">#1 - GK</button>
         </div>
         <div class="row">
             <button id="player-2-button" contenteditable="true">Player 2</button>
@@ -68,6 +68,18 @@
             </label>
         </div>
     </div>
+
+    <div id="player-edit-popup" class="popup" style="display:none;">
+    <div class="popup-content">
+        <label for="player-number-input">Number:</label>
+        <input type="number" id="player-number-input" min="1" max="99" />
+
+        <label for="player-name-input">Name:</label>
+        <input type="text" id="player-name-input" />
+
+        <button onclick="confirmPlayerEdit()">Confirm</button>
+    </div>
+</div>
     
     <!-- Stats Tab Content -->
     <div id="stats" class="tab-content active">
