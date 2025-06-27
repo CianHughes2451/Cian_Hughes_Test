@@ -1307,3 +1307,43 @@ const calculateDistance = (x1, y1, x2, y2) => {
     const dy = y2 - y1;
     return Math.sqrt(dx * dx + dy * dy).toFixed(2);
 };
+
+// Testing the changes to player 1 in home tab
+let editingPlayerId = null;
+
+playerNames[1] = "#1 - GK";
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('player-1-button').textContent = playerNames[1];
+});
+
+function openEditPopup(playerId) {
+    if (playerId !== 1) return;
+    editingPlayerId = playerId;
+
+    const label = playerNames[playerId];
+    const match = label.match(/^#(\d+) - (.+)$/);
+    if (match) {
+        document.getElementById('player-number-input').value = match[1];
+        document.getElementById('player-name-input').value = match[2];
+    }
+
+    document.getElementById('player-edit-popup').style.display = 'block';
+}
+
+function confirmPlayerEdit() {
+    const number = document.getElementById('player-number-input').value.trim();
+    const name = document.getElementById('player-name-input').value.trim();
+
+    if (number === '' || name === '') {
+        alert('Please enter both number and name.');
+        return;
+    }
+
+    const newLabel = `#${number} - ${name}`;
+    playerNames[editingPlayerId] = newLabel;
+
+    document.getElementById('player-1-button').textContent = newLabel;
+
+    updatePlayerLabels();
+    document.getElementById('player-edit-popup').style.display = 'none';
+}
