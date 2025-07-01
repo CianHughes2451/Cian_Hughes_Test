@@ -27,38 +27,35 @@
 
     <div id="home" class="tab-content">
         <div class="row">
-            <button id="rename-team-1-button" contenteditable="true">Team 1</button>
-            <button id="rename-team-2-button" contenteditable="true">Team 2</button>
+            <button id="rename-team-1-button" onclick="openTeamEditPopup(1)">Team 1</button>
+            <button id="rename-team-2-button" onclick="openTeamEditPopup(2)">Team 2</button>
         </div>
         <div class="row">
             <button id="player-1-button" onclick="openEditPopup(1)">#1 - GK</button>
         </div>
         <div class="row">
-            <button id="player-2-button" contenteditable="true">Player 2</button>
-            <button id="player-3-button" contenteditable="true">Player 3</button>
-            <button id="player-4-button" contenteditable="true">Player 4</button>
+            <button id="player-4-button" onclick="openEditPopup(4)">#4 - RCNB</button>
+            <button id="player-3-button" onclick="openEditPopup(3)">#3 - FB</button>
+            <button id="player-2-button" onclick="openEditPopup(2)">#2 - LCNB</button>
         </div>
         <div class="row">
-            <button id="player-5-button" contenteditable="true">Player 5</button>
-            <button id="player-6-button" contenteditable="true">Player 6</button>
-            <button id="player-7-button" contenteditable="true">Player 7</button>
+            <button id="player-7-button" onclick="openEditPopup(7)">#7 - RWB</button>
+            <button id="player-6-button" onclick="openEditPopup(6)">#6 - CTB</button>
+            <button id="player-5-button" onclick="openEditPopup(5)">#5 - LWB</button>
         </div>
         <div class="row">
-            <button id="player-8-button" contenteditable="true">Player 8</button>
-            <button id="player-9-button" contenteditable="true">Player 9</button>
+            <button id="player-9-button" onclick="openEditPopup(9)">#9 - MF</button>
+            <button id="player-8-button" onclick="openEditPopup(8)">#8 - MF</button>
         </div>
         <div class="row">
-            <button id="player-10-button" contenteditable="true">Player 10</button>
-            <button id="player-11-button" contenteditable="true">Player 11</button>
-            <button id="player-12-button" contenteditable="true">Player 12</button>
+            <button id="player-12-button" onclick="openEditPopup(12)">#12 - RWF</button>
+            <button id="player-11-button" onclick="openEditPopup(11)">#11 - CTF</button>
+            <button id="player-10-button" onclick="openEditPopup(10)">#10 - LWF</button>
         </div>
         <div class="row">
-            <button id="player-13-button" contenteditable="true">Player 13</button>
-            <button id="player-14-button" contenteditable="true">Player 14</button>
-            <button id="player-15-button" contenteditable="true">Player 15</button>
-        </div>
-        <div class="row">
-            <button id="confirm-changes-button" onclick="confirmChanges()">Confirm Changes</button>
+            <button id="player-15-button" onclick="openEditPopup(15)">#15 - RCNF</button>
+            <button id="player-14-button" onclick="openEditPopup(14)">#14 - FF</button>
+            <button id="player-13-button" onclick="openEditPopup(13)">#13 - LCNF</button>
         </div>
         <div class="row">
             <label for="toggle-coordinates" class="toggle-label">Toggle Coordinates:</label>
@@ -78,8 +75,21 @@
             <input type="text" id="player-name-input" />
 
             <button onclick="confirmPlayerEdit()">Confirm</button>
+            <button onclick="document.getElementById('player-edit-popup').style.display='none'">Cancel</button>
         </div>
     </div>
+
+    <div id="team-edit-popup" class="popup" style="display:none;">
+        <div class="popup-content">
+            <label for="team-name-input">Team Name:</label>
+            <input type="text" id="team-name-input" />
+
+            <button onclick="confirmTeamEdit()">Confirm</button>
+            <button onclick="document.getElementById('team-edit-popup').style.display='none'">Cancel</button>
+        </div>
+    </div>
+
+
         <!-- Stats Tab Content -->
     <div id="stats" class="tab-content active">
         <div id="action-buttons" class="screen active">
@@ -127,30 +137,30 @@
             <button class="return-button" onclick="returnToActionScreen()">Return to Actions</button>
             <h3>Select Player</h3>
             <div class="player-button-container">
-                <button class="player-button" onclick="selectPlayer(1)">Player 1</button>
+                <button class="player-button" onclick="selectPlayer(1)" aria-label="Select Player 1">#1 - GK</button>
                 <div class="player-row">
-                    <button class="player-button" onclick="selectPlayer(2)">Player 2</button>
-                    <button class="player-button" onclick="selectPlayer(3)">Player 3</button>
-                    <button class="player-button" onclick="selectPlayer(4)">Player 4</button>
+                <button class="player-button" onclick="selectPlayer(4)" aria-label="Select Player 4">#4 - RCNB</button>
+                <button class="player-button" onclick="selectPlayer(3)" aria-label="Select Player 3">#3 - FB</button>
+                <button class="player-button" onclick="selectPlayer(2)" aria-label="Select Player 2">#2 - LCNB</button>
                 </div>
                 <div class="player-row">
-                    <button class="player-button" onclick="selectPlayer(5)">Player 5</button>
-                    <button class="player-button" onclick="selectPlayer(6)">Player 6</button>
-                    <button class="player-button" onclick="selectPlayer(7)">Player 7</button>
+                <button class="player-button" onclick="selectPlayer(7)" aria-label="Select Player 7">#7 - RWB</button>
+                <button class="player-button" onclick="selectPlayer(6)" aria-label="Select Player 6">#6 - CTB</button>
+                <button class="player-button" onclick="selectPlayer(5)" aria-label="Select Player 5">#5 - LWB</button>
                 </div>
                 <div class="player-row">
-                    <button class="player-button" onclick="selectPlayer(8)">Player 8</button>
-                    <button class="player-button" onclick="selectPlayer(9)">Player 9</button>
+                <button class="player-button" onclick="selectPlayer(9)" aria-label="Select Player 9">#9 - MF</button>
+                <button class="player-button" onclick="selectPlayer(8)" aria-label="Select Player 8">#8 - MF</button>
                 </div>
                 <div class="player-row">
-                    <button class="player-button" onclick="selectPlayer(10)">Player 10</button>
-                    <button class="player-button" onclick="selectPlayer(11)">Player 11</button>
-                    <button class="player-button" onclick="selectPlayer(12)">Player 12</button>
+                <button class="player-button" onclick="selectPlayer(12)" aria-label="Select Player 12">#12 - RWF</button>
+                <button class="player-button" onclick="selectPlayer(11)" aria-label="Select Player 11">#11 - CTF</button>
+                <button class="player-button" onclick="selectPlayer(10)" aria-label="Select Player 10">#10 - LWF</button>
                 </div>
                 <div class="player-row">
-                    <button class="player-button" onclick="selectPlayer(13)">Player 13</button>
-                    <button class="player-button" onclick="selectPlayer(14)">Player 14</button>
-                    <button class="player-button" onclick="selectPlayer(15)">Player 15</button>
+                <button class="player-button" onclick="selectPlayer(15)" aria-label="Select Player 15">#15 - RCNF</button>
+                <button class="player-button" onclick="selectPlayer(14)" aria-label="Select Player 14">#14 - FF</button>
+                <button class="player-button" onclick="selectPlayer(13)" aria-label="Select Player 13">#13 - LCNF</button>
                 </div>
             </div>
         </div>
@@ -160,30 +170,30 @@
             <button class="return-button" onclick="returnToFirstPlayerScreen()">Return to First Player</button>
             <h3>Select Receiver</h3>
             <div class="player-button-container">
-                <button class="player-button" onclick="selectSecondPlayer(1)">Player 1</button>
+                <button class="player-button" onclick="selectSecondPlayer(1)" aria-label="Select Receiver 1">#1 - GK</button>
                 <div class="player-row">
-                    <button class="player-button" onclick="selectSecondPlayer(2)">Player 2</button>
-                    <button class="player-button" onclick="selectSecondPlayer(3)">Player 3</button>
-                    <button class="player-button" onclick="selectSecondPlayer(4)">Player 4</button>
+                    <button class="player-button" onclick="selectSecondPlayer(4)" aria-label="Select Receiver 4">#4 - RCNB</button>
+                    <button class="player-button" onclick="selectSecondPlayer(3)" aria-label="Select Receiver 3">#3 - FB</button>
+                    <button class="player-button" onclick="selectSecondPlayer(2)" aria-label="Select Receiver 2">#2 - LCNB</button>
                 </div>
                 <div class="player-row">
-                    <button class="player-button" onclick="selectSecondPlayer(5)">Player 5</button>
-                    <button class="player-button" onclick="selectSecondPlayer(6)">Player 6</button>
-                    <button class="player-button" onclick="selectSecondPlayer(7)">Player 7</button>
+                    <button class="player-button" onclick="selectSecondPlayer(7)" aria-label="Select Receiver 7">#7 - RWB</button>
+                    <button class="player-button" onclick="selectSecondPlayer(6)" aria-label="Select Receiver 6">#6 - CTB</button>
+                    <button class="player-button" onclick="selectSecondPlayer(5)" aria-label="Select Receiver 5">#5 - LWB</button>
                 </div>
                 <div class="player-row">
-                    <button class="player-button" onclick="selectSecondPlayer(8)">Player 8</button>
-                    <button class="player-button" onclick="selectSecondPlayer(9)">Player 9</button>
+                    <button class="player-button" onclick="selectSecondPlayer(9)" aria-label="Select Receiver 9">#9 - MF</button>
+                    <button class="player-button" onclick="selectSecondPlayer(8)" aria-label="Select Receiver 8">#8 - MF</button>
                 </div>
                 <div class="player-row">
-                    <button class="player-button" onclick="selectSecondPlayer(10)">Player 10</button>
-                    <button class="player-button" onclick="selectSecondPlayer(11)">Player 11</button>
-                    <button class="player-button" onclick="selectSecondPlayer(12)">Player 12</button>
+                    <button class="player-button" onclick="selectSecondPlayer(12)" aria-label="Select Receiver 12">#12 - RWF</button>
+                    <button class="player-button" onclick="selectSecondPlayer(11)" aria-label="Select Receiver 11">#11 - CTF</button>
+                    <button class="player-button" onclick="selectSecondPlayer(10)" aria-label="Select Receiver 10">#10 - LWF</button>
                 </div>
                 <div class="player-row">
-                    <button class="player-button" onclick="selectSecondPlayer(13)">Player 13</button>
-                    <button class="player-button" onclick="selectSecondPlayer(14)">Player 14</button>
-                    <button class="player-button" onclick="selectSecondPlayer(15)">Player 15</button>
+                    <button class="player-button" onclick="selectSecondPlayer(15)" aria-label="Select Receiver 15">#15 - RCNF</button>
+                    <button class="player-button" onclick="selectSecondPlayer(14)" aria-label="Select Receiver 14">#13 - FF</button>
+                    <button class="player-button" onclick="selectSecondPlayer(13)" aria-label="Select Receiver 13">#13 - LCNF</button>
                 </div>
             </div>
         </div>
