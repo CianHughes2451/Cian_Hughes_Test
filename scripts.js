@@ -15,21 +15,21 @@ let marker2 = { x: null, y: null };
 let firstMarkerConfirmed = false;
 
 let playerNames = {
-    1: 'Player 1',
-    2: 'Player 2',
-    3: 'Player 3',
-    4: 'Player 4',
-    5: 'Player 5',
-    6: 'Player 6',
-    7: 'Player 7',
-    8: 'Player 8',
-    9: 'Player 9',
-    10: 'Player 10',
-    11: 'Player 11',
-    12: 'Player 12',
-    13: 'Player 13',
-    14: 'Player 14',
-    15: 'Player 15'
+    1: '#1 - GK',
+    2: '#2 - LCNB',
+    3: '#3 - FB',
+    4: '#4 - RCNB',
+    5: '#5 - LWB',
+    6: '#6 - CTB',
+    7: '#7 - RWB',
+    8: '#8 - MF',
+    9: '#9 - MF',
+    10: '#10 - LWF',
+    11: '#11 - CTF',
+    12: '#12 - RWF',
+    13: '#13 - LCNF',
+    14: '#14 - FF',
+    15: '#15 - RCNF'
 };
 
 let coordinatesEnabled = false;
@@ -37,11 +37,14 @@ let coordinatesEnabled = false;
 let currentCoordinates1 = '';
 let currentCoordinates2 = '';
 
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('action-buttons').classList.add('active');
+let isDragging = false; // Tracks whether a drag is in progress
+let dragSourceIndex = null; // The player being dragged
+
+document.addEventListener('DOMContentLoaded', function () {
     updateCounters();
-    updatePlayerLabels(); // Ensure player labels are updated on page load
-    filterActions(); // Ensure initial filter is applied
+    updatePlayerLabels();
+    addDragAndTouchEventsToPlayerButtons(); // <--- New line to enable drag-and-drop
+    filterActions();
 });
 
 function selectAction(action) {
@@ -413,13 +416,17 @@ function renameTeam(team) {
 
 function updatePlayerLabels() {
     for (let i = 1; i <= 15; i++) {
+        // Update Home tab
+        const homeBtn = document.getElementById(`player-${i}-button`);
+        if (homeBtn) homeBtn.textContent = playerNames[i];
+
+        // Update player selection screens
         document.querySelectorAll(`.player-button[aria-label="Select Player ${i}"]`).forEach(button => {
             button.textContent = playerNames[i];
         });
         document.querySelectorAll(`.player-button[aria-label="Select Receiver ${i}"]`).forEach(button => {
             button.textContent = playerNames[i];
         });
-        document.getElementById(`player-${i}-button`).textContent = playerNames[i]; // Update home screen buttons
     }
 }
 
@@ -1308,25 +1315,14 @@ const calculateDistance = (x1, y1, x2, y2) => {
     return Math.sqrt(dx * dx + dy * dy).toFixed(2);
 };
 
-// Testing the changes to player 1 in home tab
+// Allowing dynamic changes to player names
 let editingPlayerId = null;
 
-playerNames[1] = "#1 - GK";
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('player-1-button').textContent = playerNames[1];
-});
-
-function openEditPopup(playerId) {
-    if (playerId !== 1) return;
-    editingPlayerId = playerId;
-
-    const label = playerNames[playerId];
-    const match = label.match(/^#(\d+) - (.+)$/);
-    if (match) {
-        document.getElementById('player-number-input').value = match[1];
-        document.getElementById('player-name-input').value = match[2];
-    }
-
+function openEditPopup(playerIndex) {
+    editingPlayerIndex = playerIndex;
+    const [number, ...nameParts] = playerNames[playerIndex].split(' - ');
+    document.getElementById('player-number-input').value = number.replace('#', '');
+    document.getElementById('player-name-input').value = nameParts.join(' ').trim();
     document.getElementById('player-edit-popup').style.display = 'block';
 }
 
@@ -1334,16 +1330,134 @@ function confirmPlayerEdit() {
     const number = document.getElementById('player-number-input').value.trim();
     const name = document.getElementById('player-name-input').value.trim();
 
-    if (number === '' || name === '') {
+    if (!number || !name) {
         alert('Please enter both number and name.');
         return;
     }
 
-    const newLabel = `#${number} - ${name}`;
-    playerNames[editingPlayerId] = newLabel;
+    const formattedName = `#${number} - ${name}`;
+    playerNames[editingPlayerIndex] = formattedName;
 
-    document.getElementById('player-1-button').textContent = newLabel;
+    // Update home screen
+    document.getElementById(`player-${editingPlayerIndex}-button`).textContent = formattedName;
 
+    // Update Stats player screens
     updatePlayerLabels();
+
     document.getElementById('player-edit-popup').style.display = 'none';
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === "Escape") {
+        document.getElementById('player-edit-popup').style.display = 'none';
+    }
+});
+
+let editingTeamIndex = null;
+
+function openTeamEditPopup(teamIndex) {
+    editingTeamIndex = teamIndex;
+    const button = document.getElementById(`rename-team-${teamIndex}-button`);
+    document.getElementById('team-name-input').value = button.textContent.trim();
+    document.getElementById('team-edit-popup').style.display = 'block';
+}
+
+function confirmTeamEdit() {
+    const newName = document.getElementById('team-name-input').value.trim();
+    if (newName === '') {
+        alert('Please enter a valid team name.');
+        return;
+    }
+
+    // Update home tab button
+    document.getElementById(`rename-team-${editingTeamIndex}-button`).textContent = newName;
+
+    // Update scoreboard label (counter area)
+    document.querySelectorAll('.counter-container .team-name')[editingTeamIndex - 1].textContent = `${newName}:`;
+
+    // Hide popup
+    document.getElementById('team-edit-popup').style.display = 'none';
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === "Escape") {
+        document.getElementById('team-edit-popup').style.display = 'none';
+    }
+});
+
+// Code for drag and drop feature
+function addDragAndTouchEventsToPlayerButtons() {
+    for (let i = 1; i <= 15; i++) {
+        const button = document.getElementById(`player-${i}-button`);
+        if (!button) continue;
+
+        // Desktop drag support
+        button.setAttribute('draggable', 'true');
+        button.addEventListener('dragstart', handleDragStart);
+        button.addEventListener('dragover', handleDragOver);
+        button.addEventListener('drop', handleDrop);
+
+        // Mobile touch support
+        button.addEventListener('touchstart', handleTouchStart, { passive: false });
+        button.addEventListener('touchmove', handleTouchMove, { passive: false });
+        button.addEventListener('touchend', handleTouchEnd);
+    }
+}
+
+// --- Desktop Drag Events ---
+function handleDragStart(e) {
+    isDragging = true;
+    dragSourceIndex = parseInt(e.target.id.split('-')[1]);
+    e.dataTransfer.setData('text/plain', dragSourceIndex); // Needed for Firefox
+}
+
+function handleDragOver(e) {
+    e.preventDefault(); // Necessary to allow dropping
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    const targetIndex = parseInt(e.target.id.split('-')[1]);
+    const sourceIndex = parseInt(e.dataTransfer.getData('text/plain'));
+
+    if (sourceIndex !== targetIndex) {
+        swapPlayerNames(sourceIndex, targetIndex);
+    }
+    isDragging = false;
+}
+
+// --- Mobile Touch Events ---
+let touchStartIndex = null;
+function handleTouchStart(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (element && element.id.startsWith('player-') && element.id.endsWith('-button')) {
+        touchStartIndex = parseInt(element.id.split('-')[1]);
+    }
+}
+
+function handleTouchMove(e) {
+    e.preventDefault();
+}
+
+function handleTouchEnd(e) {
+    const touch = e.changedTouches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (element && element.id.startsWith('player-') && element.id.endsWith('-button')) {
+        const touchEndIndex = parseInt(element.id.split('-')[1]);
+        if (touchStartIndex !== null && touchEndIndex !== null && touchStartIndex !== touchEndIndex) {
+            swapPlayerNames(touchStartIndex, touchEndIndex);
+        }
+    }
+    touchStartIndex = null;
+}
+
+// --- Swap Function ---
+function swapPlayerNames(index1, index2) {
+    const temp = playerNames[index1];
+    playerNames[index1] = playerNames[index2];
+    playerNames[index2] = temp;
+
+    updatePlayerLabels(); // Refresh all labels across app
 }
