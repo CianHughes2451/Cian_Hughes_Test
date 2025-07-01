@@ -42,7 +42,7 @@ let dragSourceIndex = null; // The player being dragged
 
 let touchStartTime = 0; // Used to detect tap vs long-press
 let touchStartIndex = null;
-const TOUCH_HOLD_THRESHOLD = 300; // ms to distinguish tap vs hold
+const TOUCH_HOLD_THRESHOLD = 500; // ms to distinguish tap vs hold
 
 document.addEventListener('DOMContentLoaded', function () {
     updateCounters();
