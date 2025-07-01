@@ -40,14 +40,16 @@ let currentCoordinates2 = '';
 let isDragging = false; // Tracks whether a drag is in progress
 let dragSourceIndex = null; // The player being dragged
 
-let touchStartTime = 0; // Used to detect tap vs long-press
+let touchStartTime = 0; // Used to detect tap vs drag
 let touchStartIndex = null;
-const TOUCH_HOLD_THRESHOLD = 800; // ms to distinguish tap vs hold
+let touchStartX = 0;
+let touchStartY = 0;
+const MOVE_THRESHOLD = 10; // pixels to distinguish drag from tap
 
 document.addEventListener('DOMContentLoaded', function () {
     updateCounters();
     updatePlayerLabels();
-    addDragAndTouchEventsToPlayerButtons(); // <--- New line to enable drag-and-drop
+    addDragAndTouchEventsToPlayerButtons(); // <--- Enable drag-and-drop and touch
     filterActions();
 });
 
@@ -1436,8 +1438,9 @@ function handleTouchStart(e) {
     const touch = e.touches[0];
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
     if (element && element.id.startsWith('player-') && element.id.endsWith('-button')) {
-        touchStartTime = Date.now();
         touchStartIndex = parseInt(element.id.split('-')[1]);
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
     }
 }
 
@@ -1446,26 +1449,31 @@ function handleTouchMove(e) {
 }
 
 function handleTouchEnd(e) {
-    const touchEndTime = Date.now();
-    const duration = touchEndTime - touchStartTime;
-
     const touch = e.changedTouches[0];
-    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    const endX = touch.clientX;
+    const endY = touch.clientY;
+
+    const movedX = Math.abs(endX - touchStartX);
+    const movedY = Math.abs(endY - touchStartY);
+
+    const element = document.elementFromPoint(endX, endY);
     if (element && element.id.startsWith('player-') && element.id.endsWith('-button')) {
         const touchEndIndex = parseInt(element.id.split('-')[1]);
 
-        if (duration < TOUCH_HOLD_THRESHOLD) {
-            // Short tap: treat as a click
-            openEditPopup(touchEndIndex);
-        } else {
-            // Long press: treat as drag and drop
-            if (touchStartIndex !== null && touchStartIndex !== touchEndIndex) {
+        if (movedX > MOVE_THRESHOLD || movedY > MOVE_THRESHOLD) {
+            // Treated as drag and drop
+            if (touchStartIndex !== null && touchEndIndex !== null && touchStartIndex !== touchEndIndex) {
                 swapPlayerNames(touchStartIndex, touchEndIndex);
             }
+        } else {
+            // Treated as tap
+            openEditPopup(touchEndIndex);
         }
     }
+
     touchStartIndex = null;
-    touchStartTime = 0;
+    touchStartX = 0;
+    touchStartY = 0;
 }
 
 // --- Swap Function ---
