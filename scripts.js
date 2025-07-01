@@ -44,7 +44,7 @@ let touchStartTime = 0; // Used to detect tap vs drag
 let touchStartIndex = null;
 let touchStartX = 0;
 let touchStartY = 0;
-const MOVE_THRESHOLD = 10; // pixels to distinguish drag from tap
+const MOVE_THRESHOLD = 5; // pixels to distinguish drag from tap
 
 document.addEventListener('DOMContentLoaded', function () {
     updateCounters();
