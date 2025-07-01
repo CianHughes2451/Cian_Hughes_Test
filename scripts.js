@@ -40,6 +40,10 @@ let currentCoordinates2 = '';
 let isDragging = false; // Tracks whether a drag is in progress
 let dragSourceIndex = null; // The player being dragged
 
+let touchStartTime = 0; // Used to detect tap vs long-press
+let touchStartIndex = null;
+const TOUCH_HOLD_THRESHOLD = 300; // ms to distinguish tap vs hold
+
 document.addEventListener('DOMContentLoaded', function () {
     updateCounters();
     updatePlayerLabels();
@@ -1427,12 +1431,12 @@ function handleDrop(e) {
 }
 
 // --- Mobile Touch Events ---
-let touchStartIndex = null;
 function handleTouchStart(e) {
     e.preventDefault();
     const touch = e.touches[0];
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
     if (element && element.id.startsWith('player-') && element.id.endsWith('-button')) {
+        touchStartTime = Date.now();
         touchStartIndex = parseInt(element.id.split('-')[1]);
     }
 }
@@ -1442,15 +1446,26 @@ function handleTouchMove(e) {
 }
 
 function handleTouchEnd(e) {
+    const touchEndTime = Date.now();
+    const duration = touchEndTime - touchStartTime;
+
     const touch = e.changedTouches[0];
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
     if (element && element.id.startsWith('player-') && element.id.endsWith('-button')) {
         const touchEndIndex = parseInt(element.id.split('-')[1]);
-        if (touchStartIndex !== null && touchEndIndex !== null && touchStartIndex !== touchEndIndex) {
-            swapPlayerNames(touchStartIndex, touchEndIndex);
+
+        if (duration < TOUCH_HOLD_THRESHOLD) {
+            // Short tap: treat as a click
+            openEditPopup(touchEndIndex);
+        } else {
+            // Long press: treat as drag and drop
+            if (touchStartIndex !== null && touchStartIndex !== touchEndIndex) {
+                swapPlayerNames(touchStartIndex, touchEndIndex);
+            }
         }
     }
     touchStartIndex = null;
+    touchStartTime = 0;
 }
 
 // --- Swap Function ---
