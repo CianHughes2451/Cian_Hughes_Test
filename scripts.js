@@ -44,13 +44,22 @@ let touchStartTime = 0; // Used to detect tap vs drag
 let touchStartIndex = null;
 let touchStartX = 0;
 let touchStartY = 0;
-const MOVE_THRESHOLD = 5; // pixels to distinguish drag from tap
+const MOVE_THRESHOLD = 10; // pixels to distinguish drag from tap
+
+let currentNoteRowIndex = null;
 
 document.addEventListener('DOMContentLoaded', function () {
     updateCounters();
     updatePlayerLabels();
     addDragAndTouchEventsToPlayerButtons(); // <--- Enable drag-and-drop and touch
     filterActions();
+});
+
+document.addEventListener('click', (e) => {
+    const popup = document.getElementById('row-options-popup');
+    if (!popup.contains(e.target)) {
+        hideRowOptionsMenu();
+    }
 });
 
 function selectAction(action) {
@@ -60,10 +69,10 @@ function selectAction(action) {
     firstMarkerConfirmed = false; // Reset the marker confirmation for every action
     const actionScreenMap = {
         'Point - Score': 'mode-point-score',
+        '2-Point - Score': 'mode-2-point-score',
         'Point - Miss': 'mode-point-miss',
         'Goal - Score': 'mode-goal-score',
         'Goal - Miss': 'mode-goal-miss',
-        '45 Entry': 'mode-45-entry', // Added new action
         'Free Won': 'mode-free-won',
         'Ball - Won': 'mode-ball-won',
         'Ball - Lost': 'mode-ball-lost',
@@ -72,7 +81,7 @@ function selectAction(action) {
         'Miss - Against': 'mode-miss-against',
         'Kickout - For': 'mode-kickout-for',
         'Kickout - Against': 'mode-kickout-against',
-        'Shot - Saved': 'mode-shot-saved',
+        '2-Point - Against': 'mode-2-point-against',
         'Foul': 'mode-foul',
         'Carry': 'mode-carry'
     };
@@ -96,32 +105,12 @@ function selectMode(mode) {
         'Kickout - Against': 'definition-kickout-against',
         'Ball - Won': 'definition-ball-won',
         'Ball - Lost': 'definition-ball-lost',
-        'Foul': 'definition-foul'
+        'Foul': 'definition-foul',
+        'Miss - Against': 'definition-miss-against'
     };
 
-    if (currentAction === '45 Entry') {
-        logAction(); // Directly log the action for 45 Entry
-    } else if (currentAction === 'Point - Against' || currentAction === 'Goal - Against') {
-        if (mode === 'Mistake') {
-            if (coordinatesEnabled) {
-                switchScreen('coordinate-screen'); // Go to coordinate screen for Mistake
-            } else {
-                switchScreen('player-buttons');
-            }
-        } else {
-            if (coordinatesEnabled) {
-                switchScreen('coordinate-screen'); // Go to coordinate screen for No Mistake
-            } else {
-                logAction(); // Log action directly for No Mistake
-            }
-        }
-    } else if (currentAction === 'Miss - Against') {
-        if (coordinatesEnabled) {
-            switchScreen('coordinate-screen'); // Go to coordinate screen for Miss - Against
-        } else {
-            logAction(); // Log action directly for Miss - Against
-        }
-    } else if (currentAction === 'Carry') {
+    
+    if (currentAction === 'Carry') {
         if (coordinatesEnabled) {
             switchScreen('coordinate-screen'); // Go to coordinate screen for Carry after mode screen
         } else {
@@ -129,7 +118,7 @@ function selectMode(mode) {
         }
     } else if (actionDefinitionMap[currentAction]) {
         switchScreen(actionDefinitionMap[currentAction]);
-    } else if (coordinatesEnabled && (currentAction === 'Point - Score' || currentAction === 'Goal - Score' || currentAction === '45 Entry')) {
+    } else if (coordinatesEnabled && (currentAction === 'Point - Score' || currentAction === 'Goal - Score' || currentAction === 'Point - Against' || currentAction === 'Goal - Against' || currentAction === 'Miss - Against')) {
         switchScreen('coordinate-screen'); // Go to coordinate screen for specified actions
     } else {
         switchScreen('player-buttons');
@@ -139,7 +128,7 @@ function selectMode(mode) {
 function selectDefinition(definition) {
     currentDefinition = definition;
 
-    if (coordinatesEnabled && (currentAction === 'Point - Miss' || currentAction === 'Goal - Miss' || currentAction === 'Ball - Won' || currentAction === 'Ball - Lost' || currentAction === 'Kickout - For' || currentAction === 'Kickout - Against' || currentAction === 'Free Won')) {
+    if (coordinatesEnabled && (currentAction === 'Point - Miss' || currentAction === '2-Point - Score' || currentAction === 'Goal - Miss' || currentAction === 'Ball - Won' || currentAction === 'Ball - Lost' || currentAction === 'Kickout - For' || currentAction === 'Kickout - Against' || currentAction === 'Free Won' || currentAction === '2-Point - Against' || currentAction === 'Miss - Against')) {
         switchScreen('coordinate-screen'); // Go to coordinate screen for specified actions after definition screen
     } else {
         switchScreen('player-buttons');
@@ -176,10 +165,14 @@ function logAction() {
 
     if (currentAction === 'Point - Score') {
         team1Points++;
+    } else if (currentAction === '2-Point - Score') {
+        team1Points += 2;
     } else if (currentAction === 'Goal - Score') {
         team1Goals++;
     } else if (currentAction === 'Point - Against') {
         team2Points++;
+    } else if (currentAction === '2-Point - Against') {
+        team2Points += 2;
     } else if (currentAction === 'Goal - Against') {
         team2Goals++;
     }
@@ -263,7 +256,7 @@ function returnToModeScreen() {
         'Miss - Against': 'mode-miss-against',
         'Kickout - For': 'mode-kickout-for',
         'Kickout - Against': 'mode-kickout-against',
-        'Shot - Saved': 'mode-shot-saved'
+        '2-Point - Against': 'mode-2-point-against'
     };
 
     if (actionModeMap[currentAction]) {
@@ -289,72 +282,126 @@ function switchScreen(screenId) {
 }
 
 function updateSummary() {
-    const summaryTableBody = document.getElementById('summary-table').querySelector('tbody');
-    summaryTableBody.innerHTML = '';
+    const summaryTable = document.getElementById('summary-table');
+    const summaryTableBody = summaryTable.querySelector('tbody');
+    const summaryTableHead = summaryTable.querySelector('thead');
 
+    // Clear existing content
+    summaryTableBody.innerHTML = '';
+    summaryTableHead.innerHTML = '';
+
+    // === Step 1: Always define Note 1-5 headers ===
+    const headers = ['Action', 'Mode', 'Definition', 'Player', 'Player 2', 'X_1', 'Y_1', 'X_2', 'Y_2'];
+    for (let i = 1; i <= 5; i++) {
+        headers.push(`Note ${i}`);
+    }
+
+    const headerRow = document.createElement('tr');
+    headers.forEach((headerText, idx) => {
+        const th = document.createElement('th');
+        th.textContent = headerText;
+        if (headerText.startsWith('Note')) {
+            th.classList.add('note-column', 'hidden-column');
+            th.classList.add(`note-header-${idx - 9 + 1}`); // header for Note 1–5
+        }
+        headerRow.appendChild(th);
+    });
+    summaryTableHead.appendChild(headerRow);
+
+    // Track visible note usage
+    const visibleNotes = [false, false, false, false, false];
+
+    // === Step 2: Populate each row
     actionsLog.forEach((entry, index) => {
         const row = document.createElement('tr');
+        row.classList.add('summary-row');
+        row.dataset.index = index;
 
-        const actionCell = document.createElement('td');
-        const modeCell = document.createElement('td');
-        const definitionCell = document.createElement('td');
-        const playerCell = document.createElement('td');
-        const player2Cell = document.createElement('td');
-        const x1Cell = document.createElement('td'); 
-        const y1Cell = document.createElement('td'); 
-        const x2Cell = document.createElement('td'); 
-        const y2Cell = document.createElement('td'); 
+        const cells = [
+            entry.action,
+            entry.mode,
+            entry.definition,
+            entry.player,
+            entry.player2,
+            ...(entry.coordinates1 ? entry.coordinates1.slice(1, -1).split(', ') : ['', '']),
+            ...(entry.coordinates2 ? entry.coordinates2.slice(1, -1).split(', ') : ['', ''])
+        ];
 
-        actionCell.textContent = entry.action;
-        modeCell.textContent = entry.mode;
-        definitionCell.textContent = entry.definition;
-        playerCell.textContent = entry.player;
-        player2Cell.textContent = entry.player2;
-        
-        if (entry.coordinates1) {
-            const [x1, y1] = entry.coordinates1.slice(1, -1).split(', ');
-            x1Cell.textContent = x1;
-            y1Cell.textContent = y1;
+        cells.forEach(text => {
+            const td = document.createElement('td');
+            td.textContent = text;
+            row.appendChild(td);
+        });
+
+        const noteList = entry.notes || [];
+        for (let i = 0; i < 5; i++) {
+            const td = document.createElement('td');
+            td.textContent = noteList[i] || '';
+            td.classList.add('note-column', `note-${i + 1}`);
+            if (!noteList[i]) td.classList.add('hidden-column');
+            else visibleNotes[i] = true;
+            row.appendChild(td);
         }
-        
-        if (entry.coordinates2) {
-            const [x2, y2] = entry.coordinates2.slice(1, -1).split(', ');
-            x2Cell.textContent = x2;
-            y2Cell.textContent = y2;
-        }
 
-        row.appendChild(actionCell);
-        row.appendChild(modeCell);
-        row.appendChild(definitionCell);
-        row.appendChild(playerCell);
-        row.appendChild(player2Cell);
-        row.appendChild(x1Cell);
-        row.appendChild(y1Cell);
-        row.appendChild(x2Cell);
-        row.appendChild(y2Cell);
-
-        const deleteButton = document.createElement('button');
-        deleteButton.classList.add('delete-button');
-        deleteButton.innerHTML = '&times;';
-        deleteButton.setAttribute('aria-label', 'Delete entry');
-        deleteButton.onclick = () => {
-            if (confirm('Are you sure you want to delete this entry?')) {
-                deleteEntry(index);
-            }
-        };
-
-        const deleteCell = document.createElement('td');
-        deleteCell.appendChild(deleteButton);
-        row.appendChild(deleteCell);
+        row.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showRowOptionsMenu(e.currentTarget, index);
+        });
 
         summaryTableBody.appendChild(row);
     });
+
+    // === Step 3: Reveal used note columns
+    for (let i = 0; i < 5; i++) {
+        if (visibleNotes[i]) {
+            document.querySelectorAll(`.note-${i + 1}`).forEach(cell => {
+                cell.classList.remove('hidden-column');
+            });
+            document.querySelectorAll(`.note-header-${i + 1}`).forEach(header => {
+                header.classList.remove('hidden-column');
+            });
+        }
+    }
 }
 
 function deleteEntry(index) {
     actionsLog.splice(index, 1);
     updateSummary();
     filterActions();
+}
+
+// Code to allow editing in summary screen:
+let currentRowIndex = null;
+
+function showRowOptionsMenu(rowElement, index) {
+    currentRowIndex = index;
+
+    const popup = document.getElementById('row-options-popup');
+    const rect = rowElement.getBoundingClientRect();
+
+    popup.style.top = `${window.scrollY + rect.bottom}px`;
+    popup.style.left = `${rect.left}px`;
+    popup.style.display = 'block';
+}
+
+function hideRowOptionsMenu() {
+    const popup = document.getElementById('row-options-popup');
+    popup.style.display = 'none';
+    currentRowIndex = null;
+}
+
+// Handle action when a button is clicked in the popup
+function handleRowOption(action) {
+    if (action === 'delete') {
+        deleteEntry(currentRowIndex);  // ✅ Correct function call
+        hideRowOptionsMenu();
+    } else if (action === 'addNote') {
+        hideRowOptionsMenu();
+        openAddNotePopup(currentRowIndex);
+    } else if (action === 'edit') {
+        alert('Edit Row - not yet implemented.');
+        hideRowOptionsMenu();
+    }
 }
 
 function updateCounters() {
@@ -644,7 +691,13 @@ canvas.addEventListener('click', (e) => {
     const rect = canvas.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / canvas.width) * 80;
     const y = 140 - ((e.clientY - rect.top) / canvas.height) * 140;
-    
+
+    // 💡 Restrict 2-Point - Score to valid locations
+    if (currentAction === '2-Point - Score' && !isValid2PointLocation(x, y)) {
+        showCoordinateWarning('Invalid location: 2-point scores must be outside the arc and the 21m line.');
+        return;
+    }
+
     if (!firstMarkerConfirmed) {
         marker1.x = x.toFixed(2);
         marker1.y = y.toFixed(2);
@@ -660,6 +713,43 @@ canvas.addEventListener('click', (e) => {
         document.getElementById('coordinate-display-2').textContent = `X2: ${marker2.x}, Y2: ${marker2.y}`;
     }
 });
+
+// --- code for 2-Point coordinates ---
+const arcTop = generateArcPoints(40, 140, 40, Math.atan2(119 - 140, 74 - 40), Math.atan2(119 - 140, 6 - 40), 100);
+
+function isPointInsidePolygon(x, y, polygonPoints) {
+    let inside = false;
+    for (let i = 0, j = polygonPoints.length - 1; i < polygonPoints.length; j = i++) {
+        const xi = polygonPoints[i].x, yi = polygonPoints[i].y;
+        const xj = polygonPoints[j].x, yj = polygonPoints[j].y;
+
+        const intersect = ((yi > y) !== (yj > y)) &&
+            (x < ((xj - xi) * (y - yi)) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    return inside;
+}
+
+function isValid2PointLocation(x, y) {
+    // y must be ≤ 119 (outside the 21 line)
+    const beyond21Line = y <= 119;
+
+    // Use arcTop, which is already generated with 100 points
+    const insideArc = isPointInsidePolygon(x, y, arcTop);
+
+    return beyond21Line && !insideArc;
+}
+
+// Warning for invalid 2-pointer
+function showCoordinateWarning(message) {
+    const warningBox = document.getElementById('coordinate-warning');
+    warningBox.textContent = message;
+    warningBox.classList.add('show');
+
+    setTimeout(() => {
+        warningBox.classList.remove('show');
+    }, 1000); // 1 second
+}
 
 confirmCoordinatesButton.addEventListener('click', () => {
     if (currentAction === 'Handpass' || currentAction === 'Kickpass' || currentAction === 'Carry') {
@@ -683,12 +773,15 @@ confirmCoordinatesButton.addEventListener('click', () => {
         if (marker1.x !== null && marker1.y !== null) {
             currentCoordinates1 = `(${marker1.x}, ${marker1.y})`;
 
-            if ((currentAction === 'Point - Against' || currentAction === 'Goal - Against') && currentMode !== 'Mistake') {
-                logAction(); // Log action directly for No Mistake
-                switchScreen('action-buttons'); // Return to main stats screen
-            } else if (currentAction === 'Miss - Against') {
-                logAction(); // Log action directly for Miss - Against
-                switchScreen('action-buttons'); // Return to main stats screen
+            // For opposition tracking actions, log immediately without player selection
+            if (
+                currentAction === 'Point - Against' ||
+                currentAction === '2-Point - Against' ||
+                currentAction === 'Goal - Against' ||
+                currentAction === 'Miss - Against'
+            ) {
+                logAction();
+                switchScreen('action-buttons');
             } else {
                 switchScreen('player-buttons'); // Go to player selection screen for other actions
             }
@@ -959,6 +1052,24 @@ const drawReviewMarker = (x, y, color, entry, actionType, markerType = 'circle')
         reviewCtx.arc(mapX(x), mapYReview(y), 5, 0, Math.PI * 2);
         reviewCtx.strokeStyle = color;
         reviewCtx.stroke();
+    } else if (markerType === 'triangle') {
+    // Clear path and explicitly move through 3 points
+        reviewCtx.beginPath();
+        reviewCtx.moveTo(mappedX, mappedY - 6);       // Top
+        reviewCtx.lineTo(mappedX - 5, mappedY + 4);    // Bottom left
+        reviewCtx.lineTo(mappedX + 5, mappedY + 4);    // Bottom right
+        reviewCtx.closePath();                         // Back to top
+        reviewCtx.fillStyle = color;
+        reviewCtx.fill();
+    } else if (markerType === 'diamond') {
+        reviewCtx.beginPath();
+        reviewCtx.moveTo(mappedX, mappedY - 6);        // Top
+        reviewCtx.lineTo(mappedX - 5, mappedY);        // Left
+        reviewCtx.lineTo(mappedX, mappedY + 6);        // Bottom
+        reviewCtx.lineTo(mappedX + 5, mappedY);        // Right
+        reviewCtx.closePath();                         // Back to top
+        reviewCtx.fillStyle = color;
+        reviewCtx.fill();
     }
     reviewMarkers.push({ x, y, entry, color, markerType });
 };
@@ -990,6 +1101,8 @@ const filterActions = () => {
         if (showOwnShots) {
             if (entry.action === 'Point - Score') {
                 drawReviewMarker(x1, y1, 'blue', entry, 'Point - Score');
+            } else if (entry.action === '2-Point - Score') {
+                drawReviewMarker(x1, y1, 'blue', entry, '2-Point - Score', 'circle');
             } else if (entry.action === 'Point - Miss') {
                 drawReviewMarker(x1, y1, 'blue', entry, 'Point - Miss', 'cross');
             } else if (entry.action === 'Goal - Score') {
@@ -1070,6 +1183,10 @@ const filterActions = () => {
             drawReviewMarker(x1, y1, 'blue', entry, 'Point - Against', 'hollowCircle');
         }
 
+        if (showPointAgainst && entry.action === '2-Point - Against') {
+            drawReviewMarker(x1, y1, 'blue', entry, '2-Point - Against', 'hollowCircle');
+        }
+
         if (showGoalAgainst && entry.action === 'Goal - Against') {
             drawReviewMarker(x1, y1, 'green', entry, 'Goal - Against', 'hollowCircle');
         }
@@ -1128,6 +1245,14 @@ function showSummaryBox(x, y, entry, color) {
             <p><strong>Player:</strong> ${entry.player}</p>
             <p><strong>Action:</strong> Point - Score</p>
             <p><strong>Type:</strong> ${entry.mode}</p>
+            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
+        `;
+    } else if (entry.action === '2-Point - Score') {
+        summaryBox.innerHTML = `
+            <p><strong>Player:</strong> ${entry.player}</p>
+            <p><strong>Action:</strong> 2-Point - Score</p>
+            <p><strong>Type:</strong> ${entry.definition}</p>
+            <p><strong>How:</strong> ${entry.mode}</p>
             <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
         `;
     } else if (entry.action === 'Point - Miss') {
@@ -1235,6 +1360,13 @@ function showSummaryBox(x, y, entry, color) {
             <p><strong>Player:</strong> ${entry.player}</p>
             <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
         `;
+    } else if (entry.action === '2-Point - Against') {
+        summaryBox.innerHTML = `
+            <p><strong>Action:</strong> 2-Point Against</p>
+            <p><strong>Type:</strong> ${entry.definition}</p>
+            <p><strong>Player:</strong> ${entry.player}</p>
+            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
+        `;
     } else if (entry.action === 'Goal - Against') {
         summaryBox.innerHTML = `
             <p><strong>Action:</strong> Goal Against</p>
@@ -1246,6 +1378,7 @@ function showSummaryBox(x, y, entry, color) {
         summaryBox.innerHTML = `
             <p><strong>Action:</strong> Miss Against</p>
             <p><strong>Type:</strong> ${entry.mode}</p>
+            <p><strong>How:</strong> ${entry.definition}</p>
             <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
         `;
     }  
@@ -1484,3 +1617,56 @@ function swapPlayerNames(index1, index2) {
 
     updatePlayerLabels(); // Refresh all labels across app
 }
+
+// Code to add notes to data rows
+// Opens the Add Note popup for a specific row
+function openAddNotePopup(index) {
+    currentNoteRowIndex = index;
+    const popup = document.getElementById('add-note-popup');
+    const input = document.getElementById('note-input');
+    input.value = '';
+    popup.style.display = 'block';
+    input.focus();
+}
+
+// Closes the Add Note popup
+function closeAddNotePopup() {
+    document.getElementById('add-note-popup').style.display = 'none';
+    currentNoteRowIndex = null;
+}
+
+// Adds a quick note to the input field
+function insertQuickNote(note) {
+    const input = document.getElementById('note-input');
+    input.value = note;
+    input.focus();
+}
+
+// Confirm and store the note
+function confirmNote() {
+    const noteText = document.getElementById('note-input').value.trim();
+    if (noteText && currentNoteRowIndex !== null) {
+        if (!actionsLog[currentNoteRowIndex].notes) {
+            actionsLog[currentNoteRowIndex].notes = [];
+        }
+        actionsLog[currentNoteRowIndex].notes.push(noteText);
+        updateSummary();
+    }
+    closeAddNotePopup();
+}
+
+// Add keyboard shortcuts for the note popup
+document.addEventListener('keydown', function (e) {
+    const popup = document.getElementById('add-note-popup');
+    if (popup.style.display === 'block') {
+        if (e.key === 'Enter') {
+            confirmNote();
+        } else if (e.key === 'Escape') {
+            closeAddNotePopup();
+        }
+    }
+});
+
+// Hook up buttons
+document.getElementById('confirm-note-button').addEventListener('click', confirmNote);
+document.getElementById('cancel-note-button').addEventListener('click', closeAddNotePopup);
