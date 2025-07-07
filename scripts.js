@@ -46,7 +46,8 @@ let touchStartX = 0;
 let touchStartY = 0;
 const MOVE_THRESHOLD = 10; // pixels to distinguish drag from tap
 
-let currentNoteRowIndex = null;
+let noteRowIndex = null;
+let tempNoteContent = '';
 
 document.addEventListener('DOMContentLoaded', function () {
     updateCounters();
@@ -157,7 +158,8 @@ function logAction() {
         player: playerNames[currentPlayer] || currentPlayer,
         player2: playerNames[secondPlayer] || secondPlayer || '',
         coordinates1: currentCoordinates1 || '',
-        coordinates2: currentCoordinates2 || ''
+        coordinates2: currentCoordinates2 || '',
+        notes: []
     };
 
     actionsLog.push(entry);
@@ -282,86 +284,74 @@ function switchScreen(screenId) {
 }
 
 function updateSummary() {
-    const summaryTable = document.getElementById('summary-table');
-    const summaryTableBody = summaryTable.querySelector('tbody');
-    const summaryTableHead = summaryTable.querySelector('thead');
-
-    // Clear existing content
+    const summaryTableBody = document.getElementById('summary-table').querySelector('tbody');
     summaryTableBody.innerHTML = '';
-    summaryTableHead.innerHTML = '';
 
-    // === Step 1: Always define Note 1-5 headers ===
-    const headers = ['Action', 'Mode', 'Definition', 'Player', 'Player 2', 'X_1', 'Y_1', 'X_2', 'Y_2'];
-    for (let i = 1; i <= 5; i++) {
-        headers.push(`Note ${i}`);
-    }
-
-    const headerRow = document.createElement('tr');
-    headers.forEach((headerText, idx) => {
-        const th = document.createElement('th');
-        th.textContent = headerText;
-        if (headerText.startsWith('Note')) {
-            th.classList.add('note-column', 'hidden-column');
-            th.classList.add(`note-header-${idx - 9 + 1}`); // header for Note 1–5
-        }
-        headerRow.appendChild(th);
-    });
-    summaryTableHead.appendChild(headerRow);
-
-    // Track visible note usage
-    const visibleNotes = [false, false, false, false, false];
-
-    // === Step 2: Populate each row
     actionsLog.forEach((entry, index) => {
         const row = document.createElement('tr');
+
+        const actionCell = document.createElement('td');
+        const modeCell = document.createElement('td');
+        const definitionCell = document.createElement('td');
+        const playerCell = document.createElement('td');
+        const player2Cell = document.createElement('td');
+        const x1Cell = document.createElement('td'); 
+        const y1Cell = document.createElement('td'); 
+        const x2Cell = document.createElement('td'); 
+        const y2Cell = document.createElement('td'); 
+
+        actionCell.textContent = entry.action;
+        modeCell.textContent = entry.mode;
+        definitionCell.textContent = entry.definition;
+        playerCell.textContent = entry.player;
+        player2Cell.textContent = entry.player2;
+        
+        if (entry.coordinates1) {
+            const [x1, y1] = entry.coordinates1.slice(1, -1).split(', ');
+            x1Cell.textContent = x1;
+            y1Cell.textContent = y1;
+        }
+
+        if (entry.coordinates2) {
+            const [x2, y2] = entry.coordinates2.slice(1, -1).split(', ');
+            x2Cell.textContent = x2;
+            y2Cell.textContent = y2;
+        }
+
+        row.appendChild(actionCell);
+        row.appendChild(modeCell);
+        row.appendChild(definitionCell);
+        row.appendChild(playerCell);
+        row.appendChild(player2Cell);
+        row.appendChild(x1Cell);
+        row.appendChild(y1Cell);
+        row.appendChild(x2Cell);
+        row.appendChild(y2Cell);
+
+        ['Note 1', 'Note 2', 'Note 3'].forEach((label, i) => {
+            const noteCell = document.createElement('td');
+            const noteText = entry.notes && entry.notes[i] ? entry.notes[i] : '';
+
+            noteCell.textContent = noteText.length > 15 ? noteText.slice(0, 15) + '…' : noteText;
+            noteCell.classList.add('note-cell');
+            if (noteText.length > 15) {
+                noteCell.title = noteText;  // Tooltip on hover
+            }
+
+            row.appendChild(noteCell);
+        });
+
+        // ✅ Make row clickable to open options menu
         row.classList.add('summary-row');
         row.dataset.index = index;
 
-        const cells = [
-            entry.action,
-            entry.mode,
-            entry.definition,
-            entry.player,
-            entry.player2,
-            ...(entry.coordinates1 ? entry.coordinates1.slice(1, -1).split(', ') : ['', '']),
-            ...(entry.coordinates2 ? entry.coordinates2.slice(1, -1).split(', ') : ['', ''])
-        ];
-
-        cells.forEach(text => {
-            const td = document.createElement('td');
-            td.textContent = text;
-            row.appendChild(td);
-        });
-
-        const noteList = entry.notes || [];
-        for (let i = 0; i < 5; i++) {
-            const td = document.createElement('td');
-            td.textContent = noteList[i] || '';
-            td.classList.add('note-column', `note-${i + 1}`);
-            if (!noteList[i]) td.classList.add('hidden-column');
-            else visibleNotes[i] = true;
-            row.appendChild(td);
-        }
-
         row.addEventListener('click', (e) => {
-            e.stopPropagation();
+            e.stopPropagation(); // Prevent closing popup immediately
             showRowOptionsMenu(e.currentTarget, index);
         });
 
         summaryTableBody.appendChild(row);
     });
-
-    // === Step 3: Reveal used note columns
-    for (let i = 0; i < 5; i++) {
-        if (visibleNotes[i]) {
-            document.querySelectorAll(`.note-${i + 1}`).forEach(cell => {
-                cell.classList.remove('hidden-column');
-            });
-            document.querySelectorAll(`.note-header-${i + 1}`).forEach(header => {
-                header.classList.remove('hidden-column');
-            });
-        }
-    }
 }
 
 function deleteEntry(index) {
@@ -396,12 +386,39 @@ function handleRowOption(action) {
         deleteEntry(currentRowIndex);  // ✅ Correct function call
         hideRowOptionsMenu();
     } else if (action === 'addNote') {
+        noteRowIndex = currentRowIndex;
+        document.getElementById('note-popup').style.display = 'block';
+        document.getElementById('custom-note-input').value = '';
         hideRowOptionsMenu();
-        openAddNotePopup(currentRowIndex);
     } else if (action === 'edit') {
         alert('Edit Row - not yet implemented.');
         hideRowOptionsMenu();
     }
+}
+
+function addQuickNote(text) {
+    document.getElementById('custom-note-input').value = text;
+}
+
+function confirmNote() {
+    const noteText = document.getElementById('custom-note-input').value.trim();
+    if (!noteText) return;
+
+    const notes = actionsLog[noteRowIndex].notes || [];
+    if (notes.length >= 3) {
+        alert('All 3 note slots are filled.');
+        closeNotePopup();
+        return;
+    }
+    notes.push(noteText);
+    actionsLog[noteRowIndex].notes = notes;
+    updateSummary();
+    closeNotePopup();
+}
+
+function closeNotePopup() {
+    document.getElementById('note-popup').style.display = 'none';
+    noteRowIndex = null;
 }
 
 function updateCounters() {
@@ -1617,56 +1634,3 @@ function swapPlayerNames(index1, index2) {
 
     updatePlayerLabels(); // Refresh all labels across app
 }
-
-// Code to add notes to data rows
-// Opens the Add Note popup for a specific row
-function openAddNotePopup(index) {
-    currentNoteRowIndex = index;
-    const popup = document.getElementById('add-note-popup');
-    const input = document.getElementById('note-input');
-    input.value = '';
-    popup.style.display = 'block';
-    input.focus();
-}
-
-// Closes the Add Note popup
-function closeAddNotePopup() {
-    document.getElementById('add-note-popup').style.display = 'none';
-    currentNoteRowIndex = null;
-}
-
-// Adds a quick note to the input field
-function insertQuickNote(note) {
-    const input = document.getElementById('note-input');
-    input.value = note;
-    input.focus();
-}
-
-// Confirm and store the note
-function confirmNote() {
-    const noteText = document.getElementById('note-input').value.trim();
-    if (noteText && currentNoteRowIndex !== null) {
-        if (!actionsLog[currentNoteRowIndex].notes) {
-            actionsLog[currentNoteRowIndex].notes = [];
-        }
-        actionsLog[currentNoteRowIndex].notes.push(noteText);
-        updateSummary();
-    }
-    closeAddNotePopup();
-}
-
-// Add keyboard shortcuts for the note popup
-document.addEventListener('keydown', function (e) {
-    const popup = document.getElementById('add-note-popup');
-    if (popup.style.display === 'block') {
-        if (e.key === 'Enter') {
-            confirmNote();
-        } else if (e.key === 'Escape') {
-            closeAddNotePopup();
-        }
-    }
-});
-
-// Hook up buttons
-document.getElementById('confirm-note-button').addEventListener('click', confirmNote);
-document.getElementById('cancel-note-button').addEventListener('click', closeAddNotePopup);
