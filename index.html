@@ -586,6 +586,9 @@
                             <th>Y_1</th>
                             <th>X_2</th>
                             <th>Y_2</th>
+                            <th>Note 1</th>
+                            <th>Note 2</th>
+                            <th>Note 3</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -612,27 +615,28 @@
         <button onclick="handleRowOption('delete')">🗑️ Delete</button>
     </div>
 
-    <div id="add-note-popup" class="popup-note" style="display: none;">
-        <div class="popup-note-content">
-            <h3>Add Note</h3>
-            
-            <div class="note-input-section">
-                <input type="text" id="note-input" placeholder="Type your note..." />
+    <div id="note-popup" class="popup" style="display: none;">
+        <div class="popup-content sleek-popup">
+            <h3 class="popup-title">Add Note</h3>
+
+            <div class="quick-notes">
+                <button class="popup-menu-button" onclick="addQuickNote('Great play')">Great play</button>
+                <button class="popup-menu-button" onclick="addQuickNote('Poor decision')">Poor decision</button>
+                <button class="popup-menu-button" onclick="addQuickNote('Key moment')">Key moment</button>
             </div>
 
-            <div class="note-quick-buttons">
-                <button class="quick-note-button" onclick="insertQuickNote('Test 1')">Test 1</button>
-                <button class="quick-note-button" onclick="insertQuickNote('Test 2')">Test 2</button>
-                <button class="quick-note-button" onclick="insertQuickNote('Test 3')">Test 3</button>
-            </div>
+            <textarea id="custom-note-input" class="custom-note-input" placeholder="Type a custom note..."></textarea>
 
-            <div class="note-popup-actions">
-                <button id="confirm-note-button" class="popup-menu-button">✅ Confirm</button>
-                <button id="cancel-note-button" class="popup-menu-button">❌ Cancel</button>
+            <div class="popup-button-row">
+                <button class="popup-menu-button confirm" onclick="confirmNote()">Add Note</button>
+                <button class="popup-menu-button cancel" onclick="closeNotePopup()">Cancel</button>
             </div>
         </div>
     </div>
 
+    <td class="note-cell" data-note-index="0"></td>
+    <td class="note-cell" data-note-index="1"></td>
+    <td class="note-cell" data-note-index="2"></td>
 
     <script src="scripts.js"></script>
 </body>
