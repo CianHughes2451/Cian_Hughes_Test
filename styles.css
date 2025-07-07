@@ -278,16 +278,54 @@ button:focus {
 #summary-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed; /* ✅ Prevent dynamic column stretching */
+    margin-top: 20px;
 }
 
-#summary-table th, #summary-table td {
+/* Headings and cells */
+#summary-table th,
+#summary-table td {
     border: 1px solid #ddd;
-    padding: 8px;
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 14px;
+    overflow: hidden;               /* ✅ Required for truncation */
+    white-space: nowrap;            /* ✅ Keep text on one line */
+    text-overflow: ellipsis;        /* ✅ Truncate overflow text */
+    max-width: 120px;               /* ✅ Fixed width for each column */
+}
+
+/* Optional: Thinner rows for a tighter feel */
+#summary-table tr {
+    height: 38px;
+}
+
+/* Row hover effect */
+#summary-table tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Tooltip on hover for all truncated cells */
+#summary-table td:hover,
+#summary-table th:hover {
     position: relative;
 }
 
-#summary-table tr:hover {
-    background-color: #f2f2f2;
+#summary-table td:hover::after {
+    content: attr(title);
+    position: absolute;
+    left: 0;
+    top: 100%;
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 4px 6px;
+    font-size: 12px;
+    white-space: normal;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    width: max-content;
+    max-width: 240px;
+    display: block;
 }
 
 .delete-button {
@@ -744,14 +782,82 @@ input:checked + .slider:before {
     justify-content: space-between;
 }
 
-/* Hide unused note columns */
-.hidden-column {
-    display: none;
+.note-cell {
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: help;
 }
 
-.note-column {
+.note-cell {
     max-width: 100px;
-    word-wrap: break-word;
-    font-size: 13px;
-    padding: 4px 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: help;
+}
+
+.sleek-popup {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    width: 320px;
+    max-width: 90vw;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Title */
+.popup-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    text-align: center;
+    color: #222;
+}
+
+.quick-notes {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    gap: 10px;
+}
+
+/* Custom note textarea */
+.custom-note-input {
+    width: 100%;
+    min-height: 80px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 14px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+/* Button row */
+.popup-button-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 16px;
+}
+
+/* Override popup buttons for confirm/cancel */
+.popup-menu-button.confirm {
+    background-color: #007bff;
+    color: white;
+}
+
+.popup-menu-button.confirm:hover {
+    background-color: #0056b3;
+}
+
+.popup-menu-button.cancel {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+.popup-menu-button.cancel:hover {
+    background-color: #ccc;
 }
