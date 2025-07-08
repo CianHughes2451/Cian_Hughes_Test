@@ -573,7 +573,7 @@
     <div id="summary" class="tab-content">
         <h2>Summary</h2>
         <div id="summary-content">
-            <div class="summary-table-wrapper">
+            <div id="summary-container">
                 <table id="summary-table">
                     <thead>
                         <tr>
@@ -586,9 +586,7 @@
                             <th>Y_1</th>
                             <th>X_2</th>
                             <th>Y_2</th>
-                            <th>Note 1</th>
-                            <th>Note 2</th>
-                            <th>Note 3</th>
+                            <th>Notes</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -617,26 +615,32 @@
 
     <div id="note-popup" class="popup" style="display: none;">
         <div class="popup-content sleek-popup">
-            <h3 class="popup-title">Add Note</h3>
+            <h3 class="popup-title">Notes</h3>
 
-            <div class="quick-notes">
+            <!-- Quick Note Buttons -->
+            <div id="quick-note-container" class="quick-notes-grid">
                 <button class="popup-menu-button" onclick="addQuickNote('Great play')">Great play</button>
                 <button class="popup-menu-button" onclick="addQuickNote('Poor decision')">Poor decision</button>
                 <button class="popup-menu-button" onclick="addQuickNote('Key moment')">Key moment</button>
+                <button class="popup-menu-button" onclick="addQuickNote('Needs review')">Needs review</button>
+                <button class="popup-menu-button" onclick="addQuickNote('Excellent run')">Excellent run</button>
+                <button class="popup-menu-button" onclick="addQuickNote('Tactical foul')">Tactical foul</button>
             </div>
 
-            <textarea id="custom-note-input" class="custom-note-input" placeholder="Type a custom note..."></textarea>
+            <!-- Custom Note Input -->
+            <textarea id="custom-note-input" class="custom-note-input small" placeholder="Type a custom note..."></textarea>
 
+            <!-- View/Edit Existing Notes -->
+            <div id="note-list" class="note-list" style="margin-top: 16px;"></div>
+
+            <!-- Action Buttons -->
             <div class="popup-button-row">
-                <button class="popup-menu-button confirm" onclick="confirmNote()">Add Note</button>
-                <button class="popup-menu-button cancel" onclick="closeNotePopup()">Cancel</button>
+                <button id="note-confirm-button" class="popup-menu-button confirm" onclick="confirmNote()">Add Note</button>
+                <button id="note-edit-button" class="popup-menu-button edit" onclick="enterEditNoteMode()" style="display: none;">Edit</button>
+                <button class="popup-menu-button cancel" onclick="closeNotePopup()">Close</button>
             </div>
         </div>
     </div>
-
-    <td class="note-cell" data-note-index="0"></td>
-    <td class="note-cell" data-note-index="1"></td>
-    <td class="note-cell" data-note-index="2"></td>
 
     <script src="scripts.js"></script>
 </body>

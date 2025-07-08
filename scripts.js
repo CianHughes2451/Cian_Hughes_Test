@@ -48,6 +48,14 @@ const MOVE_THRESHOLD = 10; // pixels to distinguish drag from tap
 
 let noteRowIndex = null;
 let tempNoteContent = '';
+let editingMode = false;
+
+let filters = {
+    player: null,
+    action: null,
+    definition: null,
+    mode: null
+};
 
 document.addEventListener('DOMContentLoaded', function () {
     updateCounters();
@@ -284,10 +292,74 @@ function switchScreen(screenId) {
 }
 
 function updateSummary() {
-    const summaryTableBody = document.getElementById('summary-table').querySelector('tbody');
+    const summaryTable = document.getElementById('summary-table');
+    const summaryTableHead = summaryTable.querySelector('thead');
+    const summaryTableBody = summaryTable.querySelector('tbody');
+
+    // Clear existing table content
+    summaryTableHead.innerHTML = '';
     summaryTableBody.innerHTML = '';
 
-    actionsLog.forEach((entry, index) => {
+    // Extract unique values for each filter column (cascading)
+    const uniqueValues = (key) => {
+        return [...new Set(
+            actionsLog
+                .filter(entry => {
+                    if (key !== 'player' && filters.player && entry.player !== filters.player) return false;
+                    if (key !== 'action' && filters.action && entry.action !== filters.action) return false;
+                    if (key !== 'definition' && filters.definition && entry.definition !== filters.definition) return false;
+                    if (key !== 'mode' && filters.mode && entry.mode !== filters.mode) return false;
+                    return true;
+                })
+                .map(entry => entry[key])
+                .filter(Boolean)
+        )].sort();
+    };
+
+    // First row: column labels
+    const headerLabelRow = document.createElement('tr');
+
+    ['Action', 'Mode', 'Definition', 'Player'].forEach(label => {
+        const th = document.createElement('th');
+        th.textContent = label;
+        headerLabelRow.appendChild(th);
+    });
+
+    ['Player 2', 'X1', 'Y1', 'X2', 'Y2', 'Notes'].forEach(label => {
+        const th = document.createElement('th');
+        th.textContent = label;
+        headerLabelRow.appendChild(th);
+    });
+
+    summaryTableHead.appendChild(headerLabelRow);
+
+    // Second row: filter dropdowns
+    const filterRow = document.createElement('tr');
+
+    filterRow.appendChild(createFilterHeader('', 'action', uniqueValues('action')));
+    filterRow.appendChild(createFilterHeader('', 'mode', uniqueValues('mode')));
+    filterRow.appendChild(createFilterHeader('', 'definition', uniqueValues('definition')));
+    filterRow.appendChild(createFilterHeader('', 'player', uniqueValues('player')));
+
+    for (let i = 0; i < 6; i++) {
+        filterRow.appendChild(document.createElement('th'));
+    }
+
+    summaryTableHead.appendChild(filterRow);
+
+    // Filtered dataset
+    const filteredData = actionsLog
+        .map((entry, index) => ({ entry, index }))
+        .filter(({ entry }) => {
+            if (filters.player && entry.player !== filters.player) return false;
+            if (filters.action && entry.action !== filters.action) return false;
+            if (filters.definition && entry.definition !== filters.definition) return false;
+            if (filters.mode && entry.mode !== filters.mode) return false;
+            return true;
+        });
+
+    // Render filtered rows
+    filteredData.forEach(({ entry, index }) => {
         const row = document.createElement('tr');
 
         const actionCell = document.createElement('td');
@@ -295,17 +367,17 @@ function updateSummary() {
         const definitionCell = document.createElement('td');
         const playerCell = document.createElement('td');
         const player2Cell = document.createElement('td');
-        const x1Cell = document.createElement('td'); 
-        const y1Cell = document.createElement('td'); 
-        const x2Cell = document.createElement('td'); 
-        const y2Cell = document.createElement('td'); 
+        const x1Cell = document.createElement('td');
+        const y1Cell = document.createElement('td');
+        const x2Cell = document.createElement('td');
+        const y2Cell = document.createElement('td');
 
         actionCell.textContent = entry.action;
         modeCell.textContent = entry.mode;
         definitionCell.textContent = entry.definition;
         playerCell.textContent = entry.player;
         player2Cell.textContent = entry.player2;
-        
+
         if (entry.coordinates1) {
             const [x1, y1] = entry.coordinates1.slice(1, -1).split(', ');
             x1Cell.textContent = x1;
@@ -328,25 +400,40 @@ function updateSummary() {
         row.appendChild(x2Cell);
         row.appendChild(y2Cell);
 
-        ['Note 1', 'Note 2', 'Note 3'].forEach((label, i) => {
-            const noteCell = document.createElement('td');
-            const noteText = entry.notes && entry.notes[i] ? entry.notes[i] : '';
+        const noteCell = document.createElement('td');
+        noteCell.classList.add('note-icon-cell');
 
-            noteCell.textContent = noteText.length > 15 ? noteText.slice(0, 15) + '…' : noteText;
-            noteCell.classList.add('note-cell');
-            if (noteText.length > 15) {
-                noteCell.title = noteText;  // Tooltip on hover
-            }
+        if (entry.notes && entry.notes.length > 0) {
+            const noteButton = document.createElement('button');
+            noteButton.textContent = '📝';
+            noteButton.title = 'View/Edit Notes';
+            noteButton.classList.add('note-button');
 
-            row.appendChild(noteCell);
-        });
+            noteButton.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent triggering row click
+                openViewEditNotePopup(index);
+            });
 
-        // ✅ Make row clickable to open options menu
+            noteCell.appendChild(noteButton);
+        }
+
+        row.appendChild(noteCell);
+
+        // Make row clickable
         row.classList.add('summary-row');
         row.dataset.index = index;
 
         row.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent closing popup immediately
+            e.stopPropagation();
+            // Remove highlight from any previously selected row
+            document.querySelectorAll('.summary-row.selected-row').forEach(r => {
+                r.classList.remove('selected-row');
+            });
+
+            // Add highlight to the clicked row
+            row.classList.add('selected-row');
+
+            // Show context menu
             showRowOptionsMenu(e.currentTarget, index);
         });
 
@@ -354,9 +441,58 @@ function updateSummary() {
     });
 }
 
+function createFilterHeader(label, key, options) {
+    const th = document.createElement('th');
+    const select = document.createElement('select');
+    select.innerHTML = `<option>-- All --</option>`;
+    options.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt;
+        option.textContent = opt;
+        if (filters[key] === opt) option.selected = true;
+        select.appendChild(option);
+    });
+    select.onchange = () => setFilter(key, select.value);
+    th.appendChild(select);
+    return th;
+}
+
+
 function deleteEntry(index) {
+    const entry = actionsLog[index];
+
+    // Adjust score based on deleted action
+    switch (entry.action) {
+        case 'Point - Score':
+            team1Points -= 1;
+            break;
+        case '2-Point - Score':
+            team1Points -= 2;
+            break;
+        case 'Goal - Score':
+            team1Goals -= 1;
+            break;
+        case 'Point - Against':
+            team2Points -= 1;
+            break;
+        case '2-Point - Against':
+            team2Points -= 2;
+            break;
+        case 'Goal - Against':
+            team2Goals -= 1;
+            break;
+    }
+
+    // Ensure scores don't go negative (prevent user error or inconsistent state)
+    team1Goals = Math.max(0, team1Goals);
+    team1Points = Math.max(0, team1Points);
+    team2Goals = Math.max(0, team2Goals);
+    team2Points = Math.max(0, team2Points);
+
+    // Remove entry and refresh
     actionsLog.splice(index, 1);
     updateSummary();
+    updateCounters();
     filterActions();
 }
 
@@ -387,9 +523,9 @@ function handleRowOption(action) {
         hideRowOptionsMenu();
     } else if (action === 'addNote') {
         noteRowIndex = currentRowIndex;
-        document.getElementById('note-popup').style.display = 'block';
-        document.getElementById('custom-note-input').value = '';
-        hideRowOptionsMenu();
+        viewEditNoteIndex = null;
+        editingMode = false;
+        openNotePopup();
     } else if (action === 'edit') {
         alert('Edit Row - not yet implemented.');
         hideRowOptionsMenu();
@@ -404,21 +540,20 @@ function confirmNote() {
     const noteText = document.getElementById('custom-note-input').value.trim();
     if (!noteText) return;
 
-    const notes = actionsLog[noteRowIndex].notes || [];
-    if (notes.length >= 3) {
-        alert('All 3 note slots are filled.');
-        closeNotePopup();
-        return;
-    }
+    const index = noteRowIndex;
+    const notes = actionsLog[index].notes || [];
     notes.push(noteText);
-    actionsLog[noteRowIndex].notes = notes;
+    actionsLog[index].notes = notes;
+
     updateSummary();
     closeNotePopup();
 }
 
 function closeNotePopup() {
-    document.getElementById('note-popup').style.display = 'none';
     noteRowIndex = null;
+    viewEditNoteIndex = null;
+    editingMode = false;
+    document.getElementById('note-popup').style.display = 'none';
 }
 
 function updateCounters() {
@@ -1634,3 +1769,102 @@ function swapPlayerNames(index1, index2) {
 
     updatePlayerLabels(); // Refresh all labels across app
 }
+
+// Notes code
+function openViewEditNotePopup(index) {
+    noteRowIndex = null;
+    viewEditNoteIndex = index;
+    editingMode = false;
+    openNotePopup();
+}
+
+function openNotePopup() {
+    const index = viewEditNoteIndex !== null ? viewEditNoteIndex : noteRowIndex;
+    const entry = actionsLog[index];
+    const notes = entry.notes || [];
+
+    // Reset UI
+    document.getElementById('note-list').innerHTML = '';
+    document.getElementById('custom-note-input').value = '';
+    document.getElementById('note-popup').style.display = 'block';
+
+    // Show/hide relevant parts based on mode
+    const isAddMode = noteRowIndex !== null;
+    const isViewEditMode = viewEditNoteIndex !== null;
+
+    // Section visibility
+    document.getElementById('quick-note-container').style.display = isAddMode ? 'grid' : 'none';
+    document.getElementById('custom-note-input').style.display = isAddMode ? 'block' : 'none';
+    document.getElementById('note-confirm-button').style.display = isAddMode ? 'inline-block' : 'none';
+    document.getElementById('note-edit-button').style.display = (isViewEditMode && !editingMode) ? 'inline-block' : 'none';
+
+    const container = document.getElementById('note-list');
+
+    // Only show notes if user clicked 📝
+    if (isViewEditMode) {
+        notes.forEach((note, i) => {
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('note-item');
+
+            if (editingMode) {
+                const input = document.createElement('textarea');
+                input.value = note;
+                input.classList.add('note-textarea');
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = '🗑️';
+                deleteBtn.classList.add('delete-note-button');
+                deleteBtn.onclick = () => {
+                    actionsLog[index].notes.splice(i, 1);
+                    updateSummary();
+                    openNotePopup(); // Refresh
+                };
+
+                wrapper.appendChild(input);
+                wrapper.appendChild(deleteBtn);
+            } else {
+                wrapper.classList.add('note-static');
+                wrapper.textContent = note;
+            }
+
+            container.appendChild(wrapper);
+        });
+
+        // In edit mode, allow new note input at bottom
+        if (editingMode) {
+            const newInput = document.createElement('textarea');
+            newInput.classList.add('note-textarea');
+            newInput.placeholder = 'Add a new note...';
+
+            const saveBtn = document.createElement('button');
+            saveBtn.textContent = '✅';
+            saveBtn.classList.add('delete-note-button');
+            saveBtn.onclick = () => {
+                const value = newInput.value.trim();
+                if (value) {
+                    actionsLog[index].notes.push(value);
+                    updateSummary();
+                    openNotePopup(); // Refresh
+                }
+            };
+
+            const newNoteDiv = document.createElement('div');
+            newNoteDiv.classList.add('note-item');
+            newNoteDiv.appendChild(newInput);
+            newNoteDiv.appendChild(saveBtn);
+            container.appendChild(newNoteDiv);
+        }
+    }
+}
+
+function enterEditNoteMode() {
+    editingMode = true;
+    openNotePopup();
+}
+
+// filter function for summary tab
+function setFilter(key, value) {
+    filters[key] = value === '-- All --' ? null : value;
+    updateSummary(); // Refresh table based on new filters
+}
+

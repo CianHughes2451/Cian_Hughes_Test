@@ -276,23 +276,68 @@ button:focus {
 }
 
 #summary-table {
-    width: 100%;
+    table-layout: fixed;
     border-collapse: collapse;
-    table-layout: fixed; /* ✅ Prevent dynamic column stretching */
-    margin-top: 20px;
 }
 
-/* Headings and cells */
-#summary-table th,
-#summary-table td {
+#summary-table th, #summary-table td {
     border: 1px solid #ddd;
-    padding: 8px 10px;
+    padding: 6px 8px;
     text-align: left;
-    font-size: 14px;
-    overflow: hidden;               /* ✅ Required for truncation */
-    white-space: nowrap;            /* ✅ Keep text on one line */
-    text-overflow: ellipsis;        /* ✅ Truncate overflow text */
-    max-width: 120px;               /* ✅ Fixed width for each column */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Fixed column widths */
+#summary-table th:nth-child(1),  /* Action */
+#summary-table td:nth-child(1) {
+    width: 120px;
+}
+
+#summary-table th:nth-child(2),  /* Mode */
+#summary-table td:nth-child(2) {
+    width: 100px;
+}
+
+#summary-table th:nth-child(3),  /* Definition */
+#summary-table td:nth-child(3) {
+    width: 140px;
+}
+
+#summary-table th:nth-child(4),  /* Player 1 */
+#summary-table td:nth-child(4) {
+    width: 80px;
+}
+
+#summary-table th:nth-child(5),  /* Player 2 */
+#summary-table td:nth-child(5) {
+    width: 80px;
+}
+
+#summary-table th:nth-child(6),
+#summary-table th:nth-child(7),
+#summary-table th:nth-child(8),
+#summary-table th:nth-child(9) {
+    width: 50px;
+}
+
+#summary-table th:nth-child(10),  /* Notes */
+#summary-table td:nth-child(10) {
+    width: 60px;
+    text-align: center;
+}
+
+/* Style for dropdowns */
+#summary-table th select {
+    width: 100%;
+    font-size: 13px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background-color: #f8f8f8;
+    font-family: inherit;
+    max-width: 100%;
 }
 
 /* Optional: Thinner rows for a tighter feel */
@@ -511,21 +556,20 @@ input:checked + .slider:before {
     flex-wrap: wrap;
 }
 
+/* Styled buttons */
 .popup-menu-button {
-    background-color: #ffffff;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    padding: 10px 18px;
+    padding: 8px 14px;
     font-size: 14px;
-    color: #333;
-    border-radius: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: #f9f9f9;
     cursor: pointer;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
 }
 
 .popup-menu-button:hover {
-    background-color: #f2f2f2;
+    background: #ebebeb;
     transform: translateY(-1px);
 }
 
@@ -677,13 +721,31 @@ input:checked + .slider:before {
     margin-bottom: 20px;
 }
 
-/* Make the header row stick to the top */
+/* Sticky header cells */
 #summary-table thead th {
     position: sticky;
     top: 0;
-    background: #fff;
-    z-index: 2;
-    border-bottom: 2px solid #ccc;
+    z-index: 10;
+    background-color: #f8f8f8;
+    box-shadow: inset 0 -1px 0 #ccc;
+    text-align: left;
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+}
+
+/* Ensure consistent dropdown size, no shifting */
+#summary-table thead select {
+    width: 100%;
+    height: 100%;
+    font-size: 13px;
+    line-height: 1.2;
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background-color: white;
+    box-sizing: border-box;
+    appearance: none;
+    margin: 0;
 }
 
 /* Code to style summary screen edit function */
@@ -819,9 +881,9 @@ input:checked + .slider:before {
 
 .quick-notes {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 16px;
     gap: 10px;
+    justify-content: space-between;
+    flex-wrap: wrap;
 }
 
 /* Custom note textarea */
@@ -839,14 +901,16 @@ input:checked + .slider:before {
 /* Button row */
 .popup-button-row {
     display: flex;
-    justify-content: space-between;
-    margin-top: 16px;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
 }
 
 /* Override popup buttons for confirm/cancel */
 .popup-menu-button.confirm {
     background-color: #007bff;
     color: white;
+    border: none;
 }
 
 .popup-menu-button.confirm:hover {
@@ -854,10 +918,155 @@ input:checked + .slider:before {
 }
 
 .popup-menu-button.cancel {
-    background-color: #e0e0e0;
-    color: #333;
+    background-color: #f2f2f2;
 }
 
 .popup-menu-button.cancel:hover {
     background-color: #ccc;
+}
+
+.note-icon-cell {
+    text-align: center;
+    width: 60px;
+}
+
+.note-button {
+    font-size: 18px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #007bff;
+    padding: 0;
+}
+
+.note-button:hover {
+    color: #0056b3;
+    transform: scale(1.1);
+}
+
+.note-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 8px;
+    gap: 8px;
+}
+
+.note-textarea {
+    flex-grow: 1;
+    width: 100%;
+    resize: vertical;
+    font-size: 14px;
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.delete-note-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: red;
+    font-size: 18px;
+}
+
+/* Popup layout refinements */
+.note-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.note-static {
+    padding: 10px 12px;
+    background-color: #f8f8f8;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #333;
+    border: 1px solid #ddd;
+}
+
+.popup-menu-button.edit {
+    background-color: #17a2b8;
+    color: white;
+    border: none;
+}
+
+.popup-menu-button.edit:hover {
+    background-color: #138496;
+}
+
+.quick-notes-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.custom-note-input {
+    width: 100%;
+    resize: vertical;
+    font-size: 14px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-family: inherit;
+}
+
+.custom-note-input.small {
+    min-height: 60px; /* Smaller than default */
+    max-height: 100px;
+}
+
+#summary-table th select {
+    width: 100%;
+    padding: 4px 6px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background-color: #f8f8f8;
+    font-family: inherit;
+}
+
+/* Make table body scrollable if needed */
+#summary-container {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+#summary-container {
+    max-height: 60vh;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+/* Make headers sticky */
+#summary-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f8f8f8;
+    box-shadow: inset 0 -1px 0 #ccc;
+}
+
+/* Second row of thead (filter dropdowns) needs offset */
+#summary-table thead tr:nth-child(2) th {
+    height: 38px;
+    max-height: 38px;
+    min-height: 38px;
+    padding: 0;
+    overflow: hidden;
+    background-color: #f8f8f8;
+    box-sizing: border-box;
+    position: sticky;
+    top: 34px; /* directly under the first sticky row */
+    z-index: 9;
+}
+
+/* Highlight for selected row */
+.summary-row.selected-row {
+    background-color: #eaf3ff !important;
+    box-shadow: inset 2px 0 0 #007bff;
+    transition: background-color 0.2s ease;
 }
