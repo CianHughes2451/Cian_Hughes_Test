@@ -1969,9 +1969,52 @@ function toggleGroup(groupName) {
     }
 }
 
+// Toggle substitutes section
+function toggleSubstitutes() {
+    const subsSection = document.getElementById('subs-section');
+    const toggleBtn = document.getElementById('subs-toggle-btn');
+    const toggleIcon = toggleBtn.querySelector('.toggle-icon');
+    const toggleText = toggleBtn.querySelector('.toggle-text');
+    
+    const isCurrentlyHidden = subsSection.style.display === 'none';
+    
+    if (isCurrentlyHidden) {
+        // Show substitutes
+        subsSection.style.display = 'block';
+        subsSection.classList.remove('collapsed');
+        subsSection.classList.add('expanded');
+        toggleBtn.classList.add('expanded');
+        toggleIcon.textContent = '▼';
+        toggleText.textContent = 'Hide Substitutes';
+    } else {
+        // Hide substitutes
+        subsSection.classList.remove('expanded');
+        subsSection.classList.add('collapsed');
+        toggleBtn.classList.remove('expanded');
+        toggleIcon.textContent = '▶';
+        toggleText.textContent = 'Show Substitutes';
+        
+        // After animation completes, hide the element
+        setTimeout(() => {
+            if (subsSection.classList.contains('collapsed')) {
+                subsSection.style.display = 'none';
+            }
+        }, 400); // Match the CSS transition duration
+    }
+}
+
 // Restore last active tab from localStorage on page load
 document.addEventListener("DOMContentLoaded", () => {
     const savedTab = localStorage.getItem("activeTab") || "home";
     openTab(savedTab);
     highlightActiveTab(savedTab);
+    
+    // Ensure substitutes section starts closed
+    const subsSection = document.getElementById('subs-section');
+    const toggleBtn = document.getElementById('subs-toggle-btn');
+    if (subsSection && toggleBtn) {
+        subsSection.style.display = 'none';
+        subsSection.classList.add('collapsed');
+        toggleBtn.classList.remove('expanded');
+    }
 });
