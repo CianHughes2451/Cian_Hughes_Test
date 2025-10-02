@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gaelic Football App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -92,7 +95,15 @@
 
                 <div class="divider"></div>
 
-                <div class="subs-section">
+                <!-- Substitutes Toggle Button -->
+                <div class="subs-toggle-container">
+                    <button id="subs-toggle-btn" class="subs-toggle-button" onclick="toggleSubstitutes()">
+                        <span class="toggle-icon">▶</span>
+                        <span class="toggle-text">Show Substitutes</span>
+                    </button>
+                </div>
+
+                <div class="subs-section" id="subs-section" style="display: none;">
                     <div class="home-caption">Substitutes</div>
                     <div class="subs-grid">
                         <button id="player-16-button" onclick="openEditPopup(16)">#16 - SUB 1</button>
