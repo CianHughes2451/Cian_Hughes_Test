@@ -29,7 +29,19 @@ let playerNames = {
     12: '#12 - RWF',
     13: '#13 - LCNF',
     14: '#14 - FF',
-    15: '#15 - RCNF'
+    15: '#15 - RCNF',
+    16: '#16 - SUB 1',
+    17: '#17 - SUB 2',
+    18: '#18 - SUB 3',
+    19: '#19 - SUB 4',
+    20: '#20 - SUB 5',
+    21: '#21 - SUB 6',
+    22: '#22 - SUB 7',
+    23: '#23 - SUB 8',
+    24: '#24 - SUB 9',
+    25: '#25 - SUB 10',
+    26: '#26 - SUB 11',
+    27: '#27 - SUB 12'
 };
 
 let coordinatesEnabled = false;
@@ -620,7 +632,7 @@ function renameTeam(team) {
 }
 
 function updatePlayerLabels() {
-    for (let i = 1; i <= 15; i++) {
+    for (let i = 1; i <= 27; i++) {
         // Update Home tab
         const homeBtn = document.getElementById(`player-${i}-button`);
         if (homeBtn) homeBtn.textContent = playerNames[i];
@@ -1629,8 +1641,9 @@ function confirmPlayerEdit() {
     const formattedName = `#${number} - ${name}`;
     playerNames[editingPlayerIndex] = formattedName;
 
-    // Update home screen
-    document.getElementById(`player-${editingPlayerIndex}-button`).textContent = formattedName;
+    // Update home screen (if button exists; subs are only on Home)
+    const targetBtn = document.getElementById(`player-${editingPlayerIndex}-button`);
+    if (targetBtn) targetBtn.textContent = formattedName;
 
     // Update Stats player screens
     updatePlayerLabels();
@@ -1678,7 +1691,7 @@ document.addEventListener('keydown', function(e) {
 
 // Code for drag and drop feature
 function addDragAndTouchEventsToPlayerButtons() {
-    for (let i = 1; i <= 15; i++) {
+    for (let i = 1; i <= 27; i++) {
         const button = document.getElementById(`player-${i}-button`);
         if (!button) continue;
 
@@ -1868,3 +1881,97 @@ function setFilter(key, value) {
     updateSummary(); // Refresh table based on new filters
 }
 
+// =========================
+// SIDEBAR NAVIGATION LOGIC
+// =========================
+
+// Elements
+const sidebar = document.getElementById("sidebar");
+const sidebarOverlay = document.getElementById("sidebar-overlay");
+const sidebarToggle = document.getElementById("sidebar-toggle");
+const closeSidebarBtn = document.getElementById("close-sidebar");
+const sidebarLinks = document.querySelectorAll(".sidebar-link");
+
+// Open sidebar
+function openSidebar() {
+    sidebar.classList.add("open");
+    sidebarOverlay.classList.add("active");
+}
+
+// Close sidebar
+function closeSidebar() {
+    sidebar.classList.remove("open");
+    sidebarOverlay.classList.remove("active");
+}
+
+// Toggle sidebar
+sidebarToggle.addEventListener("click", openSidebar);
+closeSidebarBtn.addEventListener("click", closeSidebar);
+
+// Close sidebar when clicking outside
+sidebarOverlay.addEventListener("click", closeSidebar);
+
+// Keyboard shortcuts
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        closeSidebar();
+    }
+});
+
+// Handle tab switching from sidebar
+sidebarLinks.forEach(link => {
+    link.addEventListener("click", (e) => {
+        e.preventDefault();
+        const tabName = link.getAttribute("data-tab");
+        openTab(tabName); // Uses your existing openTab() function
+        highlightActiveTab(tabName);
+        closeSidebar();
+        // Save tab to localStorage
+        localStorage.setItem("activeTab", tabName);
+    });
+});
+
+// Highlight the active sidebar link
+function highlightActiveTab(tabName) {
+    sidebarLinks.forEach(link => {
+        if (link.getAttribute("data-tab") === tabName) {
+            link.classList.add("active");
+        } else {
+            link.classList.remove("active");
+        }
+    });
+}
+
+// Toggle collapsible groups in Review tab
+function toggleGroup(groupName) {
+    const content = document.getElementById(`${groupName}-content`);
+    const icon = document.getElementById(`${groupName}-icon`);
+    const isOpen = content.style.display !== 'none';
+    
+    // Close all other groups first
+    const allGroups = ['scoring', 'possession', 'errors', 'kickouts', 'against'];
+    allGroups.forEach(group => {
+        if (group !== groupName) {
+            const otherContent = document.getElementById(`${group}-content`);
+            const otherIcon = document.getElementById(`${group}-icon`);
+            otherContent.style.display = 'none';
+            otherIcon.textContent = '▶';
+        }
+    });
+    
+    // Toggle current group
+    if (isOpen) {
+        content.style.display = 'none';
+        icon.textContent = '▶';
+    } else {
+        content.style.display = 'block';
+        icon.textContent = '▼';
+    }
+}
+
+// Restore last active tab from localStorage on page load
+document.addEventListener("DOMContentLoaded", () => {
+    const savedTab = localStorage.getItem("activeTab") || "home";
+    openTab(savedTab);
+    highlightActiveTab(savedTab);
+});
