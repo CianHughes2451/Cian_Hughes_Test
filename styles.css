@@ -1,14 +1,30 @@
+/* Design tokens */
+:root {
+    --color-bg: #f6f7fb;
+    --color-surface: #ffffff;
+    --color-surface-alt: #f9fafb;
+    --color-primary: #2563eb;
+    --color-primary-hover: #1e4fd6;
+    --color-accent: #34c759;
+    --color-border: #e5e7eb;
+    --color-text: #1f2937;
+    --color-text-soft: #475569;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md: 0 8px 24px rgba(0,0,0,0.10);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+}
+
 /* General styling */
 body {
     font-family: 'Roboto', sans-serif;
-    background-color: #f7f7f7;
+    background-color: var(--color-bg);
     margin: 0;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    height: 100vh;
-    color: #333;
+    padding: 100px 20px 20px; /* Space for fixed banner */
+    color: var(--color-text);
+    min-height: 100vh;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -23,18 +39,29 @@ a {
 
 /* Counters */
 #counters {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr; /* left counter, center toggle, right counter */
+    align-items: center;
     position: fixed;                  /* ✅ Stick to top */
     top: 0;
     left: 0;
     width: 100%;
-    padding: 10px 20px;
+    padding: 10px 20px 14px;         /* extra bottom padding for label+toggle stack */
     box-sizing: border-box;
-    background: #007bff;
+    background: var(--color-primary);
     color: white;
     border-bottom: 1px solid #ddd;
     z-index: 1000;                    /* ✅ Stay above everything */
+}
+
+/* Ensure counters hug edges of banner */
+#counters .counter-container:first-child {
+    justify-self: start;
+}
+
+#counters .counter-container:last-child {
+    justify-self: end;
+    text-align: right;
 }
 
 .counter-container {
@@ -53,6 +80,31 @@ a {
     font-weight: bold;
 }
 
+/* Centered coordinates toggle in banner */
+.counters-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 160px; /* prevent cramping */
+    pointer-events: auto;
+}
+
+.toggle-label-top {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    margin-bottom: 6px;
+    color: #eaf2ff; /* soft for Apple-like */
+    text-align: center;
+}
+
+/* Ensure no horizontal scrolling */
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
 /* Tab container and buttons */
 .tab-container {
     width: 100%;
@@ -63,28 +115,33 @@ a {
 }
 
 .tab-button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 14px 20px;
+    background-color: transparent;
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    padding: 10px 16px;
     cursor: pointer;
-    font-size: 16px;
-    margin: 0 10px;
-    border-radius: 4px;
-    transition: background-color 0.3s ease;
+    font-size: 15px;
+    margin: 0 8px;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
 }
 
 .tab-button:hover {
-    background-color: #0056b3;
+    background-color: var(--color-surface);
 }
 
 .tab-button.active {
-    background-color: #0056b3;
+    background-color: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
 }
 
 .tab-content {
     display: none;
     width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 16px;
 }
 
 .tab-content.active {
@@ -96,7 +153,12 @@ a {
     display: none;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
 }
 
 .screen.active {
@@ -131,19 +193,20 @@ a {
 }
 
 .action-button {
-    background-color: #28a745;
-    padding: 15px 25px;
+    background-color: var(--color-primary);
+    padding: 14px 18px;
     font-size: 16px;
-    border: none;
-    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
     cursor: pointer;
     width: 100%;
-    color: white;
-    transition: background-color 0.3s ease;
+    color: #fff;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
 }
 
 .action-button:hover {
-    background-color: #218838;
+    background-color: var(--color-primary-hover);
 }
 
 /* Player button container */
@@ -155,18 +218,19 @@ a {
 }
 
 .player-button {
-    background-color: #17a2b8;
-    padding: 20px 40px;
-    font-size: 18px;
-    border: none;
-    border-radius: 8px;
+    background-color: var(--color-primary);
+    padding: 14px 18px;
+    font-size: 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
     cursor: pointer;
-    color: white;
-    transition: background-color 0.3s ease;
+    color: #fff;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
 }
 
 .player-button:hover {
-    background-color: #138496;
+    background-color: var(--color-primary-hover);
 }
 
 .player-row {
@@ -194,20 +258,21 @@ a {
 /* Mode and definition buttons */
 .mode-button,
 .definition-button {
-    background-color: #dc3545;
-    padding: 15px 30px;
+    background-color: var(--color-primary);
+    padding: 14px 18px;
     font-size: 16px;
-    border: none;
-    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
     cursor: pointer;
     width: 100%;
-    color: white;
-    transition: background-color 0.3s ease;
+    color: #fff;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
 }
 
 .mode-button:hover,
 .definition-button:hover {
-    background-color: #c82333;
+    background-color: var(--color-primary-hover);
 }
 
 .grid-container {
@@ -220,12 +285,6 @@ a {
 }
 
 .mode-button {
-    background-color: #dc3545;
-    padding: 20px;
-    font-size: 16px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
     text-align: center;
     width: 100%;
     box-sizing: border-box;
@@ -256,33 +315,32 @@ button:focus {
 }
 
 .action-button, .mode-button, .definition-button, .player-button {
-    padding: 15px 20px;
-    font-size: 18px;
+    padding: 14px 18px;
+    font-size: 16px;
 }
 
-/* Increase button contrast */
-.action-button, .mode-button, .definition-button, .player-button {
-    background-color: #007bff;
-    color: white;
-}
+/* Unified buttons use primary color via individual rules above */
 
 .action-button:hover, .mode-button:hover, .definition-button:hover, .player-button:hover {
-    background-color: #0056b3;
+    background-color: var(--color-primary-hover);
 }
 
 .action-button:focus, .mode-button:focus, .definition-button:focus, .player-button:focus {
-    background-color: #0056b3;
-    border: 2px solid #ff8c00;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+    border-color: var(--color-primary);
 }
 
 #summary-table {
     table-layout: fixed;
     border-collapse: collapse;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
 }
 
 #summary-table th, #summary-table td {
-    border: 1px solid #ddd;
-    padding: 6px 8px;
+    border: 1px solid var(--color-border);
+    padding: 10px 12px;
     text-align: left;
     white-space: nowrap;
     overflow: hidden;
@@ -347,7 +405,7 @@ button:focus {
 
 /* Row hover effect */
 #summary-table tr:hover {
-    background-color: #f9f9f9;
+    background-color: #f8fafc;
 }
 
 /* Tooltip on hover for all truncated cells */
@@ -390,11 +448,61 @@ button:focus {
     margin-top: 20px;
 }
 
+/* Home tab styles */
+.home-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+}
+
+.home-header {
+    margin-bottom: 8px;
+}
+
+.home-title {
+    margin: 0 0 4px 0;
+    font-size: 22px;
+    color: var(--color-text);
+}
+
+.home-subtitle {
+    margin: 0;
+    color: var(--color-text-soft);
+    font-size: 14px;
+}
+
+.home-section {
+    margin-top: 16px;
+}
+
+.home-section-title {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    color: var(--color-text-soft);
+}
+
+.home-caption {
+    margin: 4px 0 8px 0;
+    color: var(--color-text-soft);
+    font-size: 14px;
+}
+
+.divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: 16px 0;
+}
+
 #rename-team-1-button, #rename-team-2-button, #confirm-changes-button, 
 #player-1-button, #player-2-button, #player-3-button, #player-4-button, 
 #player-5-button, #player-6-button, #player-7-button, #player-8-button, 
 #player-9-button, #player-10-button, #player-11-button, #player-12-button, 
 #player-13-button, #player-14-button, #player-15-button, 
+#player-16-button, #player-17-button, #player-18-button, #player-19-button, 
+#player-20-button, #player-21-button, #player-22-button, #player-23-button, 
+#player-24-button, #player-25-button, #player-26-button, #player-27-button, 
 #confirm-rename-player-button {
     background-color: #007bff;
     color: white;
@@ -411,6 +519,9 @@ button:focus {
 #player-5-button:hover, #player-6-button:hover, #player-7-button:hover, #player-8-button:hover, 
 #player-9-button:hover, #player-10-button:hover, #player-11-button:hover, #player-12-button:hover, 
 #player-13-button:hover, #player-14-button:hover, #player-15-button:hover, 
+#player-16-button:hover, #player-17-button:hover, #player-18-button:hover, #player-19-button:hover, 
+#player-20-button:hover, #player-21-button:hover, #player-22-button:hover, #player-23-button:hover, 
+#player-24-button:hover, #player-25-button:hover, #player-26-button:hover, #player-27-button:hover, 
 #confirm-rename-player-button:hover {
     background-color: #0056b3;
 }
@@ -501,7 +612,7 @@ button[contenteditable="true"] {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc;
+    background-color: #d6d6d6; /* subtle gray on OFF to contrast banner */
     transition: 0.4s;
     border-radius: 34px;
 }
@@ -519,11 +630,11 @@ button[contenteditable="true"] {
 }
 
 input:checked + .slider {
-    background-color: #007bff;
+    background-color: #34c759; /* Apple-like green when ON */
 }
 
 input:focus + .slider {
-    box-shadow: 0 0 1px #007bff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
 }
 
 input:checked + .slider:before {
@@ -633,40 +744,171 @@ input:checked + .slider:before {
     height: auto; /* Ensure it takes full height of the viewport */
 }
 
-.review-container {
+/* Review tab layout */
+.review-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    min-height: calc(100vh - 200px);
+    padding: 20px;
+    box-sizing: border-box;
+    max-width: 1400px;
+    margin: 0 auto;
+    min-width: 0;
+    width: 100%;
+}
+
+.pitch-wrapper {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: calc(100vh - 150px); /* Adjust height as needed */
+    flex: 1;
+    min-width: 400px;
+    max-width: calc(100% - 270px);
 }
 
 #review-pitch {
     background-color: #61d94f; /* Same color as other pitch */
     border: 1px solid #000000; /* White border */
+    max-width: 100%;
+    height: auto;
+}
+
+/* Review controls */
+.review-controls {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 16px;
+    width: 250px;
+    flex-shrink: 0;
+    min-width: 250px;
+}
+
+.controls-title {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text);
+    text-align: center;
+}
+
+.collapsible-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.collapsible-group {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.group-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--color-surface-alt);
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+    outline: none;
+}
+
+.group-header:hover {
+    background: var(--color-border);
+}
+
+.group-header:focus {
+    border-color: var(--color-primary);
+    background: var(--color-border);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.group-header:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+}
+
+.group-title {
+    flex: 1;
+    text-align: left;
+}
+
+.group-icon {
+    font-size: 12px;
+    transition: transform 0.2s ease;
+    color: var(--color-text-soft);
+}
+
+.group-content {
+    display: none;
+    padding: 16px;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.toggle-label:hover {
+    color: var(--color-primary);
+}
+
+.toggle-label input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--color-border);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.toggle-label input[type="checkbox"]:checked + .checkmark {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.toggle-label input[type="checkbox"]:checked + .checkmark::after {
+    content: '✓';
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
 }
 
 #summary-box {
     position: absolute;
-    background-color: white;
-    border: 1px solid black;
-    padding: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    box-shadow: var(--shadow-md);
     z-index: 1000;
-}
-
-.toggle-container {
-    display: flex;
-    flex-direction: column;
-    margin-left: 20px;
-}
-
-.toggle-container h4 {
-    margin-bottom: 10px;
-}
-
-.toggle-container label {
-    margin-bottom: 10px;
-    font-size: 16px;
+    font-size: 12px;
+    color: var(--color-text);
+    max-width: 200px;
 }
 
 .popup {
@@ -674,11 +916,12 @@ input:checked + .slider:before {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: white;
+    background: var(--color-surface);
     padding: 20px;
-    border: 2px solid #007bff;
-    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
     z-index: 1000;
+    box-shadow: var(--shadow-md);
 }
 .popup-content {
     display: flex;
@@ -688,8 +931,8 @@ input:checked + .slider:before {
 .popup input {
     padding: 8px;
     font-size: 16px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
 }
 
 /* Fading message box for 2-point invalid coordinates */
@@ -726,11 +969,11 @@ input:checked + .slider:before {
     position: sticky;
     top: 0;
     z-index: 10;
-    background-color: #f8f8f8;
-    box-shadow: inset 0 -1px 0 #ccc;
+    background-color: #f1f5f9;
+    box-shadow: inset 0 -1px 0 #e2e8f0;
     text-align: left;
-    padding: 6px 8px;
-    border: 1px solid #ddd;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
 }
 
 /* Ensure consistent dropdown size, no shifting */
@@ -752,9 +995,9 @@ input:checked + .slider:before {
 /* === Row Options Popup Styling (Apple-like) === */
 .popup-menu {
     position: absolute;
-    background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    background-color: var(--color-surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
     padding: 10px;
     display: none;
     flex-direction: column;
@@ -762,7 +1005,7 @@ input:checked + .slider:before {
     min-width: 160px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     animation: fadeIn 0.2s ease-in-out;
-    border: 1px solid rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--color-border);
 }
 
 .popup-menu button {
@@ -778,7 +1021,7 @@ input:checked + .slider:before {
 }
 
 .popup-menu button:hover {
-    background-color: #f2f2f2;
+    background-color: var(--color-surface-alt);
 }
 
 @keyframes fadeIn {
@@ -1070,3 +1313,253 @@ input:checked + .slider:before {
     box-shadow: inset 2px 0 0 #007bff;
     transition: background-color 0.2s ease;
 }
+
+/* ========================= */
+/* SIDEBAR STYLES */
+/* ========================= */
+
+/* Hamburger button (fixed top-left) */
+/* Hamburger button (now below counters, with contrasting colour) */
+.hamburger {
+    font-size: 28px;
+    border: none;
+    color: black;
+    cursor: pointer;
+    position: fixed;
+    top: 70px;             /* Push below the counters bar (counters = 60px height) */
+    left: 15px;
+    z-index: 1100;         /* above content but below sidebar */
+    padding: 6px 12px;
+    transition: background 0.3s;
+}
+
+
+/* Remove hover box, just change shade */
+.hamburger:hover {
+    color: #333;
+}
+
+/* Sidebar (lighter background now) */
+.sidebar {
+    height: 100%;
+    width: 250px;
+    position: fixed;
+    top: 0;
+    left: -250px; /* hidden initially */
+    background-color: var(--color-surface);
+    overflow-x: hidden;
+    overflow-y: auto;           /* allow scrolling if content taller */
+    padding-top: 60px;
+    padding-bottom: 110px;      /* ample room so footer is not overlapped */
+    transition: 0.3s ease;
+    z-index: 1200;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.08);
+}
+
+/* Sidebar open state */
+.sidebar.open {
+    left: 0;
+}
+
+/* Sidebar close button (X) */
+.sidebar .closebtn {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 36px;
+    color: white;
+    text-decoration: none;
+}
+
+/* Sidebar links */
+.sidebar a {
+    padding: 12px 20px;
+    text-decoration: none;
+    font-size: 18px;
+    color: var(--color-text);
+    display: block;
+    transition: 0.2s;
+}
+
+.sidebar a:hover {
+    background-color: var(--color-surface-alt);
+}
+
+.sidebar a.active {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+/* Sidebar footer (coordinates toggle) */
+.sidebar-footer {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: #ffffff;
+    border: 1px solid #e6e6e6;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    z-index: 1;                 /* ensure it's above internal content */
+}
+
+.sidebar-footer .toggle-label {
+    color: #333;
+    font-weight: 600;
+}
+
+.sidebar-footer .switch { /* scale slightly for visibility */
+    transform: scale(0.95);
+}
+
+/* Overlay background */
+#sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+    z-index: 1000;
+    display: none;
+}
+
+#sidebar-overlay.active {
+    display: block;
+}
+
+/* Main content spacing fix (avoids top-heavy feel) */
+#main-content {
+    margin-top: 0;        /* Removed since body already has padding-top */
+    padding: 0;           /* Removed to prevent double padding */
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+/* Subs section on Home tab */
+.subs-section {
+    width: 100%;
+    margin-top: 40px;            /* clear separation from starting 15 */
+    padding-top: 20px;
+    border-top: 2px dashed #ccc; /* visual distinction */
+}
+
+.subs-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    justify-items: center;
+}
+
+/* Responsive (mobile-first) */
+@media screen and (max-width: 600px) {
+    .sidebar {
+        width: 220px;
+    }
+    #main-content {
+        margin-top: 90px;  /* adjust slightly for smaller screens */
+        padding: 15px;
+    }
+    /* Responsive refinements */
+    #counters {
+        padding: 8px 12px 12px;
+        grid-template-columns: 1fr auto 1fr;
+    }
+    .team-name, .counter {
+        font-size: 1.1em;
+    }
+    .toggle-label-top {
+        font-size: 11px;
+        margin-bottom: 4px;
+    }
+    .tab-content {
+        padding: 12px;
+    }
+    .screen {
+        padding: 12px;
+        border-radius: var(--radius-sm);
+    }
+    .action-columns {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .subs-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+    
+    /* Review tab responsive - Mobile only */
+    .review-layout {
+        flex-direction: column;
+        padding: 12px;
+        gap: 20px;
+        min-height: calc(100vh - 150px);
+        max-width: 100%;
+    }
+    
+    .review-controls {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+        min-width: auto;
+    }
+    
+    .pitch-wrapper {
+        order: -1; /* Move pitch to top on mobile */
+        flex: none;
+        min-width: auto;
+        max-width: none;
+    }
+    
+    #review-pitch {
+        max-width: 350px;
+        height: auto;
+    }
+}
+
+/* Tablet and small desktop responsive styles */
+@media screen and (max-width: 1024px) and (min-width: 601px) {
+    .review-layout {
+        gap: 15px;
+        padding: 15px;
+    }
+    
+    .review-controls {
+        width: 250px;
+        min-width: 250px;
+    }
+    
+    .pitch-wrapper {
+        min-width: 350px;
+        max-width: calc(100% - 270px);
+    }
+    
+    #review-pitch {
+        max-width: 100%;
+    }
+}
+
+/* Medium desktop screens */
+@media screen and (max-width: 1200px) and (min-width: 1025px) {
+    .review-layout {
+        gap: 18px;
+        padding: 18px;
+    }
+    
+    .review-controls {
+        width: 250px;
+        min-width: 250px;
+    }
+    
+    .pitch-wrapper {
+        min-width: 400px;
+        max-width: calc(100% - 270px);
+    }
+}
+
