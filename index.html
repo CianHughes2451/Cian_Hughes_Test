@@ -49,75 +49,169 @@
     <main>
         <div id="home" class="tab-content">
             <div class="home-card">
-                <div class="home-header">
-                    <h2 class="home-title">Home</h2>
-                    <p class="home-subtitle">Set team names and manage your starting 15 and substitutes.</p>
-                </div>
-
-                <div class="home-section">
-                    <h3 class="home-section-title">Teams</h3>
-                    <div class="row">
-                        <button id="rename-team-1-button" onclick="openTeamEditPopup(1)">Team 1</button>
-                        <button id="rename-team-2-button" onclick="openTeamEditPopup(2)">Team 2</button>
+                <!-- Team Toggle Section -->
+                <div class="team-toggle-section">
+                    <div class="team-toggle-container">
+                        <button id="our-team-toggle" class="team-toggle-button active" onclick="switchTeamView('our-team')">
+                            <span class="toggle-icon">👥</span>
+                            <span class="toggle-text">Our Team</span>
+                        </button>
+                        <button id="opposition-toggle" class="team-toggle-button" onclick="switchTeamView('opposition')">
+                            <span class="toggle-icon">⚔️</span>
+                            <span class="toggle-text">Opposition</span>
+                        </button>
                     </div>
                 </div>
 
-                <div class="home-section">
-                    <div class="home-caption">Starting 15</div>
-                    <div class="row">
-                        <button id="player-1-button" onclick="openEditPopup(1)">#1 - GK</button>
+                <!-- Our Team View -->
+                <div id="our-team-view" class="team-view active">
+
+                    <div class="home-section">
+                        <h4 class="home-section-title">Team Name</h4>
+                        <div class="row team-controls-row">
+                            <button id="rename-team-1-button" onclick="openTeamEditPopup(1)">Team 1</button>
+                            <button id="customize-team-1-button" class="customize-button" onclick="openTeamCustomizePopup(1)" title="Customize team colors and pattern">
+                                <span class="customize-icon">🎨</span>
+                            </button>
+                        </div>
                     </div>
-                    <div class="row">
-                        <button id="player-4-button" onclick="openEditPopup(4)">#4 - RCNB</button>
-                        <button id="player-3-button" onclick="openEditPopup(3)">#3 - FB</button>
-                        <button id="player-2-button" onclick="openEditPopup(2)">#2 - LCNB</button>
+
+                    <div class="home-section">
+                        <div class="home-caption">Starting 15</div>
+                        <div class="row">
+                            <button id="player-1-button" onclick="openEditPopup(1)">#1 - GK</button>
+                        </div>
+                        <div class="row">
+                            <button id="player-4-button" onclick="openEditPopup(4)">#4 - RCNB</button>
+                            <button id="player-3-button" onclick="openEditPopup(3)">#3 - FB</button>
+                            <button id="player-2-button" onclick="openEditPopup(2)">#2 - LCNB</button>
+                        </div>
+                        <div class="row">
+                            <button id="player-7-button" onclick="openEditPopup(7)">#7 - RWB</button>
+                            <button id="player-6-button" onclick="openEditPopup(6)">#6 - CTB</button>
+                            <button id="player-5-button" onclick="openEditPopup(5)">#5 - LWB</button>
+                        </div>
+                        <div class="row">
+                            <button id="player-9-button" onclick="openEditPopup(9)">#9 - MF</button>
+                            <button id="player-8-button" onclick="openEditPopup(8)">#8 - MF</button>
+                        </div>
+                        <div class="row">
+                            <button id="player-12-button" onclick="openEditPopup(12)">#12 - RWF</button>
+                            <button id="player-11-button" onclick="openEditPopup(11)">#11 - CTF</button>
+                            <button id="player-10-button" onclick="openEditPopup(10)">#10 - LWF</button>
+                        </div>
+                        <div class="row">
+                            <button id="player-15-button" onclick="openEditPopup(15)">#15 - RCNF</button>
+                            <button id="player-14-button" onclick="openEditPopup(14)">#14 - FF</button>
+                            <button id="player-13-button" onclick="openEditPopup(13)">#13 - LCNF</button>
+                        </div>
                     </div>
-                    <div class="row">
-                        <button id="player-7-button" onclick="openEditPopup(7)">#7 - RWB</button>
-                        <button id="player-6-button" onclick="openEditPopup(6)">#6 - CTB</button>
-                        <button id="player-5-button" onclick="openEditPopup(5)">#5 - LWB</button>
+
+                    <div class="divider"></div>
+
+                    <!-- Our Team Substitutes -->
+                    <div class="subs-toggle-container">
+                        <button id="our-subs-toggle-btn" class="subs-toggle-button" onclick="toggleSubstitutes('our-team')">
+                            <span class="toggle-icon">▶</span>
+                            <span class="toggle-text">Show Substitutes</span>
+                        </button>
                     </div>
-                    <div class="row">
-                        <button id="player-9-button" onclick="openEditPopup(9)">#9 - MF</button>
-                        <button id="player-8-button" onclick="openEditPopup(8)">#8 - MF</button>
-                    </div>
-                    <div class="row">
-                        <button id="player-12-button" onclick="openEditPopup(12)">#12 - RWF</button>
-                        <button id="player-11-button" onclick="openEditPopup(11)">#11 - CTF</button>
-                        <button id="player-10-button" onclick="openEditPopup(10)">#10 - LWF</button>
-                    </div>
-                    <div class="row">
-                        <button id="player-15-button" onclick="openEditPopup(15)">#15 - RCNF</button>
-                        <button id="player-14-button" onclick="openEditPopup(14)">#14 - FF</button>
-                        <button id="player-13-button" onclick="openEditPopup(13)">#13 - LCNF</button>
+
+                    <div class="subs-section" id="our-subs-section" style="display: none;">
+                        <div class="home-caption">Substitutes</div>
+                        <div class="subs-grid">
+                            <button id="player-16-button" onclick="openEditPopup(16)">#16 - SUB 1</button>
+                            <button id="player-17-button" onclick="openEditPopup(17)">#17 - SUB 2</button>
+                            <button id="player-18-button" onclick="openEditPopup(18)">#18 - SUB 3</button>
+                            <button id="player-19-button" onclick="openEditPopup(19)">#19 - SUB 4</button>
+                            <button id="player-20-button" onclick="openEditPopup(20)">#20 - SUB 5</button>
+                            <button id="player-21-button" onclick="openEditPopup(21)">#21 - SUB 6</button>
+                            <button id="player-22-button" onclick="openEditPopup(22)">#22 - SUB 7</button>
+                            <button id="player-23-button" onclick="openEditPopup(23)">#23 - SUB 8</button>
+                            <button id="player-24-button" onclick="openEditPopup(24)">#24 - SUB 9</button>
+                            <button id="player-25-button" onclick="openEditPopup(25)">#25 - SUB 10</button>
+                            <button id="player-26-button" onclick="openEditPopup(26)">#26 - SUB 11</button>
+                            <button id="player-27-button" onclick="openEditPopup(27)">#27 - SUB 12</button>
+                            <button id="player-28-button" onclick="openEditPopup(28)">#28 - SUB 13</button>
+                            <button id="player-29-button" onclick="openEditPopup(29)">#29 - SUB 14</button>
+                            <button id="player-30-button" onclick="openEditPopup(30)">#30 - SUB 15</button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="divider"></div>
+                <!-- Opposition Team View -->
+                <div id="opposition-view" class="team-view">
 
-                <!-- Substitutes Toggle Button -->
-                <div class="subs-toggle-container">
-                    <button id="subs-toggle-btn" class="subs-toggle-button" onclick="toggleSubstitutes()">
-                        <span class="toggle-icon">▶</span>
-                        <span class="toggle-text">Show Substitutes</span>
-                    </button>
-                </div>
+                    <div class="home-section">
+                        <h4 class="home-section-title">Team Name</h4>
+                        <div class="row team-controls-row">
+                            <button id="rename-team-2-button" onclick="openTeamEditPopup(2)">Team 2</button>
+                            <button id="customize-team-2-button" class="customize-button" onclick="openTeamCustomizePopup(2)" title="Customize team colors and pattern">
+                                <span class="customize-icon">🎨</span>
+                            </button>
+                        </div>
+                    </div>
 
-                <div class="subs-section" id="subs-section" style="display: none;">
-                    <div class="home-caption">Substitutes</div>
-                    <div class="subs-grid">
-                        <button id="player-16-button" onclick="openEditPopup(16)">#16 - SUB 1</button>
-                        <button id="player-17-button" onclick="openEditPopup(17)">#17 - SUB 2</button>
-                        <button id="player-18-button" onclick="openEditPopup(18)">#18 - SUB 3</button>
-                        <button id="player-19-button" onclick="openEditPopup(19)">#19 - SUB 4</button>
-                        <button id="player-20-button" onclick="openEditPopup(20)">#20 - SUB 5</button>
-                        <button id="player-21-button" onclick="openEditPopup(21)">#21 - SUB 6</button>
-                        <button id="player-22-button" onclick="openEditPopup(22)">#22 - SUB 7</button>
-                        <button id="player-23-button" onclick="openEditPopup(23)">#23 - SUB 8</button>
-                        <button id="player-24-button" onclick="openEditPopup(24)">#24 - SUB 9</button>
-                        <button id="player-25-button" onclick="openEditPopup(25)">#25 - SUB 10</button>
-                        <button id="player-26-button" onclick="openEditPopup(26)">#26 - SUB 11</button>
-                        <button id="player-27-button" onclick="openEditPopup(27)">#27 - SUB 12</button>
+                    <div class="home-section">
+                        <div class="home-caption">Starting 15</div>
+                        <div class="row">
+                            <button id="opp-player-1-button" class="player-button" onclick="openEditPopup(101)">#1 - GK</button>
+                        </div>
+                        <div class="row">
+                            <button id="opp-player-4-button" class="player-button" onclick="openEditPopup(104)">#4 - RCNB</button>
+                            <button id="opp-player-3-button" class="player-button" onclick="openEditPopup(103)">#3 - FB</button>
+                            <button id="opp-player-2-button" class="player-button" onclick="openEditPopup(102)">#2 - LCNB</button>
+                        </div>
+                        <div class="row">
+                            <button id="opp-player-7-button" class="player-button" onclick="openEditPopup(107)">#7 - RWB</button>
+                            <button id="opp-player-6-button" class="player-button" onclick="openEditPopup(106)">#6 - CTB</button>
+                            <button id="opp-player-5-button" class="player-button" onclick="openEditPopup(105)">#5 - LWB</button>
+                        </div>
+                        <div class="row">
+                            <button id="opp-player-9-button" class="player-button" onclick="openEditPopup(109)">#9 - MF</button>
+                            <button id="opp-player-8-button" class="player-button" onclick="openEditPopup(108)">#8 - MF</button>
+                        </div>
+                        <div class="row">
+                            <button id="opp-player-12-button" class="player-button" onclick="openEditPopup(112)">#12 - RWF</button>
+                            <button id="opp-player-11-button" class="player-button" onclick="openEditPopup(111)">#11 - CTF</button>
+                            <button id="opp-player-10-button" class="player-button" onclick="openEditPopup(110)">#10 - LWF</button>
+                        </div>
+                        <div class="row">
+                            <button id="opp-player-15-button" class="player-button" onclick="openEditPopup(115)">#15 - RCNF</button>
+                            <button id="opp-player-14-button" class="player-button" onclick="openEditPopup(114)">#14 - FF</button>
+                            <button id="opp-player-13-button" class="player-button" onclick="openEditPopup(113)">#13 - LCNF</button>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Opposition Substitutes -->
+                    <div class="subs-toggle-container">
+                        <button id="opp-subs-toggle-btn" class="subs-toggle-button" onclick="toggleSubstitutes('opposition')">
+                            <span class="toggle-icon">▶</span>
+                            <span class="toggle-text">Show Substitutes</span>
+                        </button>
+                    </div>
+
+                    <div class="subs-section" id="opp-subs-section" style="display: none;">
+                        <div class="home-caption">Substitutes</div>
+                        <div class="subs-grid">
+                            <button id="opp-player-16-button" class="player-button" onclick="openEditPopup(116)">#16 - SUB 1</button>
+                            <button id="opp-player-17-button" class="player-button" onclick="openEditPopup(117)">#17 - SUB 2</button>
+                            <button id="opp-player-18-button" class="player-button" onclick="openEditPopup(118)">#18 - SUB 3</button>
+                            <button id="opp-player-19-button" class="player-button" onclick="openEditPopup(119)">#19 - SUB 4</button>
+                            <button id="opp-player-20-button" class="player-button" onclick="openEditPopup(120)">#20 - SUB 5</button>
+                            <button id="opp-player-21-button" class="player-button" onclick="openEditPopup(121)">#21 - SUB 6</button>
+                            <button id="opp-player-22-button" class="player-button" onclick="openEditPopup(122)">#22 - SUB 7</button>
+                            <button id="opp-player-23-button" class="player-button" onclick="openEditPopup(123)">#23 - SUB 8</button>
+                            <button id="opp-player-24-button" class="player-button" onclick="openEditPopup(124)">#24 - SUB 9</button>
+                            <button id="opp-player-25-button" class="player-button" onclick="openEditPopup(125)">#25 - SUB 10</button>
+                            <button id="opp-player-26-button" class="player-button" onclick="openEditPopup(126)">#26 - SUB 11</button>
+                            <button id="opp-player-27-button" class="player-button" onclick="openEditPopup(127)">#27 - SUB 12</button>
+                            <button id="opp-player-28-button" class="player-button" onclick="openEditPopup(128)">#28 - SUB 13</button>
+                            <button id="opp-player-29-button" class="player-button" onclick="openEditPopup(129)">#29 - SUB 14</button>
+                            <button id="opp-player-30-button" class="player-button" onclick="openEditPopup(130)">#30 - SUB 15</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -132,7 +226,7 @@
                 <input type="text" id="player-name-input" />
 
                 <button onclick="confirmPlayerEdit()">Confirm</button>
-                <button onclick="document.getElementById('player-edit-popup').style.display='none'">Cancel</button>
+                <button onclick="PopupAnimator.hidePopup(document.getElementById('player-edit-popup'), 'standard')">Cancel</button>
             </div>
         </div>
 
@@ -142,7 +236,93 @@
                 <input type="text" id="team-name-input" />
 
                 <button onclick="confirmTeamEdit()">Confirm</button>
-                <button onclick="document.getElementById('team-edit-popup').style.display='none'">Cancel</button>
+                <button onclick="PopupAnimator.hidePopup(document.getElementById('team-edit-popup'), 'standard')">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Team Customization Popup -->
+        <div id="team-customize-popup" class="popup" style="display:none;">
+            <div class="popup-content customize-popup-content">
+                <h3 class="customize-popup-title">Customize Team</h3>
+                
+                <!-- Pattern Selection -->
+                <div class="customize-section">
+                    <h4 class="customize-section-title">Pattern</h4>
+                    <div class="pattern-grid">
+                        <div class="pattern-option" data-pattern="solid">
+                            <div class="pattern-preview pattern-solid"></div>
+                            <span class="pattern-label">Classic</span>
+                        </div>
+                        <div class="pattern-option" data-pattern="diagonal">
+                            <div class="pattern-preview pattern-diagonal"></div>
+                            <span class="pattern-label">Diagonal</span>
+                        </div>
+                        <div class="pattern-option" data-pattern="checkered">
+                            <div class="pattern-preview pattern-checkered"></div>
+                            <span class="pattern-label">Checkered</span>
+                        </div>
+                        <div class="pattern-option" data-pattern="vertical">
+                            <div class="pattern-preview pattern-vertical"></div>
+                            <span class="pattern-label">Vertical</span>
+                        </div>
+                        <div class="pattern-option" data-pattern="horizontal">
+                            <div class="pattern-preview pattern-horizontal"></div>
+                            <span class="pattern-label">Horizontal</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Color Selection -->
+                <div class="customize-section">
+                    <h4 class="customize-section-title">Primary Color</h4>
+                    <div class="color-picker-container">
+                        <input type="color" id="primary-color-picker" value="#2563eb">
+                        <div class="color-presets">
+                            <div class="color-preset" data-color="#ef4444" style="background: #ef4444;" title="Red"></div>
+                            <div class="color-preset" data-color="#f97316" style="background: #f97316;" title="Orange"></div>
+                            <div class="color-preset" data-color="#eab308" style="background: #eab308;" title="Yellow"></div>
+                            <div class="color-preset" data-color="#22c55e" style="background: #22c55e;" title="Green"></div>
+                            <div class="color-preset" data-color="#3b82f6" style="background: #3b82f6;" title="Blue"></div>
+                            <div class="color-preset" data-color="#8b5cf6" style="background: #8b5cf6;" title="Purple"></div>
+                            <div class="color-preset" data-color="#ec4899" style="background: #ec4899;" title="Pink"></div>
+                            <div class="color-preset" data-color="#6b7280" style="background: #6b7280;" title="Gray"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="customize-section">
+                    <h4 class="customize-section-title">Secondary Color</h4>
+                    <div class="color-picker-container">
+                        <input type="color" id="secondary-color-picker" value="#1d4ed8">
+                        <button id="secondary-none-btn" class="secondary-none-button">None</button>
+                        <div class="color-presets">
+                            <div class="color-preset" data-color="#ef4444" style="background: #ef4444;" title="Red"></div>
+                            <div class="color-preset" data-color="#f97316" style="background: #f97316;" title="Orange"></div>
+                            <div class="color-preset" data-color="#eab308" style="background: #eab308;" title="Yellow"></div>
+                            <div class="color-preset" data-color="#22c55e" style="background: #22c55e;" title="Green"></div>
+                            <div class="color-preset" data-color="#3b82f6" style="background: #3b82f6;" title="Blue"></div>
+                            <div class="color-preset" data-color="#8b5cf6" style="background: #8b5cf6;" title="Purple"></div>
+                            <div class="color-preset" data-color="#ec4899" style="background: #ec4899;" title="Pink"></div>
+                            <div class="color-preset" data-color="#6b7280" style="background: #6b7280;" title="Gray"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Preview -->
+                <div class="customize-section">
+                    <h4 class="customize-section-title">Preview</h4>
+                    <div class="preview-container">
+                        <div id="customize-preview" class="customize-preview-button">
+                            Preview
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="popup-buttons">
+                    <button id="confirm-customize" onclick="confirmTeamCustomization()">Confirm</button>
+                    <button onclick="closeTeamCustomizePopup()">Cancel</button>
+                </div>
             </div>
         </div>
 
@@ -578,7 +758,7 @@
                                 <span class="group-title">Scoring</span>
                                 <span class="group-icon" id="scoring-icon">▶</span>
                             </button>
-                            <div class="group-content" id="scoring-content">
+                            <div class="group-content collapsible-content collapsed" id="scoring-content">
                                 <label class="toggle-label">
                                     <input type="checkbox" id="toggle-own-shots">
                                     <span class="checkmark"></span>
@@ -592,7 +772,7 @@
                                 <span class="group-title">Possession</span>
                                 <span class="group-icon" id="possession-icon">▶</span>
                             </button>
-                            <div class="group-content" id="possession-content">
+                            <div class="group-content collapsible-content collapsed" id="possession-content">
                                 <label class="toggle-label">
                                     <input type="checkbox" id="toggle-fouls-won">
                                     <span class="checkmark"></span>
@@ -621,7 +801,7 @@
                                 <span class="group-title">Errors & Turnovers</span>
                                 <span class="group-icon" id="errors-icon">▶</span>
                             </button>
-                            <div class="group-content" id="errors-content">
+                            <div class="group-content collapsible-content collapsed" id="errors-content">
                                 <label class="toggle-label">
                                     <input type="checkbox" id="toggle-unforced-errors">
                                     <span class="checkmark"></span>
@@ -645,7 +825,7 @@
                                 <span class="group-title">Kickouts</span>
                                 <span class="group-icon" id="kickouts-icon">▶</span>
                             </button>
-                            <div class="group-content" id="kickouts-content">
+                            <div class="group-content collapsible-content collapsed" id="kickouts-content">
                                 <label class="toggle-label">
                                     <input type="checkbox" id="toggle-own-kickouts">
                                     <span class="checkmark"></span>
@@ -664,7 +844,7 @@
                                 <span class="group-title">Against</span>
                                 <span class="group-icon" id="against-icon">▶</span>
                             </button>
-                            <div class="group-content" id="against-content">
+                            <div class="group-content collapsible-content collapsed" id="against-content">
                                 <label class="toggle-label">
                                     <input type="checkbox" id="toggle-point-against">
                                     <span class="checkmark"></span>
@@ -688,37 +868,53 @@
         </div>
 
         <div id="summary" class="tab-content">
-            <h2>Summary</h2>
-            <div id="summary-content">
-                <div id="summary-container">
-                    <table id="summary-table">
-                        <thead>
-                            <tr>
-                                <th>Action</th>
-                                <th>Mode</th>
-                                <th>Definition</th>
-                                <th>Player</th>
-                                <th>Player 2</th>
-                                <th>X_1</th>
-                                <th>Y_1</th>
-                                <th>X_2</th>
-                                <th>Y_2</th>
-                                <th>Notes</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+            <div class="summary-header">
+                <div class="summary-toggle-container">
+                    <button id="timeline-toggle" class="summary-toggle-button active" onclick="switchSummaryView('timeline')">
+                        <span class="toggle-icon">📅</span>
+                        <span class="toggle-text">Timeline</span>
+                    </button>
+                    <div class="summary-center-space"></div>
+                    <button id="table-toggle" class="summary-toggle-button" onclick="switchSummaryView('table')">
+                        <span class="toggle-icon">📊</span>
+                        <span class="toggle-text">Table</span>
+                    </button>
+                </div>
+            </div>
 
-                        </tbody>
-                    </table>        
+            <div id="summary-content">
+                <!-- Timeline View -->
+                <div id="timeline-view" class="summary-view active">
+                    <div class="timeline-container">
+                        <div class="timeline-line"></div>
+                        <div id="timeline-content" class="timeline-content">
+                            <!-- Timeline items will be dynamically added here -->
+                        </div>
+                    </div>
                 </div>
 
-                <div class="csv-controls-bar">
-                    <div class="csv-left">
-                        <button class="popup-menu-button" onclick="exportSummaryToCSV()">📤 Export to CSV</button>
-                    </div>
-                    <div class="csv-right">
-                        <input type="file" id="upload-csv" accept=".csv" style="display: none;" />
-                        <button id="upload-csv-button" class="popup-menu-button">📥 Upload CSV</button>
+                <!-- Table View -->
+                <div id="table-view" class="summary-view">
+                    <div id="summary-container">
+                        <table id="summary-table">
+                            <thead>
+                                <tr>
+                                    <th>Action</th>
+                                    <th>Mode</th>
+                                    <th>Definition</th>
+                                    <th>Player</th>
+                                    <th>Player 2</th>
+                                    <th>X_1</th>
+                                    <th>Y_1</th>
+                                    <th>X_2</th>
+                                    <th>Y_2</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>        
                     </div>
                 </div>
             </div>
@@ -727,8 +923,8 @@
 
     <div id="row-options-popup" class="popup-menu">
         <button onclick="handleRowOption('addNote')">📝 Add Note</button>
-        <button onclick="handleRowOption('edit')">✏️ Edit</button>
         <button onclick="handleRowOption('delete')">🗑️ Delete</button>
+        <button onclick="hideRowOptionsMenu()" class="cancel-option-btn">Cancel</button>
     </div>
 
     <div id="note-popup" class="popup" style="display: none;">
