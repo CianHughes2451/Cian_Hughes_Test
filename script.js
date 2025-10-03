@@ -14,6 +14,7 @@ let marker1 = { x: null, y: null };
 let marker2 = { x: null, y: null };
 let firstMarkerConfirmed = false;
 
+// Our Team Player Names
 let playerNames = {
     1: '#1 - GK',
     2: '#2 - LCNB',
@@ -41,8 +42,69 @@ let playerNames = {
     24: '#24 - SUB 9',
     25: '#25 - SUB 10',
     26: '#26 - SUB 11',
-    27: '#27 - SUB 12'
+    27: '#27 - SUB 12',
+    28: '#28 - SUB 13',
+    29: '#29 - SUB 14',
+    30: '#30 - SUB 15'
 };
+
+// Opposition Player Names (using 100+ IDs to avoid conflicts)
+let oppositionPlayerNames = {
+    101: '#1 - GK',
+    102: '#2 - LCNB',
+    103: '#3 - FB',
+    104: '#4 - RCNB',
+    105: '#5 - LWB',
+    106: '#6 - CTB',
+    107: '#7 - RWB',
+    108: '#8 - MF',
+    109: '#9 - MF',
+    110: '#10 - LWF',
+    111: '#11 - CTF',
+    112: '#12 - RWF',
+    113: '#13 - LCNF',
+    114: '#14 - FF',
+    115: '#15 - RCNF',
+    116: '#16 - SUB 1',
+    117: '#17 - SUB 2',
+    118: '#18 - SUB 3',
+    119: '#19 - SUB 4',
+    120: '#20 - SUB 5',
+    121: '#21 - SUB 6',
+    122: '#22 - SUB 7',
+    123: '#23 - SUB 8',
+    124: '#24 - SUB 9',
+    125: '#25 - SUB 10',
+    126: '#26 - SUB 11',
+    127: '#27 - SUB 12',
+    128: '#28 - SUB 13',
+    129: '#29 - SUB 14',
+    130: '#30 - SUB 15'
+};
+
+// Current team view state
+let currentTeamView = 'our-team';
+
+// Summary view state
+let currentSummaryView = 'timeline';
+
+// Team customization data
+let teamCustomizations = {
+    1: {
+        pattern: 'solid',
+        primaryColor: '#2563eb',
+        secondaryColor: '#1d4ed8',
+        hasSecondary: true
+    },
+    2: {
+        pattern: 'solid',
+        primaryColor: '#6b7280',
+        secondaryColor: '#4b5563',
+        hasSecondary: true
+    }
+};
+
+let currentEditingTeam = null;
 
 let coordinatesEnabled = false;
 
@@ -74,6 +136,9 @@ document.addEventListener('DOMContentLoaded', function () {
     updatePlayerLabels();
     addDragAndTouchEventsToPlayerButtons(); // <--- Enable drag-and-drop and touch
     filterActions();
+    
+    // Initialize team view
+    switchTeamView('our-team');
 });
 
 document.addEventListener('click', (e) => {
@@ -370,8 +435,9 @@ function updateSummary() {
             return true;
         });
 
-    // Render filtered rows
-    filteredData.forEach(({ entry, index }) => {
+    // Render filtered rows (newest first)
+    const sortedFilteredData = [...filteredData].reverse();
+    sortedFilteredData.forEach(({ entry, index }) => {
         const row = document.createElement('tr');
 
         const actionCell = document.createElement('td');
@@ -451,6 +517,11 @@ function updateSummary() {
 
         summaryTableBody.appendChild(row);
     });
+    
+    // Update timeline if it's the active view
+    if (currentSummaryView === 'timeline') {
+        buildTimeline();
+    }
 }
 
 function createFilterHeader(label, key, options) {
@@ -508,44 +579,397 @@ function deleteEntry(index) {
     filterActions();
 }
 
+// Undo functionality variables
+let deletedEntry = null;
+let deletedIndex = -1;
+let undoTimeout = null;
+
+function deleteEntryWithUndo(index) {
+    // Store the deleted entry and its original index for potential undo
+    deletedEntry = JSON.parse(JSON.stringify(actionsLog[index])); // Deep copy
+    deletedIndex = index;
+    
+    // Delete the entry
+    deleteEntry(index);
+    
+    // Show undo button
+    showUndoButton();
+}
+
+function showUndoButton() {
+    // Remove any existing undo button
+    hideUndoButton();
+    
+    // Create undo button
+    const undoButton = document.createElement('div');
+    undoButton.id = 'undo-button';
+    undoButton.className = 'undo-button';
+    undoButton.innerHTML = `
+        <div class="undo-content">
+            <span class="undo-icon">↶</span>
+            <span class="undo-text">Undo Delete</span>
+        </div>
+    `;
+    
+    // Add click handler
+    undoButton.addEventListener('click', undoDelete);
+    
+    // Add to page
+    document.body.appendChild(undoButton);
+    
+    // Auto-hide after 5 seconds
+    undoTimeout = setTimeout(() => {
+        hideUndoButton();
+    }, 5000);
+}
+
+function hideUndoButton() {
+    const undoButton = document.getElementById('undo-button');
+    if (undoButton) {
+        undoButton.remove();
+    }
+    if (undoTimeout) {
+        clearTimeout(undoTimeout);
+        undoTimeout = null;
+    }
+}
+
+function undoDelete() {
+    if (deletedEntry && deletedIndex >= 0) {
+        // Restore the entry at its original position
+        actionsLog.splice(deletedIndex, 0, deletedEntry);
+        
+        // Restore score counters
+        switch (deletedEntry.action) {
+            case 'Point - Score':
+                team1Points += 1;
+                break;
+            case '2-Point - Score':
+                team1Points += 2;
+                break;
+            case 'Goal - Score':
+                team1Goals += 1;
+                break;
+            case 'Point - Against':
+                team2Points += 1;
+                break;
+            case '2-Point - Against':
+                team2Points += 2;
+                break;
+            case 'Goal - Against':
+                team2Goals += 1;
+                break;
+        }
+        
+        // Update displays
+        updateSummary();
+        updateCounters();
+        filterActions();
+        
+        // Hide undo button
+        hideUndoButton();
+        
+        // Clear undo data
+        deletedEntry = null;
+        deletedIndex = -1;
+    }
+}
+
 // Code to allow editing in summary screen:
 let currentRowIndex = null;
 
 function showRowOptionsMenu(rowElement, index) {
     currentRowIndex = index;
-
     const popup = document.getElementById('row-options-popup');
-    const rect = rowElement.getBoundingClientRect();
-
-    popup.style.top = `${window.scrollY + rect.bottom}px`;
-    popup.style.left = `${rect.left}px`;
-    popup.style.display = 'block';
+    PopupAnimator.showPopup(popup, 'menu');
 }
 
 function hideRowOptionsMenu() {
     const popup = document.getElementById('row-options-popup');
-    popup.style.display = 'none';
-    currentRowIndex = null;
+    PopupAnimator.hidePopup(popup, 'menu', () => {
+        currentRowIndex = null;
+    });
 }
 
 // Handle action when a button is clicked in the popup
 function handleRowOption(action) {
     if (action === 'delete') {
-        deleteEntry(currentRowIndex);  // ✅ Correct function call
+        deleteEntryWithUndo(currentRowIndex);
         hideRowOptionsMenu();
     } else if (action === 'addNote') {
         noteRowIndex = currentRowIndex;
         viewEditNoteIndex = null;
         editingMode = false;
-        openNotePopup();
-    } else if (action === 'edit') {
-        alert('Edit Row - not yet implemented.');
-        hideRowOptionsMenu();
+        openEnhancedNotePopup();
+    }
+}
+
+
+function openActionNotePopup() {
+    hideRowOptionsMenu();
+    const action = actionsLog[currentRowIndex];
+    const actionType = action.action;
+    const presets = actionNotePresets[actionType] || [];
+    
+    const popup = document.getElementById('action-note-popup');
+    if (!popup) {
+        createActionNotePopup();
+    }
+    
+    // Update popup content for this specific action
+    updateActionNotePopup(actionType, presets, action);
+    document.getElementById('action-note-popup').style.display = 'block';
+}
+
+function createActionNotePopup() {
+    const popup = document.createElement('div');
+    popup.id = 'action-note-popup';
+    popup.className = 'popup';
+    popup.style.display = 'none';
+    
+    popup.innerHTML = `
+        <div class="popup-content sleek-popup action-note-content">
+            <div class="action-note-header">
+                <div class="note-icon">📝</div>
+                <h3 class="note-title">Add Note</h3>
+                <button class="close-btn" onclick="closeActionNotePopup()">×</button>
+            </div>
+            <div class="action-note-body">
+                <div class="action-info">
+                    <span class="action-type-label">Action:</span>
+                    <span class="action-type-text" id="note-action-type"></span>
+                </div>
+                <div class="preset-notes-section">
+                    <h4 class="preset-title">Quick Notes</h4>
+                    <div class="preset-buttons" id="preset-buttons-container">
+                        <!-- Preset buttons will be added here -->
+                    </div>
+                </div>
+                <div class="custom-note-section">
+                    <h4 class="custom-title">Custom Note</h4>
+                    <div class="custom-note-input-container">
+                        <textarea id="custom-note-input" placeholder="Enter your custom note..."></textarea>
+                        <button class="custom-note-confirm" onclick="addCustomNote()">Add Note</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(popup);
+}
+
+function updateActionNotePopup(actionType, presets, action) {
+    document.getElementById('note-action-type').textContent = actionType;
+    
+    const presetsContainer = document.getElementById('preset-buttons-container');
+    presetsContainer.innerHTML = '';
+    
+    presets.forEach(preset => {
+        const button = document.createElement('button');
+        button.className = 'preset-note-button';
+        button.textContent = preset;
+        button.onclick = () => addPresetNote(preset);
+        presetsContainer.appendChild(button);
+    });
+    
+    // Clear custom note input
+    document.getElementById('custom-note-input').value = '';
+}
+
+function addPresetNote(noteText) {
+    if (actionsLog[currentRowIndex]) {
+        if (!actionsLog[currentRowIndex].notes) {
+            actionsLog[currentRowIndex].notes = [];
+        }
+        actionsLog[currentRowIndex].notes.push(noteText);
+        updateSummary();
+        closeActionNotePopup();
+    }
+}
+
+function addCustomNote() {
+    const customText = document.getElementById('custom-note-input').value.trim();
+    if (customText && actionsLog[currentRowIndex]) {
+        if (!actionsLog[currentRowIndex].notes) {
+            actionsLog[currentRowIndex].notes = [];
+        }
+        actionsLog[currentRowIndex].notes.push(customText);
+        updateSummary();
+        closeActionNotePopup();
+    }
+}
+
+function closeActionNotePopup() {
+    document.getElementById('action-note-popup').style.display = 'none';
+}
+
+function openEnhancedNotePopup() {
+    hideRowOptionsMenu();
+    const index = viewEditNoteIndex !== null ? viewEditNoteIndex : noteRowIndex;
+    const entry = actionsLog[index];
+    const actionType = entry.action;
+    const presets = actionNotePresets[actionType] || [];
+    
+    // Create a simple, clean note popup
+    createSimpleNotePopup(actionType, presets, index);
+}
+
+function createSimpleNotePopup(actionType, presets, index) {
+    // Remove existing popup if any
+    const existingPopup = document.getElementById('simple-note-popup');
+    if (existingPopup) {
+        existingPopup.remove();
+    }
+    
+    const popup = document.createElement('div');
+    popup.id = 'simple-note-popup';
+    popup.className = 'popup';
+    popup.style.display = 'none';
+    
+    popup.innerHTML = `
+        <div class="popup-content sleek-popup simple-note-content">
+            <div class="simple-note-header">
+                <h3>Action: ${actionType}</h3>
+            </div>
+            
+            <div class="quick-notes-section">
+                <h4>Quick Notes</h4>
+                <div class="quick-notes-grid" id="quick-notes-container">
+                    ${presets.map(preset => `
+                        <button class="quick-note-btn" onclick="addQuickNoteAndClose('${preset}', ${index})">${preset}</button>
+                    `).join('')}
+                </div>
+            </div>
+            
+            <div class="custom-note-section">
+                <div class="custom-note-row">
+                    <input type="text" id="simple-custom-input" placeholder="Custom Note" />
+                    <button class="confirm-custom-btn" onclick="addCustomNoteAndClose(${index})">✓</button>
+                </div>
+            </div>
+            
+            <div class="note-popup-actions">
+                <button class="cancel-note-btn" onclick="closeSimpleNotePopup()">Cancel</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(popup);
+    PopupAnimator.showPopup(popup, 'standard');
+}
+
+function addQuickNoteAndClose(noteText, index) {
+    if (actionsLog[index]) {
+        if (!actionsLog[index].notes) {
+            actionsLog[index].notes = [];
+        }
+        actionsLog[index].notes.push(noteText);
+        updateSummary();
+        closeSimpleNotePopup();
+    }
+}
+
+function addCustomNoteAndClose(index) {
+    const customText = document.getElementById('simple-custom-input').value.trim();
+    if (customText && actionsLog[index]) {
+        if (!actionsLog[index].notes) {
+            actionsLog[index].notes = [];
+        }
+        actionsLog[index].notes.push(customText);
+        updateSummary();
+        closeSimpleNotePopup();
+    }
+}
+
+function closeSimpleNotePopup() {
+    const popup = document.getElementById('simple-note-popup');
+    if (popup) {
+        PopupAnimator.hidePopup(popup, 'standard', () => {
+            popup.remove();
+        });
     }
 }
 
 function addQuickNote(text) {
     document.getElementById('custom-note-input').value = text;
+}
+
+// Universal Popup Animation System
+class PopupAnimator {
+    static showPopup(element, type = 'standard') {
+        if (!element) return;
+        
+        // Position popup (only if not already positioned)
+        if (!element.style.position || element.style.position !== 'fixed') {
+            element.style.position = 'fixed';
+            element.style.top = '50%';
+            element.style.left = '50%';
+            element.style.transform = 'translate(-50%, -50%)';
+            element.style.zIndex = '10000';
+        }
+        
+        // Simply show the popup
+        element.style.display = 'block';
+        element.style.opacity = '1';
+    }
+    
+    static hidePopup(element, type = 'standard', callback = null) {
+        if (!element || element.style.display === 'none') {
+            if (callback) callback();
+            return;
+        }
+        
+        // Simply hide the popup
+        element.style.display = 'none';
+        if (callback) callback();
+    }
+}
+
+// Enhanced Collapsible System
+class CollapsibleManager {
+    static toggle(element, isExpanded = null) {
+        if (!element) return;
+        
+        // Prevent double-clicking issues
+        if (element.dataset.animating === 'true') return;
+        element.dataset.animating = 'true';
+        
+        const currentlyExpanded = !element.classList.contains('collapsed');
+        const shouldExpand = isExpanded !== null ? isExpanded : !currentlyExpanded;
+        
+        if (shouldExpand) {
+            // Expand
+            element.classList.remove('collapsed');
+            element.classList.add('expanded');
+            
+            // Calculate and set max-height
+            const scrollHeight = element.scrollHeight;
+            element.style.maxHeight = scrollHeight + 'px';
+            
+            setTimeout(() => {
+                element.style.maxHeight = 'none';
+                element.dataset.animating = 'false';
+            }, 400);
+        } else {
+            // Collapse
+            const scrollHeight = element.scrollHeight;
+            element.style.maxHeight = scrollHeight + 'px';
+            
+            // Force reflow
+            element.offsetHeight;
+            
+            element.classList.add('collapsed');
+            element.classList.remove('expanded');
+            element.style.maxHeight = '0px';
+            
+            setTimeout(() => {
+                element.dataset.animating = 'false';
+            }, 400);
+        }
+        
+        return shouldExpand;
+    }
 }
 
 function confirmNote() {
@@ -594,6 +1018,9 @@ function openTab(tabName) {
 
     if (tabName === 'review') {
         refreshReviewTab();  // Call the refresh function when the review tab is shown
+    } else if (tabName === 'summary') {
+        // Restore the previous summary view state
+        switchSummaryView(currentSummaryView);
     }
 }
 
@@ -632,8 +1059,8 @@ function renameTeam(team) {
 }
 
 function updatePlayerLabels() {
-    for (let i = 1; i <= 27; i++) {
-        // Update Home tab
+    // Update our team players (1-30)
+    for (let i = 1; i <= 30; i++) {
         const homeBtn = document.getElementById(`player-${i}-button`);
         if (homeBtn) homeBtn.textContent = playerNames[i];
 
@@ -644,6 +1071,12 @@ function updatePlayerLabels() {
         document.querySelectorAll(`.player-button[aria-label="Select Receiver ${i}"]`).forEach(button => {
             button.textContent = playerNames[i];
         });
+    }
+    
+    // Update opposition players (101-130)
+    for (let i = 101; i <= 130; i++) {
+        const oppBtn = document.getElementById(`opp-player-${i - 100}-button`);
+        if (oppBtn) oppBtn.textContent = oppositionPlayerNames[i];
     }
 }
 
@@ -831,9 +1264,9 @@ const drawReviewArc = (arcPoints) => {
     reviewCtx.beginPath();
     arcPoints.forEach((point, index) => {
         if (index === 0) {
-            reviewCtx.moveTo(mapX(point.x), mapYReview(point.y));
+            reviewCtx.moveTo(mapXReview(point.x), mapYReview(point.y));
         } else {
-            reviewCtx.lineTo(mapX(point.x), mapYReview(point.y));
+            reviewCtx.lineTo(mapXReview(point.x), mapYReview(point.y));
         }
     });
     reviewCtx.stroke();
@@ -969,145 +1402,6 @@ function resetCoordinateScreen() {
     drawPitch(); // Redraw the pitch to clear markers
 }
 
-function exportSummaryToCSV() {
-    const rows = [];
-    const summaryTable = document.getElementById('summary-table');
-
-    // Get the headers
-    const headers = [];
-    summaryTable.querySelectorAll('thead th').forEach(th => {
-        headers.push(th.textContent);
-    });
-    rows.push(headers.join(','));
-
-    // Get the rows
-    summaryTable.querySelectorAll('tbody tr').forEach(tr => {
-        const cells = [];
-        tr.querySelectorAll('td').forEach(td => {
-            cells.push(td.textContent);
-        });
-        rows.push(cells.join(','));
-    });
-
-    // Create CSV string
-    const csvContent = rows.join('\n');
-
-    // Create a Blob from the CSV string
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-
-    // Get team names
-    const team1Name = document.querySelectorAll('.counter-container .team-name')[0].textContent.slice(0, -1);
-    const team2Name = document.querySelectorAll('.counter-container .team-name')[1].textContent.slice(0, -1);
-
-    // Create a link to download the Blob
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `${team1Name} - ${team2Name}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-document.getElementById('upload-csv-button').addEventListener('click', () => {
-    document.getElementById('upload-csv').click();
-});
-
-document.getElementById('upload-csv').addEventListener('change', handleCSVUpload);
-
-function handleCSVUpload(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const text = e.target.result;
-            const rows = text.split('\n').map(row => row.split(','));
-
-            // Validate CSV header
-            const expectedHeaders = ['Action', 'Mode', 'Definition', 'Player', 'Player 2', 'X_1', 'Y_1', 'X_2', 'Y_2'];
-            const headers = rows[0].map(header => header.trim());
-            const isValid = expectedHeaders.every((header, index) => header === headers[index]);
-
-            if (!isValid) {
-                alert('Invalid CSV format. Please ensure the CSV has the correct headers.');
-                return;
-            }
-
-            // Append CSV data to actions log
-            const newEntries = rows.slice(1).filter(row => row.length === 9).map(row => ({
-                action: row[0].trim(),
-                mode: row[1].trim(),
-                definition: row[2].trim(),
-                player: row[3].trim(),
-                player2: row[4].trim(),
-                coordinates1: row[5] && row[6] ? `(${row[5].trim()}, ${row[6].trim()})` : '',
-                coordinates2: row[7] && row[8] ? `(${row[7].trim()}, ${row[8].trim()})` : ''
-            }));
-
-            actionsLog.push(...newEntries);
-
-            // Append CSV data to summary table
-            const summaryTableBody = document.getElementById('summary-table').querySelector('tbody');
-            newEntries.forEach(entry => {
-                const tr = document.createElement('tr');
-                const actionCell = document.createElement('td');
-                const modeCell = document.createElement('td');
-                const definitionCell = document.createElement('td');
-                const playerCell = document.createElement('td');
-                const player2Cell = document.createElement('td');
-                const x1Cell = document.createElement('td');
-                const y1Cell = document.createElement('td');
-                const x2Cell = document.createElement('td');
-                const y2Cell = document.createElement('td');
-
-                actionCell.textContent = entry.action;
-                modeCell.textContent = entry.mode;
-                definitionCell.textContent = entry.definition;
-                playerCell.textContent = entry.player;
-                player2Cell.textContent = entry.player2;
-
-                if (entry.coordinates1) {
-                    const [x1, y1] = entry.coordinates1.slice(1, -1).split(', ');
-                    x1Cell.textContent = x1;
-                    y1Cell.textContent = y1;
-                }
-
-                if (entry.coordinates2) {
-                    const [x2, y2] = entry.coordinates2.slice(1, -1).split(', ');
-                    x2Cell.textContent = x2;
-                    y2Cell.textContent = y2;
-                }
-
-                tr.appendChild(actionCell);
-                tr.appendChild(modeCell);
-                tr.appendChild(definitionCell);
-                tr.appendChild(playerCell);
-                tr.appendChild(player2Cell);
-                tr.appendChild(x1Cell);
-                tr.appendChild(y1Cell);
-                tr.appendChild(x2Cell);
-                tr.appendChild(y2Cell);
-
-                const deleteButton = document.createElement('button');
-                deleteButton.classList.add('delete-button');
-                deleteButton.innerHTML = '&times;';
-                deleteButton.setAttribute('aria-label', 'Delete entry');
-                deleteButton.onclick = () => {
-                    if (confirm('Are you sure you want to delete this entry?')) {
-                        deleteEntry(Array.from(summaryTableBody.children).indexOf(tr));
-                    }
-                };
-                const deleteCell = document.createElement('td');
-                deleteCell.appendChild(deleteButton);
-                tr.appendChild(deleteCell);
-                summaryTableBody.appendChild(tr);
-            });
-
-            // Refresh review markers
-            filterActions();
-        };
-        reader.readAsText(file);
-    }
-}
 
 const reviewCanvas = document.getElementById('review-pitch');
 const reviewCtx = reviewCanvas.getContext('2d');
@@ -1117,8 +1411,8 @@ const drawReviewPitch = () => {
 
     const drawReviewLine = (startX, startY, endX, endY) => {
         reviewCtx.beginPath();
-        reviewCtx.moveTo(mapX(startX), mapYReview(startY));
-        reviewCtx.lineTo(mapX(endX), mapYReview(endY));
+        reviewCtx.moveTo(mapXReview(startX), mapYReview(startY));
+        reviewCtx.lineTo(mapXReview(endX), mapYReview(endY));
         reviewCtx.strokeStyle = 'black';  // Ensure the line color is black
         reviewCtx.stroke();
     };
@@ -1169,9 +1463,9 @@ const drawReviewRotatedSemicircle = (semicircle) => {
     reviewCtx.beginPath();
     semicircle.forEach((point, index) => {
         if (index === 0) {
-            reviewCtx.moveTo(mapX(point.x), mapYReview(point.y));
+            reviewCtx.moveTo(mapXReview(point.x), mapYReview(point.y));
         } else {
-            reviewCtx.lineTo(mapX(point.x), mapYReview(point.y));
+            reviewCtx.lineTo(mapXReview(point.x), mapYReview(point.y));
         }
     });
     reviewCtx.strokeStyle = 'black';  // Ensure the line color is black
@@ -1182,15 +1476,16 @@ const drawReviewClockwiseRotatedSemicircle = (semicircle) => {
     reviewCtx.beginPath();
     semicircle.forEach((point, index) => {
         if (index === 0) {
-            reviewCtx.moveTo(mapX(point.x), mapYReview(point.y));
+            reviewCtx.moveTo(mapXReview(point.x), mapYReview(point.y));
         } else {
-            reviewCtx.lineTo(mapX(point.x), mapYReview(point.y));
+            reviewCtx.lineTo(mapXReview(point.x), mapYReview(point.y));
         }
     });
     reviewCtx.strokeStyle = 'black';  // Ensure the line color is black
     reviewCtx.stroke();
 };
 
+const mapXReview = x => (x / 80) * reviewCanvas.width;
 const mapYReview = y => reviewCanvas.height - (y / 140) * reviewCanvas.height;
 
 let reviewMarkers = []; // Store marker positions
@@ -1198,22 +1493,22 @@ let reviewMarkers = []; // Store marker positions
 const drawReviewMarker = (x, y, color, entry, actionType, markerType = 'circle') => {
     reviewCtx.beginPath();
     if (markerType === 'circle') {
-        reviewCtx.arc(mapX(x), mapYReview(y), 5, 0, Math.PI * 2);
+        reviewCtx.arc(mapXReview(x), mapYReview(y), 5, 0, Math.PI * 2);
         reviewCtx.fillStyle = color;
         reviewCtx.fill();
     } else if (markerType === 'cross') {
-        reviewCtx.moveTo(mapX(x) - 5, mapYReview(y) - 5);
-        reviewCtx.lineTo(mapX(x) + 5, mapYReview(y) + 5);
-        reviewCtx.moveTo(mapX(x) + 5, mapYReview(y) - 5);
-        reviewCtx.lineTo(mapX(x) - 5, mapYReview(y) + 5);
+        reviewCtx.moveTo(mapXReview(x) - 5, mapYReview(y) - 5);
+        reviewCtx.lineTo(mapXReview(x) + 5, mapYReview(y) + 5);
+        reviewCtx.moveTo(mapXReview(x) + 5, mapYReview(y) - 5);
+        reviewCtx.lineTo(mapXReview(x) - 5, mapYReview(y) + 5);
         reviewCtx.strokeStyle = color;
         reviewCtx.stroke();
     } else if (markerType === 'square') {
-        reviewCtx.rect(mapX(x) - 5, mapYReview(y) - 5, 10, 10);
+        reviewCtx.rect(mapXReview(x) - 5, mapYReview(y) - 5, 10, 10);
         reviewCtx.fillStyle = color;
         reviewCtx.fill();
     } else if (markerType === 'hollowCircle') {
-        reviewCtx.arc(mapX(x), mapYReview(y), 5, 0, Math.PI * 2);
+        reviewCtx.arc(mapXReview(x), mapYReview(y), 5, 0, Math.PI * 2);
         reviewCtx.strokeStyle = color;
         reviewCtx.stroke();
     } else if (markerType === 'triangle') {
@@ -1389,16 +1684,51 @@ const handleCanvasClick = (e) => {
 };
 
 function showSummaryBox(x, y, entry, color) {
+    // Remove any existing summary box first
+    const existingBox = document.getElementById('summary-box');
+    if (existingBox) {
+        existingBox.remove();
+    }
+    
     const summaryBox = document.createElement('div');
     summaryBox.id = 'summary-box';
     summaryBox.style.position = 'absolute';
-    summaryBox.style.left = `${x}px`;
-    summaryBox.style.top = `${y}px`;
-    summaryBox.style.padding = '10px';
-    summaryBox.style.border = `2px solid ${color}`;
-    summaryBox.style.backgroundColor = 'white';
-    summaryBox.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
-    summaryBox.style.zIndex = '1000';
+    summaryBox.style.visibility = 'hidden'; // Hide initially to prevent jumping
+    summaryBox.style.zIndex = '10000';
+    
+    // Add to DOM first to get dimensions
+    document.body.appendChild(summaryBox);
+    
+    // Position adjustment to prevent going off-screen
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+    
+    let adjustedX = x + scrollLeft + 10; // Small offset from click point
+    let adjustedY = y + scrollTop + 10;
+    
+    // Get actual dimensions after adding to DOM
+    const boxRect = summaryBox.getBoundingClientRect();
+    const boxWidth = boxRect.width || 280; // fallback width
+    const boxHeight = boxRect.height || 200; // fallback height
+    
+    // Adjust if would go off screen
+    if (adjustedX + boxWidth > window.innerWidth + scrollLeft) {
+        adjustedX = x + scrollLeft - boxWidth - 10;
+    }
+    if (adjustedY + boxHeight > window.innerHeight + scrollTop) {
+        adjustedY = y + scrollTop - boxHeight - 10;
+    }
+    
+    // Ensure minimum margins
+    adjustedX = Math.max(scrollLeft + 10, adjustedX);
+    adjustedY = Math.max(scrollTop + 10, adjustedY);
+    
+    summaryBox.style.left = `${adjustedX}px`;
+    summaryBox.style.top = `${adjustedY}px`;
+    summaryBox.style.visibility = 'visible'; // Show after positioning
+    
+    // Add a subtle accent border using the action color
+    summaryBox.style.borderLeft = `4px solid ${color}`;
 
     const [coordX1, coordY1] = entry.coordinates1.slice(1, -1).split(', ');
     const [coordX2, coordY2] = entry.coordinates2 ? entry.coordinates2.slice(1, -1).split(', ') : [];
@@ -1571,8 +1901,8 @@ const drawPassMarkersAndArrow = (x1, y1, x2, y2, color, entry, actionType) => {
 
     // Draw the arrow connecting the two markers
     reviewCtx.beginPath();
-    reviewCtx.moveTo(mapX(x1), mapYReview(y1));
-    reviewCtx.lineTo(mapX(x2), mapYReview(y2));
+    reviewCtx.moveTo(mapXReview(x1), mapYReview(y1));
+    reviewCtx.lineTo(mapXReview(x2), mapYReview(y2));
     reviewCtx.strokeStyle = color;
     reviewCtx.stroke();
 
@@ -1580,10 +1910,10 @@ const drawPassMarkersAndArrow = (x1, y1, x2, y2, color, entry, actionType) => {
     const headlen = 15; // length of head in pixels
     const angle = Math.atan2(mapYReview(y2) - mapYReview(y1), mapX(x2) - mapX(x1));
     reviewCtx.beginPath();
-    reviewCtx.moveTo(mapX(x2), mapYReview(y2));
-    reviewCtx.lineTo(mapX(x2) - headlen * Math.cos(angle - Math.PI / 6), mapYReview(y2) - headlen * Math.sin(angle - Math.PI / 6));
-    reviewCtx.lineTo(mapX(x2) - headlen * Math.cos(angle + Math.PI / 6), mapYReview(y2) - headlen * Math.sin(angle + Math.PI / 6));
-    reviewCtx.lineTo(mapX(x2), mapYReview(y2));
+    reviewCtx.moveTo(mapXReview(x2), mapYReview(y2));
+    reviewCtx.lineTo(mapXReview(x2) - headlen * Math.cos(angle - Math.PI / 6), mapYReview(y2) - headlen * Math.sin(angle - Math.PI / 6));
+    reviewCtx.lineTo(mapXReview(x2) - headlen * Math.cos(angle + Math.PI / 6), mapYReview(y2) - headlen * Math.sin(angle + Math.PI / 6));
+    reviewCtx.lineTo(mapXReview(x2), mapYReview(y2));
     reviewCtx.fillStyle = color;
     reviewCtx.fill();
 };
@@ -1623,10 +1953,16 @@ let editingPlayerId = null;
 
 function openEditPopup(playerIndex) {
     editingPlayerIndex = playerIndex;
-    const [number, ...nameParts] = playerNames[playerIndex].split(' - ');
+    
+    // Determine if this is an opposition player
+    const isOpposition = playerIndex > 100;
+    const playerData = isOpposition ? oppositionPlayerNames[playerIndex] : playerNames[playerIndex];
+    
+    const [number, ...nameParts] = playerData.split(' - ');
     document.getElementById('player-number-input').value = number.replace('#', '');
     document.getElementById('player-name-input').value = nameParts.join(' ').trim();
-    document.getElementById('player-edit-popup').style.display = 'block';
+    const popup = document.getElementById('player-edit-popup');
+    PopupAnimator.showPopup(popup, 'standard');
 }
 
 function confirmPlayerEdit() {
@@ -1639,21 +1975,33 @@ function confirmPlayerEdit() {
     }
 
     const formattedName = `#${number} - ${name}`;
-    playerNames[editingPlayerIndex] = formattedName;
-
-    // Update home screen (if button exists; subs are only on Home)
+    
+    // Determine if this is an opposition player
+    const isOpposition = editingPlayerIndex > 100;
+    
+    if (isOpposition) {
+        oppositionPlayerNames[editingPlayerIndex] = formattedName;
+        // Update opposition button
+        const targetBtn = document.getElementById(`opp-player-${editingPlayerIndex - 100}-button`);
+        if (targetBtn) targetBtn.textContent = formattedName;
+    } else {
+        playerNames[editingPlayerIndex] = formattedName;
+        // Update our team button
     const targetBtn = document.getElementById(`player-${editingPlayerIndex}-button`);
     if (targetBtn) targetBtn.textContent = formattedName;
+    }
 
-    // Update Stats player screens
+    // Update all player screens
     updatePlayerLabels();
 
-    document.getElementById('player-edit-popup').style.display = 'none';
+    const popup = document.getElementById('player-edit-popup');
+    PopupAnimator.hidePopup(popup, 'standard');
 }
 
 document.addEventListener('keydown', function(e) {
     if (e.key === "Escape") {
-        document.getElementById('player-edit-popup').style.display = 'none';
+        const popup = document.getElementById('player-edit-popup');
+    PopupAnimator.hidePopup(popup, 'standard');
     }
 });
 
@@ -1663,7 +2011,8 @@ function openTeamEditPopup(teamIndex) {
     editingTeamIndex = teamIndex;
     const button = document.getElementById(`rename-team-${teamIndex}-button`);
     document.getElementById('team-name-input').value = button.textContent.trim();
-    document.getElementById('team-edit-popup').style.display = 'block';
+    const popup = document.getElementById('team-edit-popup');
+    PopupAnimator.showPopup(popup, 'standard');
 }
 
 function confirmTeamEdit() {
@@ -1680,26 +2029,61 @@ function confirmTeamEdit() {
     document.querySelectorAll('.counter-container .team-name')[editingTeamIndex - 1].textContent = `${newName}:`;
 
     // Hide popup
-    document.getElementById('team-edit-popup').style.display = 'none';
+    const popup = document.getElementById('team-edit-popup');
+    PopupAnimator.hidePopup(popup, 'standard');
 }
 
 document.addEventListener('keydown', function(e) {
     if (e.key === "Escape") {
-        document.getElementById('team-edit-popup').style.display = 'none';
+        const popup = document.getElementById('team-edit-popup');
+    PopupAnimator.hidePopup(popup, 'standard');
     }
 });
 
-// Code for drag and drop feature
+// Enhanced drag and drop with visual feedback
+let dragGhost = null;
+let currentDragTarget = null;
+
 function addDragAndTouchEventsToPlayerButtons() {
-    for (let i = 1; i <= 27; i++) {
+    // Our team players (1-30)
+    for (let i = 1; i <= 30; i++) {
         const button = document.getElementById(`player-${i}-button`);
         if (!button) continue;
+
+        // Add draggable styling
+        button.classList.add('draggable-element');
 
         // Desktop drag support
         button.setAttribute('draggable', 'true');
         button.addEventListener('dragstart', handleDragStart);
         button.addEventListener('dragover', handleDragOver);
+        button.addEventListener('dragenter', handleDragEnter);
+        button.addEventListener('dragleave', handleDragLeave);
         button.addEventListener('drop', handleDrop);
+        button.addEventListener('dragend', handleDragEnd);
+
+        // Mobile touch support
+        button.addEventListener('touchstart', handleTouchStart, { passive: false });
+        button.addEventListener('touchmove', handleTouchMove, { passive: false });
+        button.addEventListener('touchend', handleTouchEnd);
+    }
+    
+    // Opposition players (101-130 mapped to opp-player-1 through opp-player-30)
+    for (let i = 1; i <= 30; i++) {
+        const button = document.getElementById(`opp-player-${i}-button`);
+        if (!button) continue;
+
+        // Add draggable styling
+        button.classList.add('draggable-element');
+
+        // Desktop drag support
+        button.setAttribute('draggable', 'true');
+        button.addEventListener('dragstart', handleDragStart);
+        button.addEventListener('dragover', handleDragOver);
+        button.addEventListener('dragenter', handleDragEnter);
+        button.addEventListener('dragleave', handleDragLeave);
+        button.addEventListener('drop', handleDrop);
+        button.addEventListener('dragend', handleDragEnd);
 
         // Mobile touch support
         button.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -1708,29 +2092,157 @@ function addDragAndTouchEventsToPlayerButtons() {
     }
 }
 
-// --- Desktop Drag Events ---
+// --- Enhanced Desktop Drag Events ---
 function handleDragStart(e) {
     isDragging = true;
-    dragSourceIndex = parseInt(e.target.id.split('-')[1]);
-    e.dataTransfer.setData('text/plain', dragSourceIndex); // Needed for Firefox
+    
+    // Determine if this is our team or opposition
+    const isOpposition = e.target.id.startsWith('opp-player-');
+    if (isOpposition) {
+        dragSourceIndex = parseInt(e.target.id.split('-')[2]) + 100; // Convert to 101-130 range
+    } else {
+        dragSourceIndex = parseInt(e.target.id.split('-')[1]); // Regular 1-30 range
+    }
+    
+    // Create ghost image
+    createDragGhost(e.target);
+    
+    // Style the source element
+    e.target.classList.add('drag-source');
+    
+    // Add dragging cursor to body
+    document.body.classList.add('dragging-cursor');
+    
+    e.dataTransfer.setData('text/plain', dragSourceIndex);
+    e.dataTransfer.effectAllowed = 'move';
 }
 
 function handleDragOver(e) {
-    e.preventDefault(); // Necessary to allow dropping
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+}
+
+function handleDragEnter(e) {
+    e.preventDefault();
+    
+    let targetIndex;
+    const isOpposition = e.target.id.startsWith('opp-player-');
+    if (isOpposition) {
+        targetIndex = parseInt(e.target.id.split('-')[2]) + 100; // Convert to 101-130 range
+    } else {
+        targetIndex = parseInt(e.target.id.split('-')[1]); // Regular 1-27 range
+    }
+    
+    // Only allow swapping within the same team
+    const sourceIsOpposition = dragSourceIndex > 100;
+    const targetIsOpposition = targetIndex > 100;
+    
+    if (targetIndex && targetIndex !== dragSourceIndex && sourceIsOpposition === targetIsOpposition) {
+        // Remove previous target highlighting
+        if (currentDragTarget) {
+            currentDragTarget.classList.remove('drag-target-hover');
+        }
+        
+        // Add new target highlighting
+        currentDragTarget = e.target;
+        e.target.classList.add('drag-target-hover');
+    }
+}
+
+function handleDragLeave(e) {
+    // Only remove highlight if we're actually leaving the element
+    if (!e.target.contains(e.relatedTarget)) {
+        e.target.classList.remove('drag-target-hover');
+        if (currentDragTarget === e.target) {
+            currentDragTarget = null;
+        }
+    }
 }
 
 function handleDrop(e) {
     e.preventDefault();
-    const targetIndex = parseInt(e.target.id.split('-')[1]);
+    
+    let targetIndex;
+    const isOpposition = e.target.id.startsWith('opp-player-');
+    if (isOpposition) {
+        targetIndex = parseInt(e.target.id.split('-')[2]) + 100; // Convert to 101-130 range
+    } else {
+        targetIndex = parseInt(e.target.id.split('-')[1]); // Regular 1-27 range
+    }
+    
     const sourceIndex = parseInt(e.dataTransfer.getData('text/plain'));
 
-    if (sourceIndex !== targetIndex) {
+    // Only allow swapping within the same team
+    const sourceIsOpposition = sourceIndex > 100;
+    const targetIsOpposition = targetIndex > 100;
+
+    if (sourceIndex !== targetIndex && targetIndex && sourceIsOpposition === targetIsOpposition) {
         swapPlayerNames(sourceIndex, targetIndex);
+        
+        // Add success animation - get correct button IDs
+        let sourceButton, targetButton;
+        if (sourceIsOpposition) {
+            sourceButton = document.getElementById(`opp-player-${sourceIndex - 100}-button`);
+            targetButton = document.getElementById(`opp-player-${targetIndex - 100}-button`);
+        } else {
+            sourceButton = document.getElementById(`player-${sourceIndex}-button`);
+            targetButton = document.getElementById(`player-${targetIndex}-button`);
+        }
+        
+        if (sourceButton) sourceButton.classList.add('swap-success');
+        if (targetButton) targetButton.classList.add('swap-success');
+        
+        // Remove success animation after it completes
+        setTimeout(() => {
+            if (sourceButton) sourceButton.classList.remove('swap-success');
+            if (targetButton) targetButton.classList.remove('swap-success');
+        }, 600);
     }
-    isDragging = false;
+    
+    cleanupDragState();
 }
 
-// --- Mobile Touch Events ---
+function handleDragEnd(e) {
+    cleanupDragState();
+}
+
+function createDragGhost(element) {
+    // Create a visual ghost element
+    dragGhost = element.cloneNode(true);
+    dragGhost.classList.add('drag-ghost');
+    dragGhost.style.position = 'absolute';
+    dragGhost.style.top = '-1000px';
+    dragGhost.style.left = '-1000px';
+    dragGhost.style.width = element.offsetWidth + 'px';
+    dragGhost.style.height = element.offsetHeight + 'px';
+    document.body.appendChild(dragGhost);
+}
+
+function cleanupDragState() {
+    isDragging = false;
+    
+    // Remove ghost element
+    if (dragGhost) {
+        document.body.removeChild(dragGhost);
+        dragGhost = null;
+    }
+    
+    // Remove all drag-related classes
+    document.querySelectorAll('.drag-source, .drag-target-hover').forEach(el => {
+        el.classList.remove('drag-source', 'drag-target-hover');
+    });
+    
+    // Remove dragging cursor
+    document.body.classList.remove('dragging-cursor');
+    
+    currentDragTarget = null;
+    dragSourceIndex = null;
+}
+
+// --- Enhanced Mobile Touch Events ---
+let touchDragActive = false;
+let touchDragElement = null;
+
 function handleTouchStart(e) {
     e.preventDefault();
     const touch = e.touches[0];
@@ -1739,46 +2251,130 @@ function handleTouchStart(e) {
         touchStartIndex = parseInt(element.id.split('-')[1]);
         touchStartX = touch.clientX;
         touchStartY = touch.clientY;
+        touchStartTime = Date.now();
+        touchDragElement = element;
     }
 }
 
 function handleTouchMove(e) {
     e.preventDefault();
+    
+    if (!touchDragElement || touchStartIndex === null) return;
+    
+    const touch = e.touches[0];
+    const movedX = Math.abs(touch.clientX - touchStartX);
+    const movedY = Math.abs(touch.clientY - touchStartY);
+    
+    // Start drag mode if moved beyond threshold
+    if (!touchDragActive && (movedX > MOVE_THRESHOLD || movedY > MOVE_THRESHOLD)) {
+        touchDragActive = true;
+        touchDragElement.classList.add('touch-drag-active');
+        document.body.classList.add('dragging-cursor');
+    }
+    
+    if (touchDragActive) {
+        // Find element under touch point
+        const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+        
+        // Remove previous target highlighting
+        if (currentDragTarget) {
+            currentDragTarget.classList.remove('drag-target-hover');
+            currentDragTarget = null;
+        }
+        
+        // Add highlighting to valid drop target
+        if (elementUnder && elementUnder.id.startsWith('player-') && elementUnder.id.endsWith('-button')) {
+            const targetIndex = parseInt(elementUnder.id.split('-')[1]);
+            if (targetIndex && targetIndex !== touchStartIndex) {
+                currentDragTarget = elementUnder;
+                elementUnder.classList.add('drag-target-hover');
+            }
+        }
+    }
 }
 
 function handleTouchEnd(e) {
     const touch = e.changedTouches[0];
     const endX = touch.clientX;
     const endY = touch.clientY;
+    const touchDuration = Date.now() - touchStartTime;
 
     const movedX = Math.abs(endX - touchStartX);
     const movedY = Math.abs(endY - touchStartY);
 
     const element = document.elementFromPoint(endX, endY);
+    
+    if (touchDragActive) {
+        // Handle drag and drop
     if (element && element.id.startsWith('player-') && element.id.endsWith('-button')) {
         const touchEndIndex = parseInt(element.id.split('-')[1]);
 
-        if (movedX > MOVE_THRESHOLD || movedY > MOVE_THRESHOLD) {
-            // Treated as drag and drop
             if (touchStartIndex !== null && touchEndIndex !== null && touchStartIndex !== touchEndIndex) {
                 swapPlayerNames(touchStartIndex, touchEndIndex);
+                
+                // Add success animation
+                const sourceButton = document.getElementById(`player-${touchStartIndex}-button`);
+                const targetButton = document.getElementById(`player-${touchEndIndex}-button`);
+                
+                if (sourceButton) sourceButton.classList.add('swap-success');
+                if (targetButton) targetButton.classList.add('swap-success');
+                
+                setTimeout(() => {
+                    if (sourceButton) sourceButton.classList.remove('swap-success');
+                    if (targetButton) targetButton.classList.remove('swap-success');
+                }, 600);
             }
-        } else {
-            // Treated as tap
+        }
+    } else if (touchDuration < 500 && movedX < MOVE_THRESHOLD && movedY < MOVE_THRESHOLD) {
+        // Handle tap (short touch with minimal movement)
+        if (element && element.id.startsWith('player-') && element.id.endsWith('-button')) {
+            const touchEndIndex = parseInt(element.id.split('-')[1]);
             openEditPopup(touchEndIndex);
         }
     }
 
+    // Cleanup touch drag state
+    cleanupTouchDragState();
+}
+
+function cleanupTouchDragState() {
+    if (touchDragElement) {
+        touchDragElement.classList.remove('touch-drag-active');
+    }
+    
+    if (currentDragTarget) {
+        currentDragTarget.classList.remove('drag-target-hover');
+    }
+    
+    document.body.classList.remove('dragging-cursor');
+    
+    touchDragActive = false;
+    touchDragElement = null;
+    currentDragTarget = null;
     touchStartIndex = null;
     touchStartX = 0;
     touchStartY = 0;
+    touchStartTime = 0;
 }
 
 // --- Swap Function ---
 function swapPlayerNames(index1, index2) {
+    // Determine which team(s) we're working with
+    const index1IsOpposition = index1 > 100;
+    const index2IsOpposition = index2 > 100;
+    
+    if (index1IsOpposition && index2IsOpposition) {
+        // Both opposition players
+        const temp = oppositionPlayerNames[index1];
+        oppositionPlayerNames[index1] = oppositionPlayerNames[index2];
+        oppositionPlayerNames[index2] = temp;
+    } else if (!index1IsOpposition && !index2IsOpposition) {
+        // Both our team players
     const temp = playerNames[index1];
     playerNames[index1] = playerNames[index2];
     playerNames[index2] = temp;
+    }
+    // Don't allow swapping between teams
 
     updatePlayerLabels(); // Refresh all labels across app
 }
@@ -1905,7 +2501,11 @@ function closeSidebar() {
 }
 
 // Toggle sidebar
-sidebarToggle.addEventListener("click", openSidebar);
+sidebarToggle.addEventListener("click", function(event) {
+    openSidebar();
+    // Remove focus to prevent stuck pressed state
+    event.target.blur();
+});
 closeSidebarBtn.addEventListener("click", closeSidebar);
 
 // Close sidebar when clicking outside
@@ -1946,60 +2546,393 @@ function highlightActiveTab(tabName) {
 function toggleGroup(groupName) {
     const content = document.getElementById(`${groupName}-content`);
     const icon = document.getElementById(`${groupName}-icon`);
-    const isOpen = content.style.display !== 'none';
     
-    // Close all other groups first
+    if (!content || !icon) return;
+    
+    // Prevent double-clicking issues
+    if (content.dataset.animating === 'true') return;
+    
+    const isCurrentlyCollapsed = content.classList.contains('collapsed');
+    
+    // Close all other groups first with animation
     const allGroups = ['scoring', 'possession', 'errors', 'kickouts', 'against'];
     allGroups.forEach(group => {
         if (group !== groupName) {
             const otherContent = document.getElementById(`${group}-content`);
             const otherIcon = document.getElementById(`${group}-icon`);
-            otherContent.style.display = 'none';
-            otherIcon.textContent = '▶';
+            if (otherContent && otherIcon && !otherContent.classList.contains('collapsed')) {
+                CollapsibleManager.toggle(otherContent, false);
+                otherIcon.textContent = '▶';
+                otherIcon.parentElement.classList.remove('expanded');
+            }
         }
     });
     
-    // Toggle current group
-    if (isOpen) {
-        content.style.display = 'none';
-        icon.textContent = '▶';
-    } else {
-        content.style.display = 'block';
+    // Toggle current group with animation
+    const shouldExpand = CollapsibleManager.toggle(content, isCurrentlyCollapsed);
+    
+    // Update icon and visual state
+    if (shouldExpand) {
         icon.textContent = '▼';
+        icon.parentElement.classList.add('expanded', 'toggle-button-enhanced');
+    } else {
+        icon.textContent = '▶';
+        icon.parentElement.classList.remove('expanded');
+        icon.parentElement.classList.add('toggle-button-enhanced');
+    }
+    
+    // Remove focus to prevent stuck pressed state
+    icon.parentElement.blur();
+}
+
+// Team switching functionality
+function switchTeamView(teamType) {
+    currentTeamView = teamType;
+    
+    // Update toggle buttons
+    const ourTeamToggle = document.getElementById('our-team-toggle');
+    const oppositionToggle = document.getElementById('opposition-toggle');
+    
+    if (teamType === 'our-team') {
+        ourTeamToggle.classList.add('active');
+        oppositionToggle.classList.remove('active');
+        
+        // Show our team view, hide opposition
+        document.getElementById('our-team-view').classList.add('active');
+        document.getElementById('opposition-view').classList.remove('active');
+    } else {
+        oppositionToggle.classList.add('active');
+        ourTeamToggle.classList.remove('active');
+        
+        // Show opposition view, hide our team
+        document.getElementById('opposition-view').classList.add('active');
+        document.getElementById('our-team-view').classList.remove('active');
+    }
+    
+    // Re-initialize drag and drop for the new view
+    setTimeout(() => {
+        addDragAndTouchEventsToPlayerButtons();
+    }, 100);
+    
+    // Remove focus to prevent stuck pressed state
+    if (teamType === 'our-team') {
+        ourTeamToggle.blur();
+    } else {
+        oppositionToggle.blur();
     }
 }
 
-// Toggle substitutes section
-function toggleSubstitutes() {
-    const subsSection = document.getElementById('subs-section');
-    const toggleBtn = document.getElementById('subs-toggle-btn');
+// Enhanced substitutes toggle with team support
+function toggleSubstitutes(teamType = currentTeamView) {
+    let subsSection, toggleBtn;
+    
+    if (teamType === 'our-team') {
+        subsSection = document.getElementById('our-subs-section');
+        toggleBtn = document.getElementById('our-subs-toggle-btn');
+    } else {
+        subsSection = document.getElementById('opp-subs-section');
+        toggleBtn = document.getElementById('opp-subs-toggle-btn');
+    }
+    
+    if (!subsSection || !toggleBtn) return;
+    
+    // Prevent double-clicking issues
+    if (subsSection.dataset.animating === 'true') return;
+    
     const toggleIcon = toggleBtn.querySelector('.toggle-icon');
     const toggleText = toggleBtn.querySelector('.toggle-text');
     
-    const isCurrentlyHidden = subsSection.style.display === 'none';
+    // Add collapsible class if not present
+    subsSection.classList.add('collapsible-content');
     
-    if (isCurrentlyHidden) {
+    // Add enhanced toggle button class
+    toggleBtn.classList.add('toggle-button-enhanced');
+    
+    const isCurrentlyHidden = subsSection.style.display === 'none' || subsSection.classList.contains('collapsed');
+    
+    const isExpanded = CollapsibleManager.toggle(subsSection, isCurrentlyHidden);
+    
+    if (isExpanded) {
         // Show substitutes
         subsSection.style.display = 'block';
-        subsSection.classList.remove('collapsed');
-        subsSection.classList.add('expanded');
         toggleBtn.classList.add('expanded');
         toggleIcon.textContent = '▼';
         toggleText.textContent = 'Hide Substitutes';
     } else {
         // Hide substitutes
-        subsSection.classList.remove('expanded');
-        subsSection.classList.add('collapsed');
         toggleBtn.classList.remove('expanded');
         toggleIcon.textContent = '▶';
         toggleText.textContent = 'Show Substitutes';
-        
-        // After animation completes, hide the element
-        setTimeout(() => {
-            if (subsSection.classList.contains('collapsed')) {
-                subsSection.style.display = 'none';
+    }
+    
+    // Remove focus to prevent stuck pressed state
+    toggleBtn.blur();
+}
+
+// Team Customization Functions
+function openTeamCustomizePopup(teamNumber) {
+    currentEditingTeam = teamNumber;
+    const customization = teamCustomizations[teamNumber];
+    
+    // Set current values in the popup
+    document.getElementById('primary-color-picker').value = customization.primaryColor;
+    document.getElementById('secondary-color-picker').value = customization.secondaryColor;
+    
+    // Set pattern selection
+    document.querySelectorAll('.pattern-option').forEach(option => {
+        option.classList.remove('selected');
+        if (option.dataset.pattern === customization.pattern) {
+            option.classList.add('selected');
+        }
+    });
+    
+    // Set secondary color state
+    const secondaryNoneBtn = document.getElementById('secondary-none-btn');
+    const secondaryPicker = document.getElementById('secondary-color-picker');
+    if (customization.hasSecondary) {
+        secondaryNoneBtn.classList.remove('active');
+        secondaryPicker.style.display = 'block';
+    } else {
+        secondaryNoneBtn.classList.add('active');
+        secondaryPicker.style.display = 'none';
+    }
+    
+    updateCustomizePreview();
+    const popup = document.getElementById('team-customize-popup');
+    PopupAnimator.showPopup(popup, 'standard');
+}
+
+function closeTeamCustomizePopup() {
+    const popup = document.getElementById('team-customize-popup');
+    PopupAnimator.hidePopup(popup, 'standard', () => {
+        currentEditingTeam = null;
+    });
+}
+
+function confirmTeamCustomization() {
+    if (!currentEditingTeam) return;
+    
+    const pattern = document.querySelector('.pattern-option.selected')?.dataset.pattern || 'solid';
+    const primaryColor = document.getElementById('primary-color-picker').value;
+    const secondaryColor = document.getElementById('secondary-color-picker').value;
+    const hasSecondary = !document.getElementById('secondary-none-btn').classList.contains('active');
+    
+    // Update team customization
+    teamCustomizations[currentEditingTeam] = {
+        pattern,
+        primaryColor,
+        secondaryColor,
+        hasSecondary
+    };
+    
+    // Apply customization to UI
+    applyTeamCustomization(currentEditingTeam);
+    
+    closeTeamCustomizePopup();
+}
+
+function updateCustomizePreview() {
+    const preview = document.getElementById('customize-preview');
+    const pattern = document.querySelector('.pattern-option.selected')?.dataset.pattern || 'solid';
+    const primaryColor = document.getElementById('primary-color-picker').value;
+    const secondaryColor = document.getElementById('secondary-color-picker').value;
+    const hasSecondary = !document.getElementById('secondary-none-btn').classList.contains('active');
+    
+    const style = generateTeamStyle(pattern, primaryColor, hasSecondary ? secondaryColor : null);
+    preview.style.background = style.background;
+    preview.style.color = style.color;
+    preview.style.border = style.border || '1px solid rgba(0, 0, 0, 0.1)';
+    
+    // Add background-size for checkered pattern
+    if (pattern === 'checkered' && hasSecondary) {
+        preview.style.backgroundSize = '20px 20px';
+    } else {
+        preview.style.backgroundSize = 'auto';
+    }
+}
+
+function generateTeamStyle(pattern, primaryColor, secondaryColor) {
+    const textColor = getContrastColor(primaryColor);
+    let background, border;
+    
+    switch (pattern) {
+        case 'solid':
+            background = primaryColor;
+            break;
+        case 'diagonal':
+            background = secondaryColor 
+                ? `linear-gradient(45deg, ${primaryColor} 50%, ${secondaryColor} 50%)`
+                : primaryColor;
+            break;
+        case 'checkered':
+            if (secondaryColor) {
+                background = `
+                    conic-gradient(${primaryColor} 90deg, ${secondaryColor} 90deg 180deg, ${primaryColor} 180deg 270deg, ${secondaryColor} 270deg)
+                `;
+                border = '1px solid rgba(0, 0, 0, 0.1)';
+            } else {
+                background = primaryColor;
             }
-        }, 400); // Match the CSS transition duration
+            break;
+        case 'vertical':
+            background = secondaryColor
+                ? `repeating-linear-gradient(90deg, ${primaryColor} 0px, ${primaryColor} 12px, ${secondaryColor} 12px, ${secondaryColor} 20px)`
+                : primaryColor;
+            break;
+        case 'horizontal':
+            background = secondaryColor
+                ? `repeating-linear-gradient(0deg, ${primaryColor} 0px, ${primaryColor} 8px, ${secondaryColor} 8px, ${secondaryColor} 14px)`
+                : primaryColor;
+            break;
+        default:
+            background = primaryColor;
+    }
+    
+    return { background, color: textColor, border };
+}
+
+function getContrastColor(hexColor) {
+    // Convert hex to RGB
+    const r = parseInt(hexColor.slice(1, 3), 16);
+    const g = parseInt(hexColor.slice(3, 5), 16);
+    const b = parseInt(hexColor.slice(5, 7), 16);
+    
+    // Calculate luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    
+    // Return black or white based on luminance
+    return luminance > 0.5 ? '#000000' : '#ffffff';
+}
+
+function applyTeamCustomization(teamNumber) {
+    const customization = teamCustomizations[teamNumber];
+    const style = generateTeamStyle(
+        customization.pattern, 
+        customization.primaryColor, 
+        customization.hasSecondary ? customization.secondaryColor : null
+    );
+    
+    // Apply to team name button
+    const teamButton = document.getElementById(`rename-team-${teamNumber}-button`);
+    if (teamButton) {
+        teamButton.style.setProperty('background', style.background, 'important');
+        teamButton.style.setProperty('color', style.color, 'important');
+        if (style.border) teamButton.style.border = style.border;
+        
+        // Add background-size for checkered pattern
+        if (customization.pattern === 'checkered' && customization.hasSecondary) {
+            teamButton.style.backgroundSize = '20px 20px';
+        }
+    }
+    
+    // Apply to player buttons
+    const playerPrefix = teamNumber === 1 ? 'player-' : 'opp-player-';
+    for (let i = 1; i <= 30; i++) {
+        const playerButton = document.getElementById(`${playerPrefix}${i}-button`);
+        if (playerButton) {
+            playerButton.style.background = style.background + ' !important';
+            playerButton.style.color = style.color + ' !important';
+            if (style.border) playerButton.style.border = style.border;
+            
+            // Add background-size for checkered pattern
+            if (customization.pattern === 'checkered' && customization.hasSecondary) {
+                playerButton.style.backgroundSize = '20px 20px';
+            }
+            
+            // Remove any conflicting CSS classes that might override our styles
+            playerButton.style.setProperty('background', style.background, 'important');
+            playerButton.style.setProperty('color', style.color, 'important');
+        }
+    }
+    
+    // Apply to player selection screens (only for Team 1 - our team)
+    if (teamNumber === 1) {
+        // Apply to "Select Player" screen buttons
+        document.querySelectorAll('#player-buttons .player-button[aria-label^="Select Player"]').forEach(button => {
+            button.style.setProperty('background', style.background, 'important');
+            button.style.setProperty('color', style.color, 'important');
+            if (style.border) button.style.border = style.border;
+            
+            if (customization.pattern === 'checkered' && customization.hasSecondary) {
+                button.style.backgroundSize = '20px 20px';
+            }
+        });
+        
+        // Apply to "Select Receiver" screen buttons
+        document.querySelectorAll('#player-buttons-second .player-button[aria-label^="Select Receiver"]').forEach(button => {
+            button.style.setProperty('background', style.background, 'important');
+            button.style.setProperty('color', style.color, 'important');
+            if (style.border) button.style.border = style.border;
+            
+            if (customization.pattern === 'checkered' && customization.hasSecondary) {
+                button.style.backgroundSize = '20px 20px';
+            }
+        });
+    }
+    
+    // Apply to banner
+    updateBannerStyling();
+    
+    // Apply to timeline action boxes
+    updateTimelineColors();
+}
+
+function updateBannerStyling() {
+    const team1Style = generateTeamStyle(
+        teamCustomizations[1].pattern,
+        teamCustomizations[1].primaryColor,
+        teamCustomizations[1].hasSecondary ? teamCustomizations[1].secondaryColor : null
+    );
+    
+    const team2Style = generateTeamStyle(
+        teamCustomizations[2].pattern,
+        teamCustomizations[2].primaryColor,
+        teamCustomizations[2].hasSecondary ? teamCustomizations[2].secondaryColor : null
+    );
+    
+    // Apply to banner sections
+    const banner = document.getElementById('counters');
+    if (banner) {
+        const team1Section = banner.querySelector('.counter-container:first-child');
+        const team2Section = banner.querySelector('.counter-container:last-child');
+        
+        if (team1Section) {
+            team1Section.style.background = team1Style.background;
+            team1Section.style.color = team1Style.color;
+            team1Section.style.borderRadius = 'var(--radius-lg)';
+            team1Section.style.padding = 'var(--space-sm) var(--space-md)';
+            if (team1Style.border) team1Section.style.border = team1Style.border;
+            
+            // Apply checkered pattern background-size if needed
+            if (teamCustomizations[1].pattern === 'checkered' && teamCustomizations[1].hasSecondary) {
+                team1Section.style.backgroundSize = '20px 20px';
+            }
+            
+            // Apply text color to all child elements
+            const team1Name = team1Section.querySelector('.team-name');
+            const team1Counter = team1Section.querySelector('.counter');
+            if (team1Name) team1Name.style.color = team1Style.color;
+            if (team1Counter) team1Counter.style.color = team1Style.color;
+        }
+        
+        if (team2Section) {
+            team2Section.style.background = team2Style.background;
+            team2Section.style.color = team2Style.color;
+            team2Section.style.borderRadius = 'var(--radius-lg)';
+            team2Section.style.padding = 'var(--space-sm) var(--space-md)';
+            if (team2Style.border) team2Section.style.border = team2Style.border;
+            
+            // Apply checkered pattern background-size if needed
+            if (teamCustomizations[2].pattern === 'checkered' && teamCustomizations[2].hasSecondary) {
+                team2Section.style.backgroundSize = '20px 20px';
+            }
+            
+            // Apply text color to all child elements
+            const team2Name = team2Section.querySelector('.team-name');
+            const team2Counter = team2Section.querySelector('.counter');
+            if (team2Name) team2Name.style.color = team2Style.color;
+            if (team2Counter) team2Counter.style.color = team2Style.color;
+        }
     }
 }
 
@@ -2008,13 +2941,527 @@ document.addEventListener("DOMContentLoaded", () => {
     const savedTab = localStorage.getItem("activeTab") || "home";
     openTab(savedTab);
     highlightActiveTab(savedTab);
-    
-    // Ensure substitutes section starts closed
-    const subsSection = document.getElementById('subs-section');
-    const toggleBtn = document.getElementById('subs-toggle-btn');
-    if (subsSection && toggleBtn) {
-        subsSection.style.display = 'none';
-        subsSection.classList.add('collapsed');
-        toggleBtn.classList.remove('expanded');
+
+    // Ensure both substitutes sections start closed
+    const ourSubsSection = document.getElementById('our-subs-section');
+    const ourToggleBtn = document.getElementById('our-subs-toggle-btn');
+    if (ourSubsSection && ourToggleBtn) {
+        ourSubsSection.style.display = 'none';
+        ourSubsSection.classList.add('collapsed');
+        ourToggleBtn.classList.remove('expanded');
     }
+    
+    const oppSubsSection = document.getElementById('opp-subs-section');
+    const oppToggleBtn = document.getElementById('opp-subs-toggle-btn');
+    if (oppSubsSection && oppToggleBtn) {
+        oppSubsSection.style.display = 'none';
+        oppSubsSection.classList.add('collapsed');
+        oppToggleBtn.classList.remove('expanded');
+    }
+    
+    // Initialize team customization event listeners
+    initializeCustomizationListeners();
+    
+    // Apply initial team customizations
+    applyTeamCustomization(1);
+    applyTeamCustomization(2);
+    
+    // Initialize summary view
+    switchSummaryView('timeline');
 });
+
+function initializeCustomizationListeners() {
+    // Pattern selection
+    document.querySelectorAll('.pattern-option').forEach(option => {
+        option.addEventListener('click', () => {
+            document.querySelectorAll('.pattern-option').forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+            updateCustomizePreview();
+        });
+    });
+    
+    // Color picker changes
+    document.getElementById('primary-color-picker').addEventListener('input', updateCustomizePreview);
+    document.getElementById('secondary-color-picker').addEventListener('input', updateCustomizePreview);
+    
+    // Color presets
+    document.querySelectorAll('.color-preset').forEach(preset => {
+        preset.addEventListener('click', () => {
+            const color = preset.dataset.color;
+            const isPrimarySection = preset.closest('.customize-section').querySelector('#primary-color-picker');
+            
+            if (isPrimarySection) {
+                document.getElementById('primary-color-picker').value = color;
+            } else {
+                document.getElementById('secondary-color-picker').value = color;
+                // Enable secondary color if it was disabled
+                const secondaryNoneBtn = document.getElementById('secondary-none-btn');
+                if (secondaryNoneBtn.classList.contains('active')) {
+                    secondaryNoneBtn.classList.remove('active');
+                    document.getElementById('secondary-color-picker').style.display = 'block';
+                }
+            }
+            updateCustomizePreview();
+        });
+    });
+    
+    // Secondary "None" button
+    document.getElementById('secondary-none-btn').addEventListener('click', () => {
+        const btn = document.getElementById('secondary-none-btn');
+        const picker = document.getElementById('secondary-color-picker');
+        
+        if (btn.classList.contains('active')) {
+            btn.classList.remove('active');
+            picker.style.display = 'block';
+        } else {
+            btn.classList.add('active');
+            picker.style.display = 'none';
+        }
+        updateCustomizePreview();
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        const popup = document.getElementById('team-customize-popup');
+        if (popup.style.display === 'block') {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                confirmTeamCustomization();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                closeTeamCustomizePopup();
+            }
+        }
+    });
+}
+
+// Summary View Management
+function switchSummaryView(viewType) {
+    currentSummaryView = viewType;
+    
+    // Update toggle buttons
+    const timelineToggle = document.getElementById('timeline-toggle');
+    const tableToggle = document.getElementById('table-toggle');
+    
+    if (viewType === 'timeline') {
+        timelineToggle.classList.add('active');
+        tableToggle.classList.remove('active');
+        
+        // Show timeline view, hide table
+        document.getElementById('timeline-view').classList.add('active');
+        document.getElementById('table-view').classList.remove('active');
+        
+        // Rebuild timeline
+        buildTimeline();
+    } else {
+        tableToggle.classList.add('active');
+        timelineToggle.classList.remove('active');
+        
+        // Show table view, hide timeline
+        document.getElementById('table-view').classList.add('active');
+        document.getElementById('timeline-view').classList.remove('active');
+    }
+    
+    // Remove focus to prevent stuck pressed state
+    if (viewType === 'timeline') {
+        timelineToggle.blur();
+    } else {
+        tableToggle.blur();
+    }
+}
+
+// Timeline Functions
+function buildTimeline() {
+    const timelineContent = document.getElementById('timeline-content');
+    timelineContent.innerHTML = '';
+    
+    // Check if there are any actions
+    if (actionsLog.length === 0) {
+        const emptyMessage = document.createElement('div');
+        emptyMessage.className = 'timeline-empty-message';
+        emptyMessage.innerHTML = `
+            <div class="empty-timeline-icon">📋</div>
+            <div class="empty-timeline-text">No actions logged yet</div>
+            <div class="empty-timeline-subtext">Actions will appear here as they are logged</div>
+        `;
+        timelineContent.appendChild(emptyMessage);
+        
+        // Hide timeline line when no actions
+        const timelineLine = document.querySelector('.timeline-line');
+        if (timelineLine) {
+            timelineLine.style.display = 'none';
+        }
+        return;
+    }
+    
+    // Show timeline line when actions exist
+    const timelineLine = document.querySelector('.timeline-line');
+    if (timelineLine) {
+        timelineLine.style.display = 'block';
+    }
+    
+    // Create timeline items from actionsLog (newest first)
+    const sortedActions = [...actionsLog].reverse();
+    
+    sortedActions.forEach((action, index) => {
+        const originalIndex = actionsLog.length - 1 - index; // Calculate original index
+        const timelineItem = createTimelineItem(action, originalIndex);
+        timelineContent.appendChild(timelineItem);
+    });
+    
+    // Update timeline line height and colors after content is added
+    updateTimelineHeight();
+    updateTimelineColors();
+}
+
+function updateTimelineHeight() {
+    // Wait for DOM to update, then set timeline line height
+    setTimeout(() => {
+        const timelineContent = document.getElementById('timeline-content');
+        const timelineLine = document.querySelector('.timeline-line');
+        
+        if (timelineContent && timelineLine) {
+            const contentHeight = timelineContent.scrollHeight;
+            timelineLine.style.height = `${Math.max(contentHeight, 200)}px`;
+        }
+    }, 10);
+}
+
+function createTimelineItem(action, index) {
+    const item = document.createElement('div');
+    item.className = `timeline-item ${getTeamFromAction(action)}`;
+    
+    // Create timeline dot
+    const dot = document.createElement('div');
+    dot.className = 'timeline-dot';
+    
+    // Create action box
+    const actionBox = document.createElement('div');
+    actionBox.className = 'timeline-action-box';
+    
+    // Action title
+    const title = document.createElement('div');
+    title.className = 'timeline-action-title';
+    title.textContent = action.action;
+    
+    // Action details (mode/definition)
+    const details = document.createElement('div');
+    details.className = 'timeline-action-details';
+    const detailsText = [];
+    if (action.mode && action.mode.trim()) detailsText.push(`Type: ${action.mode}`);
+    if (action.definition && action.definition.trim()) detailsText.push(`How: ${action.definition}`);
+    details.textContent = detailsText.join(' • ');
+    
+    // Players
+    const players = document.createElement('div');
+    players.className = 'timeline-action-players';
+    const playersText = [];
+    if (action.player && action.player.trim()) playersText.push(action.player);
+    if (action.player2 && action.player2.trim()) playersText.push(`→ ${action.player2}`);
+    players.textContent = playersText.join(' ');
+    
+    // Notes section
+    if (action.notes && action.notes.length > 0) {
+        const notesSection = document.createElement('div');
+        notesSection.className = 'timeline-action-notes';
+        
+        const notesTitle = document.createElement('div');
+        notesTitle.className = 'timeline-notes-title';
+        notesTitle.innerHTML = '📝 Notes';
+        notesSection.appendChild(notesTitle);
+        
+        action.notes.forEach(note => {
+            const noteItem = document.createElement('div');
+            noteItem.className = 'timeline-note-item';
+            noteItem.textContent = note;
+            notesSection.appendChild(noteItem);
+        });
+        
+        actionBox.appendChild(notesSection);
+    }
+    
+    // Timestamp (action number)
+    const timestamp = document.createElement('div');
+    timestamp.className = 'timeline-action-timestamp';
+    timestamp.textContent = `Action #${actionsLog.length - index}`;
+    
+    // Assemble action box
+    actionBox.appendChild(title);
+    if (details.textContent) actionBox.appendChild(details);
+    if (players.textContent) actionBox.appendChild(players);
+    actionBox.appendChild(timestamp);
+    
+    // Make action box clickable
+    actionBox.style.cursor = 'pointer';
+    actionBox.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showTimelineRowOptionsMenu(e.currentTarget, index); // Use index directly (already original index)
+    });
+    
+    // Assemble timeline item
+    item.appendChild(dot);
+    item.appendChild(actionBox);
+    
+    return item;
+}
+
+function getTeamFromAction(action) {
+    // Team 1 actions (our team)
+    const team1Actions = [
+        'Point - Score',
+        '2-Point - Score', 
+        'Point - Miss',
+        'Goal - Score',
+        'Goal - Miss',
+        'Free - Won',
+        'Handpass',
+        'Kickpass',
+        'Carry',
+        'Ball - Won',
+        'Ball - Lost',
+        'Foul',
+        'Kickout - For'
+    ];
+    
+    // Team 2 actions (opposition)
+    const team2Actions = [
+        'Kickout - Against',
+        'Point - Against',
+        '2-Point - Against', 
+        'Goal - Against',
+        'Miss - Against'
+    ];
+    
+    // Check if it's a team 2 action
+    if (team2Actions.includes(action.action)) {
+        return 'team2';
+    }
+    
+    // Check if it's a team 1 action
+    if (team1Actions.includes(action.action)) {
+        return 'team1';
+    }
+    
+    // Check if the player is from opposition team (player index 101-130)
+    if (action.player) {
+        const playerIndex = Object.keys(oppositionPlayerNames).find(key => 
+            oppositionPlayerNames[key] === action.player
+        );
+        if (playerIndex) {
+            return 'team2';
+        }
+    }
+    
+    // Default to team 1
+    return 'team1';
+}
+
+function addToTimeline(action) {
+    if (currentSummaryView === 'timeline') {
+        const timelineContent = document.getElementById('timeline-content');
+        const newItem = createTimelineItem(action, 0);
+        
+        // Add to top of timeline
+        if (timelineContent.firstChild) {
+            timelineContent.insertBefore(newItem, timelineContent.firstChild);
+        } else {
+            timelineContent.appendChild(newItem);
+        }
+        
+        // Update action numbers for existing items
+        updateTimelineNumbers();
+        
+        // Update timeline line height and colors
+        updateTimelineHeight();
+        updateTimelineColors();
+    }
+}
+
+function updateTimelineNumbers() {
+    const timelineItems = document.querySelectorAll('.timeline-action-timestamp');
+    timelineItems.forEach((timestamp, index) => {
+        timestamp.textContent = `Action #${actionsLog.length - index}`;
+    });
+}
+
+// Timeline context menu functions
+function showTimelineRowOptionsMenu(element, index) {
+    currentRowIndex = index;
+    const popup = document.getElementById('row-options-popup');
+    PopupAnimator.showPopup(popup, 'menu');
+    
+    // Close menu when clicking outside
+    setTimeout(() => {
+        document.addEventListener('click', hideRowOptionsMenu, { once: true });
+    }, 10);
+}
+
+// Action-specific note presets
+const actionNotePresets = {
+    'Point - Score': [
+        'Great Assist',
+        'Momentum Swing', 
+        'Worth Another Look',
+        'Clutch Score',
+        'Perfect Execution'
+    ],
+    'Goal - Score': [
+        'Spectacular Finish',
+        'Game Changer',
+        'Clinical Strike',
+        'Unstoppable Shot',
+        'Perfect Timing'
+    ],
+    'Point - Miss': [
+        'Unlucky Attempt',
+        'Good Effort',
+        'Pressure Shot',
+        'Review Technique',
+        'Close Call'
+    ],
+    'Goal - Miss': [
+        'Great Chance',
+        'Keeper Save',
+        'Post/Crossbar',
+        'Under Pressure',
+        'Review Positioning'
+    ],
+    'Free - Won': [
+        'Smart Play',
+        'Drew Contact',
+        'Good Positioning',
+        'Tactical Foul',
+        'Earned Advantage'
+    ],
+    'Handpass': [
+        'Great Vision',
+        'Quick Thinking',
+        'Perfect Timing',
+        'Under Pressure',
+        'Good Support'
+    ],
+    'Kickpass': [
+        'Accurate Delivery',
+        'Long Range',
+        'Perfect Weight',
+        'Under Pressure',
+        'Great Vision'
+    ],
+    'Carry': [
+        'Powerful Run',
+        'Beat Defender',
+        'Good Pace',
+        'Created Space',
+        'Strong Finish'
+    ],
+    'Ball - Won': [
+        'Great Tackle',
+        'Intercepted',
+        'Strong Challenge',
+        'Good Positioning',
+        'Turnover Created'
+    ],
+    'Ball - Lost': [
+        'Forced Error',
+        'Under Pressure',
+        'Poor Decision',
+        'Review Options',
+        'Turnover'
+    ],
+    'Foul': [
+        'Tactical Foul',
+        'Accidental',
+        'Frustrated',
+        'Poor Discipline',
+        'Review Technique'
+    ],
+    'Kickout - For': [
+        'Good Distance',
+        'Accurate',
+        'Under Pressure',
+        'Quick Release',
+        'Strategic'
+    ],
+    'Kickout - Against': [
+        'Poor Clearance',
+        'Intercepted',
+        'Under Pressure',
+        'Review Positioning',
+        'Tactical Error'
+    ],
+    'Point - Against': [
+        'Defensive Lapse',
+        'Good Opposition',
+        'Unlucky',
+        'Review Marking',
+        'Pressure Score'
+    ],
+    '2-Point - Against': [
+        'Defensive Error',
+        'Great Opposition',
+        'Poor Positioning',
+        'Review Setup',
+        'Unlucky Break'
+    ],
+    'Goal - Against': [
+        'Defensive Breakdown',
+        'Excellent Finish',
+        'Keeper Error',
+        'Review Marking',
+        'Unstoppable'
+    ],
+    'Miss - Against': [
+        'Good Defense',
+        'Pressure Applied',
+        'Lucky Escape',
+        'Keeper Save',
+        'Poor Finish'
+    ]
+};
+
+function updateTimelineColors() {
+    // Get current team styles
+    const team1Style = generateTeamStyle(
+        teamCustomizations[1].pattern,
+        teamCustomizations[1].primaryColor,
+        teamCustomizations[1].hasSecondary ? teamCustomizations[1].secondaryColor : null
+    );
+    
+    const team2Style = generateTeamStyle(
+        teamCustomizations[2].pattern,
+        teamCustomizations[2].primaryColor,
+        teamCustomizations[2].hasSecondary ? teamCustomizations[2].secondaryColor : null
+    );
+    
+    // Apply to timeline action boxes
+    document.querySelectorAll('.timeline-item.team1 .timeline-action-box').forEach(box => {
+        // Set the top border color using the ::after pseudo-element
+        box.style.setProperty('--team-color', team1Style.background);
+        
+        // Update the details border color
+        const details = box.querySelector('.timeline-action-details');
+        if (details) {
+            details.style.borderLeftColor = team1Style.background;
+        }
+    });
+    
+    document.querySelectorAll('.timeline-item.team2 .timeline-action-box').forEach(box => {
+        // Set the top border color using the ::after pseudo-element
+        box.style.setProperty('--team-color', team2Style.background);
+        
+        // Update the details border color
+        const details = box.querySelector('.timeline-action-details');
+        if (details) {
+            details.style.borderLeftColor = team2Style.background;
+        }
+    });
+    
+    // Update timeline dots
+    document.querySelectorAll('.timeline-item.team1 .timeline-dot').forEach(dot => {
+        dot.style.borderColor = team1Style.background;
+    });
+    
+    document.querySelectorAll('.timeline-item.team2 .timeline-dot').forEach(dot => {
+        dot.style.borderColor = team2Style.background;
+    });
+}
