@@ -37,10 +37,21 @@
     <!-- Sidebar navigation menu -->
     <div id="sidebar" class="sidebar">
         <a href="javascript:void(0)" class="closebtn" id="close-sidebar">&times;</a>
-        <a href="#" class="sidebar-link" data-tab="home">Home</a>
+        <a href="#" class="sidebar-link" data-tab="home">Team Sheets</a>
         <a href="#" class="sidebar-link" data-tab="stats">Stats</a>
         <a href="#" class="sidebar-link" data-tab="summary">Summary</a>
         <a href="#" class="sidebar-link" data-tab="review">Review</a>
+        
+        <!-- Dark Mode Toggle at bottom of sidebar -->
+        <div class="sidebar-footer">
+            <div class="dark-mode-toggle">
+                <span class="toggle-label">Dark Mode:</span>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-dark-mode" onchange="toggleDarkMode()">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </div>
     </div>
 
     <!-- Overlay background -->
@@ -65,9 +76,23 @@
 
                 <!-- Our Team View -->
                 <div id="our-team-view" class="team-view active">
+                    <!-- Team Actions Subheader -->
+                    <div class="team-actions-subheader">
+                        <div class="team-actions-container">
+                            <button id="save-team-1-button" class="team-action-button save-button" onclick="saveTeamSheet(1)">
+                                <span class="button-icon">💾</span>
+                                <span class="button-text">Save Team Sheet</span>
+                            </button>
+                            <button id="upload-team-1-button" class="team-action-button upload-button" onclick="uploadTeamSheet(1)">
+                                <span class="button-icon">📁</span>
+                                <span class="button-text">Upload Team Sheet</span>
+                            </button>
+                            <input type="file" id="team-1-file-input" accept=".csv" style="display: none;" onchange="handleFileUpload(1, this)">
+                        </div>
+                    </div>
 
+                    <!-- Team Controls Section -->
                     <div class="home-section">
-                        <h4 class="home-section-title">Team Name</h4>
                         <div class="row team-controls-row">
                             <button id="rename-team-1-button" onclick="openTeamEditPopup(1)">Team 1</button>
                             <button id="customize-team-1-button" class="customize-button" onclick="openTeamCustomizePopup(1)" title="Customize team colors and pattern">
@@ -141,9 +166,23 @@
 
                 <!-- Opposition Team View -->
                 <div id="opposition-view" class="team-view">
+                    <!-- Team Actions Subheader -->
+                    <div class="team-actions-subheader">
+                        <div class="team-actions-container">
+                            <button id="save-team-2-button" class="team-action-button save-button" onclick="saveTeamSheet(2)">
+                                <span class="button-icon">💾</span>
+                                <span class="button-text">Save Team Sheet</span>
+                            </button>
+                            <button id="upload-team-2-button" class="team-action-button upload-button" onclick="uploadTeamSheet(2)">
+                                <span class="button-icon">📁</span>
+                                <span class="button-text">Upload Team Sheet</span>
+                            </button>
+                            <input type="file" id="team-2-file-input" accept=".csv" style="display: none;" onchange="handleFileUpload(2, this)">
+                        </div>
+                    </div>
 
+                    <!-- Team Controls Section -->
                     <div class="home-section">
-                        <h4 class="home-section-title">Team Name</h4>
                         <div class="row team-controls-row">
                             <button id="rename-team-2-button" onclick="openTeamEditPopup(2)">Team 2</button>
                             <button id="customize-team-2-button" class="customize-button" onclick="openTeamCustomizePopup(2)" title="Customize team colors and pattern">
