@@ -1209,6 +1209,27 @@ input:checked + .slider:before {
     border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
+/* Dark mode action popups */
+[data-theme="dark"] #summary-box {
+    background: var(--color-surface);
+    border: 1px solid #334155;
+    color: var(--color-text-primary);
+    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] #summary-box p {
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] #summary-box strong {
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] #summary-box p[style*="font-size: small"] {
+    color: var(--color-text-secondary);
+    border-top: 1px solid #334155;
+}
+
 /* Modern Main Popups */
 .popup {
     position: fixed;
@@ -1851,13 +1872,34 @@ input:checked + .slider:before {
     z-index: 1;                 /* ensure it's above internal content */
 }
 
+/* Sidebar Footer */
+.sidebar-footer {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+.dark-mode-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
 .sidebar-footer .toggle-label {
-    color: #333;
+    color: var(--color-text-primary);
     font-weight: 600;
+    font-size: 14px;
 }
 
 .sidebar-footer .switch { /* scale slightly for visibility */
-    transform: scale(0.95);
+    transform: scale(0.9);
 }
 
 /* Overlay background */
@@ -2075,8 +2117,8 @@ input:checked + .slider:before {
 
 /* Team Toggle System */
 .team-toggle-section {
-    margin-bottom: var(--space-xl);
-    padding: var(--space-md) 0;
+    margin-bottom: var(--space-lg);
+    padding: var(--space-sm) 0;
 }
 
 .team-toggle-container {
@@ -2088,7 +2130,7 @@ input:checked + .slider:before {
     padding: var(--space-sm);
     border-radius: var(--radius-full);
     box-shadow: var(--shadow-sm);
-    max-width: 400px;
+    max-width: 350px;
     margin: 0 auto;
 }
 
@@ -2097,10 +2139,10 @@ input:checked + .slider:before {
     align-items: center;
     justify-content: center;
     gap: var(--space-sm);
-    padding: var(--space-md) var(--space-xl);
+    padding: var(--space-sm) var(--space-lg);
     border: none;
     border-radius: var(--radius-full);
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
     font-family: var(--font-family);
     cursor: pointer;
@@ -2108,7 +2150,7 @@ input:checked + .slider:before {
     background: transparent;
     color: var(--color-text-secondary);
     flex: 1;
-    min-width: 140px;
+    min-width: 120px;
 }
 
 .team-toggle-button:hover {
@@ -2132,6 +2174,96 @@ input:checked + .slider:before {
 
 .toggle-icon {
     font-size: var(--font-size-lg);
+}
+
+/* Team Actions Subheader */
+.team-actions-subheader {
+    margin-bottom: var(--space-md);
+    padding: var(--space-xs) 0;
+}
+
+.team-actions-container {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-sm);
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(8px);
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-xs);
+    max-width: 320px;
+    margin: 0 auto;
+}
+
+.team-action-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-family);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(255, 255, 255, 0.8);
+    color: var(--color-text-primary);
+    min-width: 100px;
+}
+
+.team-action-button:hover {
+    background: rgba(255, 255, 255, 0.95);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.team-action-button.save-button:hover {
+    background: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
+}
+
+.team-action-button.upload-button:hover {
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+}
+
+.team-action-button .button-icon {
+    font-size: var(--font-size-sm);
+}
+
+.team-action-button .button-text {
+    font-size: var(--font-size-xs);
+}
+
+/* Dark mode team actions subheader */
+[data-theme="dark"] .team-actions-container {
+    background: rgba(51, 65, 85, 0.4);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] .team-action-button {
+    background: rgba(51, 65, 85, 0.8);
+    color: var(--color-text-primary);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] .team-action-button:hover {
+    background: rgba(51, 65, 85, 0.95);
+    border-color: #475569;
+}
+
+[data-theme="dark"] .team-action-button.save-button:hover {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    border-color: #16a34a;
+}
+
+[data-theme="dark"] .team-action-button.upload-button:hover {
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+    border-color: #2563eb;
 }
 
 /* Team View System */
@@ -2269,6 +2401,88 @@ input:checked + .slider:before {
     align-items: center;
     gap: var(--space-sm);
 }
+
+/* Team Actions Row */
+.team-actions-row {
+    align-items: center;
+    gap: var(--space-md);
+    margin-top: var(--space-lg);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Team Action Buttons */
+.team-action-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    padding: var(--space-md) var(--space-lg);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-xs);
+    min-width: 160px;
+    position: relative;
+    overflow: hidden;
+    will-change: transform;
+}
+
+.team-action-button:hover {
+    background: var(--color-primary-light);
+    border-color: var(--color-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.team-action-button:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-xs);
+    transition: transform var(--motion-short) var(--easing),
+                box-shadow var(--motion-short) var(--easing);
+}
+
+.team-action-button .button-icon {
+    font-size: var(--font-size-lg);
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.team-action-button .button-text {
+    font-family: var(--font-family);
+    letter-spacing: 0.025em;
+}
+
+/* Save Button Specific Styling */
+.team-action-button.save-button {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.15));
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #059669;
+}
+
+.team-action-button.save-button:hover {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.25));
+    border-color: #10b981;
+    color: #047857;
+}
+
+/* Upload Button Specific Styling */
+.team-action-button.upload-button {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.15));
+    border-color: rgba(59, 130, 246, 0.3);
+    color: #2563eb;
+}
+
+.team-action-button.upload-button:hover {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.25));
+    border-color: #3b82f6;
+    color: #1d4ed8;
+}
+
 
 .customize-button {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(248, 250, 252, 0.9));
@@ -3589,9 +3803,23 @@ input:checked + .slider:before {
     }
     
     .team-toggle-button {
-        min-width: 120px;
-        padding: var(--space-sm) var(--space-lg);
+        min-width: 100px;
+        padding: var(--space-xs) var(--space-md);
         font-size: var(--font-size-sm);
+    }
+    
+    /* Team actions subheader responsive */
+    .team-actions-container {
+        flex-direction: column;
+        gap: var(--space-xs);
+        max-width: 240px;
+        padding: var(--space-xs);
+    }
+    
+    .team-action-button {
+        min-width: 100px;
+        padding: var(--space-xs) var(--space-sm);
+        font-size: var(--font-size-xs);
     }
     
     .team-view-header {
@@ -3667,6 +3895,607 @@ input:checked + .slider:before {
     #review-pitch {
         max-width: 100%;
     }
+}
+
+/* ========================= */
+/* DARK MODE STYLES */
+/* ========================= */
+
+/* Dark mode color variables */
+[data-theme="dark"] {
+    --color-bg: #0f172a;
+    --color-surface: #1e293b;
+    --color-surface-alt: rgba(30, 41, 59, 0.6);
+    --color-text-primary: #f1f5f9;
+    --color-text-secondary: #cbd5e1;
+    --color-text-tertiary: #94a3b8;
+    --color-text-inverse: #0f172a;
+    
+    /* Preserve team colors and pitch colors - these should NOT change */
+    --team1-primary: var(--team1-primary);
+    --team1-secondary: var(--team1-secondary);
+    --team2-primary: var(--team2-primary);
+    --team2-secondary: var(--team2-secondary);
+}
+
+/* Dark mode body and main elements */
+[data-theme="dark"] body {
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] main {
+    background-color: var(--color-bg);
+}
+
+/* Dark mode banner */
+[data-theme="dark"] #counters {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border-bottom: 1px solid #334155;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .team-name {
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .counter {
+    color: var(--color-text-primary);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .toggle-label-top {
+    color: var(--color-text-primary);
+}
+
+/* Dark mode sidebar */
+[data-theme="dark"] .sidebar {
+    background: rgba(15, 23, 42, 0.95);
+    border-right: 1px solid #334155;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .sidebar .closebtn {
+    color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .sidebar .closebtn:hover {
+    color: var(--color-text-primary);
+    background: rgba(51, 65, 85, 0.3);
+}
+
+[data-theme="dark"] .sidebar-link {
+    color: var(--color-text-secondary);
+    border-bottom: 1px solid #334155;
+}
+
+[data-theme="dark"] .sidebar-link:hover {
+    color: var(--color-text-primary);
+    background: rgba(51, 65, 85, 0.2);
+}
+
+[data-theme="dark"] .sidebar-link.active {
+    color: var(--color-text-primary);
+    background: rgba(37, 99, 235, 0.2);
+    border-left: 3px solid #2563eb;
+}
+
+/* Dark mode sidebar footer */
+[data-theme="dark"] .sidebar-footer {
+    background: rgba(30, 41, 59, 0.3);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] .sidebar-footer .toggle-label {
+    color: var(--color-text-primary);
+}
+
+/* Dark mode hamburger button */
+[data-theme="dark"] .hamburger {
+    background: rgba(30, 41, 59, 0.9);
+    color: var(--color-text-primary);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] .hamburger:hover {
+    background: rgba(30, 41, 59, 1);
+    border-color: #475569;
+}
+
+/* Dark mode overlay */
+[data-theme="dark"] #sidebar-overlay {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+/* Dark mode tab content */
+[data-theme="dark"] .tab-content {
+    background-color: var(--color-bg);
+}
+
+/* Dark mode buttons */
+[data-theme="dark"] .player-button {
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] .player-button:hover {
+    background: #334155;
+    border-color: #475569;
+}
+
+[data-theme="dark"] .player-button:active {
+    background: #475569;
+}
+
+/* Dark mode team buttons */
+[data-theme="dark"] button[id^="rename-team-"] {
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] button[id^="rename-team-"]:hover {
+    background: #334155;
+    border-color: #475569;
+}
+
+/* Dark mode popups */
+[data-theme="dark"] .popup {
+    background: var(--color-surface);
+    border: 1px solid #334155;
+    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .popup-content {
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .popup-content h3 {
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .popup-content label {
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .popup-content input,
+[data-theme="dark"] .popup-content select,
+[data-theme="dark"] .popup-content textarea {
+    background: var(--color-bg);
+    color: var(--color-text-primary);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] .popup-content input:focus,
+[data-theme="dark"] .popup-content select:focus,
+[data-theme="dark"] .popup-content textarea:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+/* Dark mode buttons in popups */
+[data-theme="dark"] .popup-content button {
+    background: #2563eb;
+    color: white;
+    border: 1px solid #1d4ed8;
+}
+
+[data-theme="dark"] .popup-content button:hover {
+    background: #1d4ed8;
+}
+
+[data-theme="dark"] .popup-content button.secondary {
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] .popup-content button.secondary:hover {
+    background: #334155;
+}
+
+/* Dark mode row options popup */
+[data-theme="dark"] .popup-menu {
+    background: var(--color-surface);
+    border: 1px solid #334155;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .popup-menu button {
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .popup-menu button:hover {
+    background: rgba(37, 99, 235, 0.2);
+    color: var(--color-text-primary);
+}
+
+/* Dark mode note popup */
+[data-theme="dark"] .popup-note {
+    background: var(--color-surface);
+    border: 1px solid #334155;
+    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .popup-note-content {
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .popup-note-content h3 {
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .popup-note-content textarea {
+    background: var(--color-bg);
+    color: var(--color-text-primary);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] .popup-note-content textarea:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+[data-theme="dark"] .note-popup-actions {
+    border-top: 1px solid #334155;
+}
+
+[data-theme="dark"] .cancel-note-btn {
+    background: rgba(51, 65, 85, 0.3);
+    color: var(--color-text-secondary);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] .cancel-note-btn:hover {
+    background: #334155;
+    color: var(--color-text-primary);
+}
+
+/* Dark mode action buttons */
+[data-theme="dark"] .action-button {
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] .action-button:hover {
+    background: #334155;
+    border-color: #475569;
+}
+
+[data-theme="dark"] .action-button:active {
+    background: #475569;
+}
+
+/* Dark mode summary table */
+[data-theme="dark"] #summary-table {
+    background: var(--color-surface);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] #summary-table th {
+    background: #334155;
+    color: var(--color-text-primary);
+    border-bottom: 1px solid #475569;
+}
+
+[data-theme="dark"] #summary-table td {
+    color: var(--color-text-primary);
+    border-bottom: 1px solid #334155;
+}
+
+[data-theme="dark"] #summary-table tbody tr:nth-child(even) {
+    background: rgba(51, 65, 85, 0.1);
+}
+
+[data-theme="dark"] #summary-table tbody tr:hover {
+    background: rgba(51, 65, 85, 0.3);
+}
+
+[data-theme="dark"] #summary-table th select {
+    background: var(--color-bg);
+    color: var(--color-text-primary);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] #summary-table th select:hover {
+    border-color: #2563eb;
+    background-color: rgba(37, 99, 235, 0.1);
+}
+
+[data-theme="dark"] #summary-table th select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+/* Dark mode select dropdown options */
+[data-theme="dark"] #summary-table th select option {
+    background: var(--color-bg);
+    color: var(--color-text-primary);
+}
+
+/* Dark mode tooltips */
+[data-theme="dark"] #summary-table td:hover::after {
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    border: 1px solid #334155;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Dark mode sticky headers */
+[data-theme="dark"] #summary-table thead th {
+    background-color: #334155;
+    color: var(--color-text-primary);
+    box-shadow: inset 0 -1px 0 #475569;
+}
+
+[data-theme="dark"] #summary-table thead tr:nth-child(2) th {
+    background-color: #334155;
+}
+
+/* Dark mode summary table wrapper */
+[data-theme="dark"] .summary-table-wrapper {
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] .summary-row:hover {
+    background: rgba(51, 65, 85, 0.3);
+}
+
+[data-theme="dark"] .summary-row.selected-row {
+    background: rgba(37, 99, 235, 0.2) !important;
+    box-shadow: inset 2px 0 0 #2563eb;
+}
+
+/* Dark mode filters */
+[data-theme="dark"] .filter-section {
+    background: var(--color-surface);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] .filter-section h3 {
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .filter-section select {
+    background: var(--color-bg);
+    color: var(--color-text-primary);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] .filter-section select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+/* Dark mode review plot - preserve original colors */
+[data-theme="dark"] .review-plot {
+    background: #f8f9fa; /* Keep light background for pitch */
+    border: 1px solid #334155;
+}
+
+/* Dark mode review collapsible sections */
+[data-theme="dark"] .collapsible-group {
+    background: var(--color-surface);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] .group-header {
+    background: #334155;
+    color: var(--color-text-primary);
+    border-bottom: 1px solid #475569;
+}
+
+[data-theme="dark"] .group-header:hover {
+    background: #475569;
+}
+
+[data-theme="dark"] .group-content {
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    border-top: 1px solid #334155;
+}
+
+[data-theme="dark"] .group-content label {
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .group-content input,
+[data-theme="dark"] .group-content select {
+    background: var(--color-bg);
+    color: var(--color-text-primary);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] .group-content input:focus,
+[data-theme="dark"] .group-content select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+[data-theme="dark"] .group-content button {
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] .group-content button:hover {
+    background: #334155;
+    border-color: #475569;
+}
+
+/* Dark mode coordinate display */
+[data-theme="dark"] #coordinate-display {
+    color: var(--color-text-primary);
+}
+
+/* Dark mode messages */
+[data-theme="dark"] .fade-message {
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] .fade-message.success {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: #10b981;
+    color: #10b981;
+}
+
+[data-theme="dark"] .fade-message.error {
+    background: rgba(220, 38, 38, 0.1);
+    border-color: #dc2626;
+    color: #dc2626;
+}
+
+/* Dark mode toggle switch */
+[data-theme="dark"] .slider {
+    background-color: #334155;
+}
+
+[data-theme="dark"] input:checked + .slider {
+    background-color: #34c759;
+}
+
+[data-theme="dark"] .slider:before {
+    background-color: var(--color-text-primary);
+}
+
+/* Dark mode pattern preview in team customization */
+[data-theme="dark"] .pattern-preview {
+    border: 1px solid #334155;
+    /* Don't override the pattern background - let the pattern classes show through */
+}
+
+[data-theme="dark"] .pattern-option {
+    background: var(--color-surface);
+    border: 1px solid #334155;
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .pattern-option:hover {
+    background: #334155;
+    border-color: #475569;
+}
+
+[data-theme="dark"] .pattern-option.selected {
+    background: rgba(37, 99, 235, 0.2);
+    border-color: #2563eb;
+}
+
+/* Dark mode color pickers */
+[data-theme="dark"] input[type="color"] {
+    background: var(--color-bg);
+    border: 1px solid #334155;
+}
+
+/* Dark mode secondary color buttons */
+[data-theme="dark"] .secondary-color-btn {
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] .secondary-color-btn:hover {
+    background: #334155;
+}
+
+[data-theme="dark"] .secondary-color-btn.active {
+    background: rgba(37, 99, 235, 0.2);
+    border-color: #2563eb;
+}
+
+/* Dark mode timeline */
+[data-theme="dark"] .timeline-container {
+    background: var(--color-surface);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] .timeline-header {
+    background: #334155;
+    color: var(--color-text-primary);
+    border-bottom: 1px solid #475569;
+}
+
+[data-theme="dark"] .timeline-row {
+    border-bottom: 1px solid #334155;
+}
+
+[data-theme="dark"] .timeline-row:hover {
+    background: rgba(51, 65, 85, 0.3);
+}
+
+/* Dark mode timeline action boxes */
+[data-theme="dark"] .timeline-action-box {
+    background: var(--color-surface);
+    border: 1px solid #334155;
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .timeline-action-box:hover {
+    background: #334155;
+    border-color: #475569;
+}
+
+[data-theme="dark"] .timeline-action-title {
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .timeline-action-details {
+    color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .timeline-action-players {
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .timeline-action-timestamp {
+    color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .timeline-action-notes {
+    background: rgba(51, 65, 85, 0.3);
+    border: 1px solid #334155;
+    color: var(--color-text-primary);
+}
+
+/* Dark mode stats cards */
+[data-theme="dark"] .stats-card {
+    background: var(--color-surface);
+    border: 1px solid #334155;
+}
+
+[data-theme="dark"] .stats-card h3 {
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .stats-card .stat-value {
+    color: var(--color-text-primary);
+}
+
+/* Dark mode pitch plot - preserve original colors */
+[data-theme="dark"] .pitch {
+    background: #f8f9fa; /* Keep light background */
+}
+
+/* Dark mode action icons - preserve original colors */
+[data-theme="dark"] .action-icon {
+    /* Preserve original icon colors - no changes needed */
+    filter: none;
+}
+
+/* Dark mode team colors - preserve original colors */
+[data-theme="dark"] .pattern-solid,
+[data-theme="dark"] .pattern-diagonal,
+[data-theme="dark"] .pattern-checkered,
+[data-theme="dark"] .pattern-vertical,
+[data-theme="dark"] .pattern-horizontal,
+[data-theme="dark"] .pattern-classic {
+    /* Preserve team pattern colors - no changes needed */
+    filter: none;
 }
 
 /* Medium desktop screens */
