@@ -139,7 +139,38 @@ document.addEventListener('DOMContentLoaded', function () {
     
     // Initialize team view
     switchTeamView('our-team');
+    
+    // Initialize dark mode
+    initializeDarkMode();
 });
+
+// Dark Mode Toggle
+function toggleDarkMode() {
+    const darkModeToggle = document.getElementById('toggle-dark-mode');
+    const isDarkMode = darkModeToggle.checked;
+    
+    if (isDarkMode) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('darkMode', 'true');
+    } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        localStorage.setItem('darkMode', 'false');
+    }
+}
+
+// Initialize dark mode on page load
+function initializeDarkMode() {
+    const savedTheme = localStorage.getItem('darkMode');
+    const darkModeToggle = document.getElementById('toggle-dark-mode');
+    
+    if (savedTheme === 'true') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        darkModeToggle.checked = true;
+    } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        darkModeToggle.checked = false;
+    }
+}
 
 document.addEventListener('click', (e) => {
     const popup = document.getElementById('row-options-popup');
@@ -1734,149 +1765,164 @@ function showSummaryBox(x, y, entry, color) {
     const [coordX2, coordY2] = entry.coordinates2 ? entry.coordinates2.slice(1, -1).split(', ') : [];
     const distance = coordX2 && coordY2 ? calculateDistance(coordX1, coordY1, coordX2, coordY2) : '';
 
-    if (entry.action === 'Point - Score') {
-        summaryBox.innerHTML = `
-            <p><strong>Player:</strong> ${entry.player}</p>
-            <p><strong>Action:</strong> Point - Score</p>
-            <p><strong>Type:</strong> ${entry.mode}</p>
-            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
-        `;
-    } else if (entry.action === '2-Point - Score') {
-        summaryBox.innerHTML = `
-            <p><strong>Player:</strong> ${entry.player}</p>
-            <p><strong>Action:</strong> 2-Point - Score</p>
-            <p><strong>Type:</strong> ${entry.definition}</p>
-            <p><strong>How:</strong> ${entry.mode}</p>
-            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
-        `;
-    } else if (entry.action === 'Point - Miss') {
-        summaryBox.innerHTML = `
-            <p><strong>Player:</strong> ${entry.player}</p>
-            <p><strong>Action:</strong> Point - Miss</p>
-            <p><strong>Type:</strong> ${entry.definition}</p>
-            <p><strong>How:</strong> ${entry.mode}</p>
-            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
-        `;
-    } else if (entry.action === 'Goal - Score') {
-        summaryBox.innerHTML = `
-            <p><strong>Player:</strong> ${entry.player}</p>
-            <p><strong>Action:</strong> Goal - Score</p>
-            <p><strong>Type:</strong> ${entry.mode}</p>
-            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
-        `;
-    } else if (entry.action === 'Goal - Miss') {
-        summaryBox.innerHTML = `
-            <p><strong>Player:</strong> ${entry.player}</p>
-            <p><strong>Action:</strong> Goal - Miss</p>
-            <p><strong>Type:</strong> ${entry.definition}</p>
-            <p><strong>How:</strong> ${entry.mode}</p>
-            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
-        `;
-    } else if (entry.action === 'Free Won') {
-        summaryBox.innerHTML = `
-            <p><strong>Player:</strong> ${entry.player}</p>
-            <p><strong>Action:</strong> Free Won</p>
-            <p><strong>Type:</strong> ${entry.mode}</p>
-            <p><strong>Card:</strong> ${entry.definition}</p>
-            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
-        `;
-    } else if (entry.action === 'Handpass') {
-        summaryBox.innerHTML = `
-            <p><strong>Action:</strong> Handpass</p>
-            <p><strong>Pass:</strong> ${entry.player}</p>
-            <p><strong>To:</strong> ${entry.player2}</p>
-            <p><strong>Dist:</strong> ${distance}m</p>
-            <p style="font-size: small; margin-top: 10px;"><strong>Coords_1:</strong> (${coordX1}, ${coordY1})</p>
-            <p style="font-size: small; margin-top: 10px;"><strong>Coords_2:</strong> (${coordX2}, ${coordY2})</p>
-        `;
-    } else if (entry.action === 'Kickpass') {
-        summaryBox.innerHTML = `
-            <p><strong>Action:</strong> Kickpass</p>
-            <p><strong>Pass:</strong> ${entry.player}</p>
-            <p><strong>To:</strong> ${entry.player2}</p>
-            <p><strong>Dist:</strong> ${distance}m</p>
-            <p style="font-size: small; margin-top: 10px;"><strong>Coords_1:</strong> (${coordX1}, ${coordY1})</p>
-            <p style="font-size: small; margin-top: 10px;"><strong>Coords_2:</strong> (${coordX2}, ${coordY2})</p>
-        `;
-    } else if (entry.action === 'Carry') {
-        summaryBox.innerHTML = `
-            <p><strong>Action:</strong> Carry</p>
-            <p><strong>Run:</strong> ${entry.mode}</p>
-            <p><strong>Player:</strong> ${entry.player}</p>
-            <p><strong>Dist:</strong> ${distance}m</p>
-            <p style="font-size: small; margin-top: 10px;"><strong>Coords_1:</strong> (${coordX1}, ${coordY1})</p>
-            <p style="font-size: small; margin-top: 10px;"><strong>Coords_2:</strong> (${coordX2}, ${coordY2})</p>
-        `;
-    } else if (entry.action === 'Ball - Lost' && entry.mode === 'Unforced Error') {
-        summaryBox.innerHTML = `
-            <p><strong>Action:</strong> Ball - Lost</p>
-            <p><strong>Type:</strong> Unforced</p>
-            <p><strong>How:</strong> ${entry.definition}</p>
-            <p><strong>Player:</strong> ${entry.player}</p>
-            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
-        `;
-    } else if (entry.action === 'Ball - Lost' && entry.mode === 'Forced Error') {
-        summaryBox.innerHTML = `
-            <p><strong>Action:</strong> Ball - Lost</p>
-            <p><strong>Type:</strong> Forced</p>
-            <p><strong>How:</strong> ${entry.definition}</p>
-            <p><strong>Player:</strong> ${entry.player}</p>
-            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
-        `;
-    } else if (entry.action === 'Ball - Won') {
-        summaryBox.innerHTML = `
-            <p><strong>Action:</strong> Ball - Won</p>
-            <p><strong>Type:</strong> ${entry.mode}</p>
-            <p><strong>How:</strong> ${entry.definition}</p>
-            <p><strong>Player:</strong> ${entry.player}</p>
-            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
-        `;
-    } else if (entry.action === 'Kickout - For') {
-        summaryBox.innerHTML = `
-            <p><strong>Action:</strong> Kickout For</p>
-            <p><strong>Won/Lost:</strong> ${entry.mode}</p>
-            <p><strong>Contest:</strong> ${entry.definition}</p>
-            <p><strong>Pass To:</strong> ${entry.player}</p>
-            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
-        `;
-    } else if (entry.action === 'Kickout - Against') {
-        summaryBox.innerHTML = `
-            <p><strong>Action:</strong> Opp. Kickout</p>
-            <p><strong>Won/Lost:</strong> ${entry.mode}</p>
-            <p><strong>Contest:</strong> ${entry.definition}</p>
-            <p><strong>Pass To:</strong> ${entry.player}</p>
-            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
-        `;
-    } else if (entry.action === 'Point - Against') {
-        summaryBox.innerHTML = `
-            <p><strong>Action:</strong> Point Against</p>
-            <p><strong>Type:</strong> ${entry.mode}</p>
-            <p><strong>Player:</strong> ${entry.player}</p>
-            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
-        `;
-    } else if (entry.action === '2-Point - Against') {
-        summaryBox.innerHTML = `
-            <p><strong>Action:</strong> 2-Point Against</p>
-            <p><strong>Type:</strong> ${entry.definition}</p>
-            <p><strong>Player:</strong> ${entry.player}</p>
-            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
-        `;
-    } else if (entry.action === 'Goal - Against') {
-        summaryBox.innerHTML = `
-            <p><strong>Action:</strong> Goal Against</p>
-            <p><strong>Type:</strong> ${entry.mode}</p>
-            <p><strong>Player:</strong> ${entry.player}</p>
-            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
-        `;
-    } else if (entry.action === 'Miss - Against') {
-        summaryBox.innerHTML = `
-            <p><strong>Action:</strong> Miss Against</p>
-            <p><strong>Type:</strong> ${entry.mode}</p>
-            <p><strong>How:</strong> ${entry.definition}</p>
-            <p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>
-        `;
-    }  
-    document.body.appendChild(summaryBox);
+    // Generate content using streamlined approach
+    const actionConfigs = {
+        'Point - Score': {
+            title: 'Point - Score',
+            fields: [
+                { label: 'Player', value: entry.player },
+                { label: 'Type', value: entry.mode }
+            ]
+        },
+        '2-Point - Score': {
+            title: '2-Point - Score',
+            fields: [
+                { label: 'Player', value: entry.player },
+                { label: 'Type', value: entry.definition },
+                { label: 'How', value: entry.mode }
+            ]
+        },
+        'Point - Miss': {
+            title: 'Point - Miss',
+            fields: [
+                { label: 'Player', value: entry.player },
+                { label: 'Type', value: entry.definition },
+                { label: 'How', value: entry.mode }
+            ]
+        },
+        'Goal - Score': {
+            title: 'Goal - Score',
+            fields: [
+                { label: 'Player', value: entry.player },
+                { label: 'Type', value: entry.mode }
+            ]
+        },
+        'Goal - Miss': {
+            title: 'Goal - Miss',
+            fields: [
+                { label: 'Player', value: entry.player },
+                { label: 'Type', value: entry.definition },
+                { label: 'How', value: entry.mode }
+            ]
+        },
+        'Free Won': {
+            title: 'Free Won',
+            fields: [
+                { label: 'Player', value: entry.player },
+                { label: 'Type', value: entry.mode },
+                { label: 'Card', value: entry.definition }
+            ]
+        },
+        'Handpass': {
+            title: 'Handpass',
+            fields: [
+                { label: 'Pass', value: entry.player },
+                { label: 'To', value: entry.player2 },
+                { label: 'Dist', value: `${distance}m` }
+            ],
+            coords: 'both'
+        },
+        'Kickpass': {
+            title: 'Kickpass',
+            fields: [
+                { label: 'Pass', value: entry.player },
+                { label: 'To', value: entry.player2 },
+                { label: 'Dist', value: `${distance}m` }
+            ],
+            coords: 'both'
+        },
+        'Carry': {
+            title: 'Carry',
+            fields: [
+                { label: 'Run', value: entry.mode },
+                { label: 'Player', value: entry.player },
+                { label: 'Dist', value: `${distance}m` }
+            ],
+            coords: 'both'
+        },
+        'Ball - Lost': {
+            title: 'Ball - Lost',
+            fields: [
+                { label: 'Type', value: entry.mode === 'Unforced Error' ? 'Unforced' : 'Forced' },
+                { label: 'How', value: entry.definition },
+                { label: 'Player', value: entry.player }
+            ]
+        },
+        'Ball - Won': {
+            title: 'Ball - Won',
+            fields: [
+                { label: 'Type', value: entry.mode },
+                { label: 'How', value: entry.definition },
+                { label: 'Player', value: entry.player }
+            ]
+        },
+        'Kickout - For': {
+            title: 'Kickout For',
+            fields: [
+                { label: 'Won/Lost', value: entry.mode },
+                { label: 'Contest', value: entry.definition },
+                { label: 'Pass To', value: entry.player }
+            ]
+        },
+        'Kickout - Against': {
+            title: 'Opp. Kickout',
+            fields: [
+                { label: 'Won/Lost', value: entry.mode },
+                { label: 'Contest', value: entry.definition },
+                { label: 'Pass To', value: entry.player }
+            ]
+        },
+        'Point - Against': {
+            title: 'Point Against',
+            fields: [
+                { label: 'Type', value: entry.mode },
+                { label: 'Player', value: entry.player }
+            ]
+        },
+        '2-Point - Against': {
+            title: '2-Point Against',
+            fields: [
+                { label: 'Type', value: entry.definition },
+                { label: 'Player', value: entry.player }
+            ]
+        },
+        'Goal - Against': {
+            title: 'Goal Against',
+            fields: [
+                { label: 'Type', value: entry.mode },
+                { label: 'Player', value: entry.player }
+            ]
+        },
+        'Miss - Against': {
+            title: 'Miss Against',
+            fields: [
+                { label: 'Type', value: entry.mode },
+                { label: 'How', value: entry.definition }
+            ]
+        }
+    };
+
+    // Generate content based on action type
+    const config = actionConfigs[entry.action] || { title: entry.action, fields: [] };
+    
+    let content = `<p><strong>Action:</strong> ${config.title}</p>`;
+    
+    // Add fields
+    config.fields.forEach(field => {
+        if (field.value) {
+            content += `<p><strong>${field.label}:</strong> ${field.value}</p>`;
+        }
+    });
+    
+    // Add coordinates
+    if (config.coords === 'both') {
+        content += `<p style="font-size: small; margin-top: 10px;"><strong>Coords_1:</strong> (${coordX1}, ${coordY1})</p>`;
+        content += `<p style="font-size: small; margin-top: 10px;"><strong>Coords_2:</strong> (${coordX2}, ${coordY2})</p>`;
+    } else {
+        content += `<p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>`;
+    }
+    
+    summaryBox.innerHTML = content;
 
     // Remove any existing event listener to prevent duplication
     document.removeEventListener('click', handleDocumentClick);
@@ -1889,7 +1935,10 @@ function showSummaryBox(x, y, entry, color) {
         }
     }
 
-    document.addEventListener('click', handleDocumentClick);
+    // Add event listener with a small delay to prevent immediate closure
+    setTimeout(() => {
+        document.addEventListener('click', handleDocumentClick);
+    }, 100);
 }
 
 const drawPassMarkersAndArrow = (x1, y1, x2, y2, color, entry, actionType) => {
@@ -2024,6 +2073,15 @@ function confirmTeamEdit() {
 
     // Update home tab button
     document.getElementById(`rename-team-${editingTeamIndex}-button`).textContent = newName;
+    
+    // Update save button text
+    const saveButton = document.getElementById(`save-team-${editingTeamIndex}-button`);
+    if (saveButton) {
+        const buttonText = saveButton.querySelector('.button-text');
+        if (buttonText) {
+            buttonText.textContent = `Save Team Sheet`;
+        }
+    }
 
     // Update scoreboard label (counter area)
     document.querySelectorAll('.counter-container .team-name')[editingTeamIndex - 1].textContent = `${newName}:`;
@@ -2247,8 +2305,13 @@ function handleTouchStart(e) {
     e.preventDefault();
     const touch = e.touches[0];
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (element && element.id.startsWith('player-') && element.id.endsWith('-button')) {
-        touchStartIndex = parseInt(element.id.split('-')[1]);
+    if (element && element.id.endsWith('-button') && (element.id.startsWith('player-') || element.id.startsWith('opp-player-'))) {
+        // Handle both our team (player-1-button) and opposition (opp-player-1-button) buttons
+        if (element.id.startsWith('opp-player-')) {
+            touchStartIndex = parseInt(element.id.split('-')[2]) + 100; // Convert to 101-130 range
+        } else {
+            touchStartIndex = parseInt(element.id.split('-')[1]); // Regular 1-30 range
+        }
         touchStartX = touch.clientX;
         touchStartY = touch.clientY;
         touchStartTime = Date.now();
@@ -2306,15 +2369,30 @@ function handleTouchEnd(e) {
     
     if (touchDragActive) {
         // Handle drag and drop
-    if (element && element.id.startsWith('player-') && element.id.endsWith('-button')) {
-        const touchEndIndex = parseInt(element.id.split('-')[1]);
+    if (element && element.id.endsWith('-button') && (element.id.startsWith('player-') || element.id.startsWith('opp-player-'))) {
+        // Handle both our team (player-1-button) and opposition (opp-player-1-button) buttons
+        let touchEndIndex;
+        if (element.id.startsWith('opp-player-')) {
+            touchEndIndex = parseInt(element.id.split('-')[2]) + 100; // Convert to 101-130 range
+        } else {
+            touchEndIndex = parseInt(element.id.split('-')[1]); // Regular 1-30 range
+        }
 
             if (touchStartIndex !== null && touchEndIndex !== null && touchStartIndex !== touchEndIndex) {
                 swapPlayerNames(touchStartIndex, touchEndIndex);
                 
-                // Add success animation
-                const sourceButton = document.getElementById(`player-${touchStartIndex}-button`);
-                const targetButton = document.getElementById(`player-${touchEndIndex}-button`);
+                // Add success animation - need to get the correct button IDs
+                let sourceButton, targetButton;
+                if (touchStartIndex > 100) {
+                    sourceButton = document.getElementById(`opp-player-${touchStartIndex - 100}-button`);
+                } else {
+                    sourceButton = document.getElementById(`player-${touchStartIndex}-button`);
+                }
+                if (touchEndIndex > 100) {
+                    targetButton = document.getElementById(`opp-player-${touchEndIndex - 100}-button`);
+                } else {
+                    targetButton = document.getElementById(`player-${touchEndIndex}-button`);
+                }
                 
                 if (sourceButton) sourceButton.classList.add('swap-success');
                 if (targetButton) targetButton.classList.add('swap-success');
@@ -2327,8 +2405,13 @@ function handleTouchEnd(e) {
         }
     } else if (touchDuration < 500 && movedX < MOVE_THRESHOLD && movedY < MOVE_THRESHOLD) {
         // Handle tap (short touch with minimal movement)
-        if (element && element.id.startsWith('player-') && element.id.endsWith('-button')) {
-            const touchEndIndex = parseInt(element.id.split('-')[1]);
+        if (element && element.id.endsWith('-button') && (element.id.startsWith('player-') || element.id.startsWith('opp-player-'))) {
+            let touchEndIndex;
+            if (element.id.startsWith('opp-player-')) {
+                touchEndIndex = parseInt(element.id.split('-')[2]) + 100; // Convert to 101-130 range
+            } else {
+                touchEndIndex = parseInt(element.id.split('-')[1]); // Regular 1-30 range
+            }
             openEditPopup(touchEndIndex);
         }
     }
@@ -3464,4 +3547,728 @@ function updateTimelineColors() {
     document.querySelectorAll('.timeline-item.team2 .timeline-dot').forEach(dot => {
         dot.style.borderColor = team2Style.background;
     });
+}
+
+// --- Team Sheet Export/Import System (v1) ---
+
+// Configuration and constants
+const TEAM_SHEET_VERSION = '1';
+const SUPPORTED_PATTERNS = ['classic', 'hooped', 'vertical', 'sash', 'diagonal', 'solid', 'custom', 'checkered', 'horizontal'];
+const REQUIRED_CSV_COLUMNS = ['team_name', 'pattern', 'primary_color', 'secondary_color', 'player_role', 'number', 'name'];
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+
+// Color normalization mapping
+const CSS_COLOR_NAMES = {
+    'black': '#000000',
+    'white': '#FFFFFF',
+    'red': '#FF0000',
+    'green': '#008000',
+    'blue': '#0000FF',
+    'yellow': '#FFFF00',
+    'orange': '#FFA500',
+    'purple': '#800080',
+    'pink': '#FFC0CB',
+    'brown': '#A52A2A',
+    'gray': '#808080',
+    'grey': '#808080'
+};
+
+// Pattern mapping (internal to CSV format)
+const PATTERN_MAPPING = {
+    'solid': 'solid',
+    'diagonal': 'diagonal', 
+    'checkered': 'classic',
+    'vertical': 'vertical',
+    'horizontal': 'hooped',
+    'custom': 'custom'
+};
+
+// RFC4180-compliant CSV parser
+function parseCSV(text) {
+    const rows = [];
+    let currentRow = [];
+    let currentField = '';
+    let inQuotes = false;
+    let i = 0;
+    
+    while (i < text.length) {
+        const char = text[i];
+        const nextChar = text[i + 1];
+        
+        if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+                // Escaped quote
+                currentField += '"';
+                i += 2;
+            } else {
+                // Toggle quote state
+                inQuotes = !inQuotes;
+                i++;
+            }
+        } else if (char === ',' && !inQuotes) {
+            // Field separator
+            currentRow.push(currentField);
+            currentField = '';
+            i++;
+        } else if (char === '\n' || char === '\r') {
+            // Row separator
+            if (!inQuotes) {
+                currentRow.push(currentField);
+                rows.push(currentRow);
+                currentRow = [];
+                currentField = '';
+                // Skip \r\n combination
+                if (char === '\r' && nextChar === '\n') {
+                    i += 2;
+                } else {
+                    i++;
+                }
+            } else {
+                currentField += char;
+                i++;
+            }
+        } else {
+            currentField += char;
+            i++;
+        }
+    }
+    
+    // Add final field and row
+    if (currentField !== '' || currentRow.length > 0) {
+        currentRow.push(currentField);
+        rows.push(currentRow);
+    }
+    
+    return rows;
+}
+
+// Normalize color to #RRGGBB format
+function normalizeColor(colorInput) {
+    if (!colorInput) return '#000000';
+    
+    const color = colorInput.trim().toLowerCase();
+    
+    // Handle CSS color names
+    if (CSS_COLOR_NAMES[color]) {
+        return CSS_COLOR_NAMES[color];
+    }
+    
+    // Handle hex colors
+    if (color.startsWith('#')) {
+        if (color.length === 4) {
+            // #RGB -> #RRGGBB
+            return `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`.toUpperCase();
+        } else if (color.length === 7) {
+            return color.toUpperCase();
+        }
+    }
+    
+    // Handle rgb() format
+    const rgbMatch = color.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
+    if (rgbMatch) {
+        const r = parseInt(rgbMatch[1]).toString(16).padStart(2, '0');
+        const g = parseInt(rgbMatch[2]).toString(16).padStart(2, '0');
+        const b = parseInt(rgbMatch[3]).toString(16).padStart(2, '0');
+        return `#${r}${g}${b}`.toUpperCase();
+    }
+    
+    // Handle rgba() format (ignore alpha)
+    const rgbaMatch = color.match(/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*[\d.]+\s*\)/);
+    if (rgbaMatch) {
+        const r = parseInt(rgbaMatch[1]).toString(16).padStart(2, '0');
+        const g = parseInt(rgbaMatch[2]).toString(16).padStart(2, '0');
+        const b = parseInt(rgbaMatch[3]).toString(16).padStart(2, '0');
+        return `#${r}${g}${b}`.toUpperCase();
+    }
+    
+    // If unrecognized, return black
+    return '#000000';
+}
+
+// Normalize pattern name
+function normalizePattern(patternInput) {
+    if (!patternInput) return 'classic';
+    
+    const pattern = patternInput.trim().toLowerCase();
+    
+    // Direct mapping
+    if (SUPPORTED_PATTERNS.includes(pattern)) {
+        return pattern;
+    }
+    
+    // Fallback to classic
+    return 'classic';
+}
+
+// Generate safe filename
+function generateFilename(teamName, teamNumber) {
+    const otherTeamNumber = teamNumber === 1 ? 2 : 1;
+    const otherTeamName = document.getElementById(`rename-team-${otherTeamNumber}-button`).textContent;
+    
+    const safeCurrentName = teamName.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+    const safeOtherName = otherTeamName.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+    
+    return `${safeCurrentName}: Team Sheet vs ${safeOtherName}.csv`;
+}
+
+// Export team sheet as CSV
+function saveTeamSheet(teamNumber) {
+    try {
+        const teamButton = document.getElementById(`rename-team-${teamNumber}-button`);
+        if (!teamButton) {
+            throw new Error(`Team button not found for team ${teamNumber}`);
+        }
+        
+        const teamName = teamButton.textContent;
+        const teamData = teamCustomizations[teamNumber];
+        
+        if (!teamData) {
+            throw new Error(`Team customization data not found for team ${teamNumber}`);
+        }
+        
+        const currentPlayerNames = teamNumber === 1 ? playerNames : oppositionPlayerNames;
+        
+        if (!currentPlayerNames) {
+            throw new Error(`Player names not found for team ${teamNumber}`);
+        }
+        
+        const teamSide = teamNumber === 1 ? 'our' : 'opp';
+        
+        // Build CSV rows
+        const csvRows = [REQUIRED_CSV_COLUMNS]; // Header row
+        
+        // Add starting players
+        const startIndex = teamNumber === 1 ? 1 : 101;
+        const endStartIndex = teamNumber === 1 ? 15 : 115;
+        
+        for (let i = startIndex; i <= endStartIndex; i++) {
+            const playerData = currentPlayerNames[i];
+            if (playerData) {
+                const parts = playerData.split(' - ');
+                const number = parts[0] ? parts[0].replace('#', '') : (teamNumber === 1 ? i : i - 100).toString();
+                const name = parts[1] || `Player ${teamNumber === 1 ? i : i - 100}`;
+                
+                csvRows.push([
+                    teamName,
+                    normalizePattern(teamData.pattern || 'classic'),
+                    normalizeColor(teamData.primaryColor || '#2563eb'),
+                    normalizeColor(teamData.secondaryColor || '#1d4ed8'),
+                    'starter',
+                    number,
+                    name
+                ]);
+            }
+        }
+        
+        // Add substitutes
+        const subStartIndex = teamNumber === 1 ? 16 : 116;
+        const subEndIndex = teamNumber === 1 ? 30 : 130;
+        
+        for (let i = subStartIndex; i <= subEndIndex; i++) {
+            const playerData = currentPlayerNames[i];
+            if (playerData) {
+                const parts = playerData.split(' - ');
+                const number = parts[0] ? parts[0].replace('#', '') : (teamNumber === 1 ? i : i - 100).toString();
+                const name = parts[1] || `Substitute ${teamNumber === 1 ? i - 15 : i - 115}`;
+                
+                csvRows.push([
+                    teamName,
+                    normalizePattern(teamData.pattern || 'classic'),
+                    normalizeColor(teamData.primaryColor || '#2563eb'),
+                    normalizeColor(teamData.secondaryColor || '#1d4ed8'),
+                    'sub',
+                    number,
+                    name
+                ]);
+            }
+        }
+        
+        // Convert to CSV string
+        const csvContent = csvRows.map(row => 
+            row.map(cell => `"${cell.toString().replace(/"/g, '""')}"`).join(',')
+        ).join('\n');
+        
+        // Create and download file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        const filename = generateFilename(teamName, teamNumber);
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        // Show success message
+        showTemporaryMessage(`Team sheet saved: ${filename}`, 'success');
+        
+    } catch (error) {
+        console.error('Error saving team sheet:', error);
+        showTemporaryMessage('Error saving team sheet. Please try again.', 'error');
+    }
+}
+
+// Upload team sheet
+function uploadTeamSheet(teamNumber) {
+    const fileInput = document.getElementById(`team-${teamNumber}-file-input`);
+    fileInput.click();
+}
+
+// Handle file upload
+function handleFileUpload(teamNumber, fileInput) {
+    const file = fileInput.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+        showTemporaryMessage('Please upload a .csv team sheet.', 'error');
+        return;
+    }
+    
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+        showTemporaryMessage('File too large. Maximum size is 2MB.', 'error');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const result = importTeamSheet(e.target.result, teamNumber);
+            
+            if (result.success) {
+                showTemporaryMessage(result.message, 'success');
+                if (result.warnings.length > 0) {
+                    setTimeout(() => {
+                        showTemporaryMessage(`Warnings: ${result.warnings.join(', ')}`, 'warning');
+                    }, 2000);
+                }
+            } else {
+                showTemporaryMessage(result.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error parsing team sheet:', error);
+            showTemporaryMessage('Error parsing team sheet. Please check the file format.', 'error');
+        }
+    };
+    
+    reader.onerror = function() {
+        showTemporaryMessage('Error reading file. Please try again.', 'error');
+    };
+    
+    reader.readAsText(file, 'UTF-8');
+    
+    // Reset file input
+    fileInput.value = '';
+}
+
+// Import team sheet with comprehensive validation
+function importTeamSheet(csvContent, teamNumber) {
+    const result = {
+        success: false,
+        message: '',
+        warnings: [],
+        errors: []
+    };
+    
+    try {
+        // Parse CSV
+        const rows = parseCSV(csvContent);
+        
+        if (rows.length < 2) {
+            result.message = 'Invalid team-sheet file. File appears to be empty or malformed.';
+            return result;
+        }
+        
+        // Validate header
+        const headerRow = rows[0];
+        const missingColumns = REQUIRED_CSV_COLUMNS.filter(col => !headerRow.includes(col));
+        
+        if (missingColumns.length > 0) {
+            result.message = `Invalid team-sheet file. Required columns missing: ${missingColumns.join(', ')}.`;
+            return result;
+        }
+        
+        // Get column indices
+        const columnIndices = {};
+        REQUIRED_CSV_COLUMNS.forEach(col => {
+            columnIndices[col] = headerRow.indexOf(col);
+        });
+        
+        // Parse data rows - use all rows regardless of team_side
+        const teamRows = rows.slice(1).filter(row => row.length >= REQUIRED_CSV_COLUMNS.length);
+        
+        if (teamRows.length === 0) {
+            result.message = 'No valid rows found in the CSV file.';
+            return result;
+        }
+        
+        // Validate required fields and collect metadata
+        let teamName = '';
+        let pattern = 'classic';
+        let primaryColor = '#000000';
+        let secondaryColor = '#FFFFFF';
+        const starters = [];
+        const subs = [];
+        const invalidRows = [];
+        
+        for (let i = 0; i < teamRows.length; i++) {
+            const row = teamRows[i];
+            
+            try {
+                const rowTeamName = row[columnIndices.team_name]?.trim();
+                const rowPattern = row[columnIndices.pattern]?.trim();
+                const rowPrimaryColor = row[columnIndices.primary_color]?.trim();
+                const rowSecondaryColor = row[columnIndices.secondary_color]?.trim();
+                const playerRole = row[columnIndices.player_role]?.trim().toLowerCase();
+                const number = row[columnIndices.number]?.trim();
+                const name = row[columnIndices.name]?.trim();
+                
+                // Validate required fields
+                if (!name) {
+                    invalidRows.push(`Row ${i + 2}: missing name`);
+                    continue;
+                }
+                
+                if (!playerRole || (playerRole !== 'starter' && playerRole !== 'sub')) {
+                    invalidRows.push(`Row ${i + 2}: invalid player_role (must be 'starter' or 'sub')`);
+                    continue;
+                }
+                
+                // Collect metadata from first valid row
+                if (i === 0 || !teamName) {
+                    if (rowTeamName) teamName = rowTeamName;
+                    if (rowPattern) pattern = normalizePattern(rowPattern);
+                    if (rowPrimaryColor) primaryColor = normalizeColor(rowPrimaryColor);
+                    if (rowSecondaryColor) secondaryColor = normalizeColor(rowSecondaryColor);
+                }
+                
+                // Parse player number
+                let playerNumber = '';
+                if (number) {
+                    const num = parseInt(number);
+                    if (!isNaN(num) && num > 0) {
+                        playerNumber = num.toString();
+                    }
+                }
+                
+                const playerData = {
+                    number: playerNumber,
+                    name: name
+                };
+                
+                if (playerRole === 'starter') {
+                    starters.push(playerData);
+                } else {
+                    subs.push(playerData);
+                }
+                
+            } catch (rowError) {
+                invalidRows.push(`Row ${i + 2}: ${rowError.message}`);
+            }
+        }
+        
+        // Check for at least one starter
+        if (starters.length === 0) {
+            result.message = 'No valid starter players found. At least one starter is required.';
+            return result;
+        }
+        
+        // Validate team name
+        if (!teamName) {
+            teamName = teamNumber === 1 ? 'Team 1' : 'Team 2';
+            result.warnings.push('No team name found, using default.');
+        }
+        
+        // Apply changes
+        applyTeamSheetData(teamNumber, {
+            teamName,
+            pattern,
+            primaryColor,
+            secondaryColor,
+            starters,
+            subs
+        });
+        
+        // Persist to localStorage
+        saveTeamSheetToLocalStorage(teamNumber, {
+            teamName,
+            pattern,
+            primaryColor,
+            secondaryColor,
+            starters,
+            subs
+        });
+        
+        // Build success message
+        let message = `Imported team sheet for "${teamName}" — ${starters.length} starters`;
+        if (subs.length > 0) {
+            message += `, ${subs.length} subs`;
+        }
+        message += ' applied. Colors & pattern updated.';
+        
+        if (invalidRows.length > 0) {
+            result.warnings.push(`${invalidRows.length} invalid rows ignored: ${invalidRows.slice(0, 3).join(', ')}${invalidRows.length > 3 ? '...' : ''}`);
+        }
+        
+        result.success = true;
+        result.message = message;
+        
+    } catch (error) {
+        result.message = `Error parsing team sheet: ${error.message}`;
+    }
+    
+    return result;
+}
+
+// Apply team sheet data to the app
+function applyTeamSheetData(teamNumber, data) {
+    // Update team name
+    const teamButton = document.getElementById(`rename-team-${teamNumber}-button`);
+    if (teamButton) {
+        teamButton.textContent = data.teamName;
+    }
+    
+    // Update banner team name
+    const bannerTeamName = document.querySelectorAll('.counter-container .team-name')[teamNumber - 1];
+    if (bannerTeamName) {
+        bannerTeamName.textContent = `${data.teamName}:`;
+    }
+    
+    // Update save button text
+    const saveButton = document.getElementById(`save-team-${teamNumber}-button`);
+    if (saveButton) {
+        const buttonText = saveButton.querySelector('.button-text');
+        if (buttonText) {
+            buttonText.textContent = `Save Team Sheet`;
+        }
+    }
+    
+    // Update team customization
+    teamCustomizations[teamNumber] = {
+        ...teamCustomizations[teamNumber],
+        pattern: data.pattern,
+        primaryColor: data.primaryColor,
+        secondaryColor: data.secondaryColor,
+        hasSecondary: true
+    };
+    
+    // Apply team design
+    applyTeamDesign(teamNumber, data);
+    
+    // Apply team customization to update colors throughout the app
+    applyTeamCustomization(teamNumber);
+    
+    // Update banner styling
+    updateBannerStyling();
+    
+    // Update timeline colors
+    updateTimelineColors();
+    
+    // Update player data
+    if (teamNumber === 1) {
+        // Clear existing data for Team 1 (indices 1-30)
+        for (let i = 1; i <= 30; i++) {
+            delete playerNames[i];
+        }
+        
+        // Apply starters (1-15)
+        data.starters.forEach((player, index) => {
+            const playerIndex = index + 1;
+            const number = player.number ? `#${player.number}` : `#${playerIndex}`;
+            playerNames[playerIndex] = `${number} - ${player.name}`;
+        });
+        
+        // Apply substitutes (16-30)
+        data.subs.forEach((player, index) => {
+            const playerIndex = index + 16;
+            const number = player.number ? `#${player.number}` : `#${playerIndex}`;
+            playerNames[playerIndex] = `${number} - ${player.name}`;
+        });
+    } else {
+        // Clear existing data for Team 2 (indices 101-130)
+        for (let i = 101; i <= 130; i++) {
+            delete oppositionPlayerNames[i];
+        }
+        
+        // Apply starters (101-115)
+        data.starters.forEach((player, index) => {
+            const playerIndex = index + 101;
+            const number = player.number ? `#${player.number}` : `#${playerIndex - 100}`;
+            oppositionPlayerNames[playerIndex] = `${number} - ${player.name}`;
+        });
+        
+        // Apply substitutes (116-130)
+        data.subs.forEach((player, index) => {
+            const playerIndex = index + 116;
+            const number = player.number ? `#${player.number}` : `#${playerIndex - 100}`;
+            oppositionPlayerNames[playerIndex] = `${number} - ${player.name}`;
+        });
+    }
+    
+    // Update UI
+    updatePlayerLabels();
+}
+
+// Apply team design across the app
+function applyTeamDesign(teamNumber, data) {
+    const root = document.documentElement;
+    
+    if (teamNumber === 1) {
+        root.style.setProperty('--team1-primary', data.primaryColor);
+        root.style.setProperty('--team1-secondary', data.secondaryColor);
+    } else {
+        root.style.setProperty('--team2-primary', data.primaryColor);
+        root.style.setProperty('--team2-secondary', data.secondaryColor);
+    }
+    
+    // Apply colors and patterns to team buttons
+    const teamButtons = teamNumber === 1 ? 
+        document.querySelectorAll('#our-team-view .player-button, #our-team-view button[id^="player-"]') :
+        document.querySelectorAll('#opposition-view .player-button, #opposition-view button[id^="opp-player-"]');
+    
+    teamButtons.forEach(button => {
+        applyButtonCustomization(button, data);
+    });
+}
+
+// Apply button customization based on team data
+function applyButtonCustomization(button, data) {
+    const primaryColor = data.primaryColor;
+    const secondaryColor = data.secondaryColor;
+    const pattern = data.pattern;
+    
+    // Remove existing pattern classes
+    button.classList.remove('pattern-classic', 'pattern-hooped', 'pattern-vertical', 'pattern-sash', 'pattern-diagonal', 'pattern-solid', 'pattern-custom', 'pattern-checkered', 'pattern-horizontal');
+    
+    // Apply pattern class
+    button.classList.add(`pattern-${pattern}`);
+    
+    // Apply colors via inline styles
+    let backgroundStyle = '';
+    
+    switch (pattern) {
+        case 'solid':
+            backgroundStyle = `background: ${primaryColor};`;
+            break;
+        case 'diagonal':
+            backgroundStyle = `background: linear-gradient(45deg, ${primaryColor} 50%, ${secondaryColor} 50%);`;
+            break;
+        case 'checkered':
+            backgroundStyle = `background: conic-gradient(${primaryColor} 90deg, ${secondaryColor} 90deg 180deg, ${primaryColor} 180deg 270deg, ${secondaryColor} 270deg);`;
+            break;
+        case 'hooped':
+            backgroundStyle = `background: repeating-linear-gradient(0deg, ${primaryColor} 0px, ${primaryColor} 4px, ${secondaryColor} 4px, ${secondaryColor} 7px);`;
+            break;
+        case 'vertical':
+            backgroundStyle = `background: repeating-linear-gradient(90deg, ${primaryColor} 0px, ${primaryColor} 6px, ${secondaryColor} 6px, ${secondaryColor} 10px);`;
+            break;
+        case 'horizontal':
+            backgroundStyle = `background: repeating-linear-gradient(0deg, ${primaryColor} 0px, ${primaryColor} 4px, ${secondaryColor} 4px, ${secondaryColor} 7px);`;
+            break;
+        case 'sash':
+            backgroundStyle = `background: linear-gradient(135deg, ${primaryColor} 40%, ${secondaryColor} 40%, ${secondaryColor} 60%, ${primaryColor} 60%);`;
+            break;
+        case 'classic':
+            backgroundStyle = `background: ${primaryColor}; border: 2px solid ${secondaryColor};`;
+            break;
+        case 'custom':
+            backgroundStyle = `background: ${primaryColor};`;
+            break;
+        default:
+            backgroundStyle = `background: ${primaryColor};`;
+    }
+    
+    button.style.cssText = backgroundStyle + 'color: white; border: none;';
+}
+
+// Save to localStorage
+function saveTeamSheetToLocalStorage(teamNumber, data) {
+    try {
+        const key = `teamSheet.team${teamNumber}`;
+        localStorage.setItem(key, JSON.stringify(data));
+        
+        // Add to import history
+        const historyKey = `teamSheet.history.team${teamNumber}`;
+        let history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+        history.unshift({
+            timestamp: new Date().toISOString(),
+            data: data
+        });
+        
+        // Keep only last 5 entries
+        history = history.slice(0, 5);
+        localStorage.setItem(historyKey, JSON.stringify(history));
+        
+    } catch (error) {
+        console.warn('Could not save to localStorage:', error);
+    }
+}
+
+// Load from localStorage
+function loadTeamSheetFromLocalStorage(teamNumber) {
+    try {
+        const key = `teamSheet.team${teamNumber}`;
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : null;
+    } catch (error) {
+        console.warn('Could not load from localStorage:', error);
+        return null;
+    }
+}
+
+// Show temporary message with type
+function showTemporaryMessage(message, type = 'info') {
+    // Create or get existing message element
+    let messageEl = document.getElementById('temp-message');
+    if (!messageEl) {
+        messageEl = document.createElement('div');
+        messageEl.id = 'temp-message';
+        messageEl.style.cssText = `
+            position: fixed;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 14px;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            max-width: 90vw;
+            text-align: center;
+        `;
+        document.body.appendChild(messageEl);
+    }
+    
+    // Set background color based on type
+    switch (type) {
+        case 'success':
+            messageEl.style.background = 'rgba(16, 185, 129, 0.95)';
+            break;
+        case 'error':
+            messageEl.style.background = 'rgba(220, 38, 38, 0.95)';
+            break;
+        case 'warning':
+            messageEl.style.background = 'rgba(245, 158, 11, 0.95)';
+            break;
+        default:
+            messageEl.style.background = 'rgba(59, 130, 246, 0.95)';
+    }
+    
+    messageEl.textContent = message;
+    messageEl.style.opacity = '1';
+    messageEl.style.transform = 'translateX(-50%) translateY(0)';
+    
+    // Hide after 4 seconds
+    setTimeout(() => {
+        messageEl.style.opacity = '0';
+        messageEl.style.transform = 'translateX(-50%) translateY(-10px)';
+    }, 4000);
 }
