@@ -14,6 +14,10 @@ let marker1 = { x: null, y: null };
 let marker2 = { x: null, y: null };
 let firstMarkerConfirmed = false;
 
+// Global arc variables for coordinate validation
+let arcTop = null;
+let arcBottom = null;
+
 // Our Team Player Names
 let playerNames = {
     1: '#1 - GK',
@@ -137,8 +141,18 @@ document.addEventListener('DOMContentLoaded', function () {
     addDragAndTouchEventsToPlayerButtons(); // <--- Enable drag-and-drop and touch
     filterActions();
     
+    // Initialize pitch sizing for review tab
+    setTimeout(() => {
+        if (document.getElementById('review-pitch')) {
+            resizePitch();
+        }
+    }, 200);
+    
     // Initialize team view
     switchTeamView('our-team');
+    
+    // Initialize Match Log team names
+    updateMatchLogTeamNames();
     
     // Initialize dark mode
     initializeDarkMode();
@@ -190,25 +204,39 @@ function selectAction(action) {
         'Point - Miss': 'mode-point-miss',
         'Goal - Score': 'mode-goal-score',
         'Goal - Miss': 'mode-goal-miss',
+        '45 Entry': 'mode-45-entry',
+        'Source of Shot': 'mode-source-of-shot',
         'Free Won': 'mode-free-won',
         'Ball - Won': 'mode-ball-won',
+        'Ball Won (Forced)': 'mode-ball-won',
+        'Ball Won (Unforced)': 'mode-ball-won-unforced',
         'Ball - Lost': 'mode-ball-lost',
+        'Ball Lost (Forced)': 'mode-ball-lost',
+        'Ball Lost (Unforced)': 'mode-ball-lost-unforced',
         'Goal - Against': 'mode-goal-against',
         'Point - Against': 'mode-point-against',
         'Miss - Against': 'mode-miss-against',
-        'Kickout - For': 'mode-kickout-for',
+        'Our Kickout': 'mode-our-kickout',
+        'Opp. Kickout': 'mode-opp-kickout',
         'Kickout - Against': 'mode-kickout-against',
         '2-Point - Against': 'mode-2-point-against',
         'Foul': 'mode-foul',
-        'Carry': 'mode-carry'
+        'Foul Committed': 'mode-foul',
+        'Pressured Shot': 'mode-pressured-shot',
+        'Card Received': 'mode-card-received',
+        'Carry': 'mode-carry',
+        'Point - Score (Team 2)': 'mode-point-score'
     };
 
     if (actionScreenMap[action]) {
         switchScreen(actionScreenMap[action]);
-    } else if ((action === 'Handpass' || action === 'Kickpass') && coordinatesEnabled) {
-        switchScreen('coordinate-screen'); // Go to coordinate screen for Handpass or Kickpass if toggled
     } else {
-        switchScreen('player-buttons');
+        // Check for Team 2 context for direct player selection actions
+        if (window.matchLogContext && currentMatchLogTeam === 2) {
+            switchScreen('player-buttons-team2');
+        } else {
+            switchScreen('player-buttons');
+        }
     }
 }
 
@@ -217,8 +245,8 @@ function selectMode(mode) {
     const actionDefinitionMap = {
         'Point - Miss': 'definition-point-miss',
         'Goal - Miss': 'definition-goal-miss',
-        'Free Won': 'definition-free-won',
-        'Kickout - For': 'definition-kickout-for',
+        'Our Kickout': 'definition-our-kickout',
+        'Opp. Kickout': 'definition-opp-kickout',
         'Kickout - Against': 'definition-kickout-against',
         'Ball - Won': 'definition-ball-won',
         'Ball - Lost': 'definition-ball-lost',
@@ -228,15 +256,109 @@ function selectMode(mode) {
 
     
     if (currentAction === 'Carry') {
-        if (coordinatesEnabled) {
-            switchScreen('coordinate-screen'); // Go to coordinate screen for Carry after mode screen
+        // Always go to player selection first, then coordinates if enabled
+        if (window.matchLogContext && currentMatchLogTeam === 2) {
+            switchScreen('player-buttons-team2');
         } else {
             switchScreen('player-buttons');
         }
+    } else if (currentAction === 'Free Won') {
+        // Free Won goes directly to player selection, skipping definition screen
+        if (window.matchLogContext && currentMatchLogTeam === 2) {
+            switchScreen('player-buttons-team2');
+        } else {
+            switchScreen('player-buttons');
+        }
+    } else if (currentAction === 'Ball Lost (Forced)') {
+        // Ball Lost (Forced) goes directly to player selection, skipping definition screen
+        if (window.matchLogContext && currentMatchLogTeam === 2) {
+            switchScreen('player-buttons-team2');
+        } else {
+            switchScreen('player-buttons');
+        }
+    } else if (currentAction === 'Ball Lost (Unforced)') {
+        // Ball Lost (Unforced) goes directly to player selection, skipping definition screen
+        if (window.matchLogContext && currentMatchLogTeam === 2) {
+            switchScreen('player-buttons-team2');
+        } else {
+            switchScreen('player-buttons');
+        }
+    } else if (currentAction === 'Ball Won (Forced)') {
+        // Ball Won (Forced) goes directly to player selection, skipping definition screen
+        if (window.matchLogContext && currentMatchLogTeam === 2) {
+            switchScreen('player-buttons-team2');
+        } else {
+            switchScreen('player-buttons');
+        }
+    } else if (currentAction === 'Ball Won (Unforced)') {
+        // Ball Won (Unforced) goes directly to player selection, skipping definition screen
+        if (window.matchLogContext && currentMatchLogTeam === 2) {
+            switchScreen('player-buttons-team2');
+        } else {
+            switchScreen('player-buttons');
+        }
+    } else if (currentAction === 'Foul Committed') {
+        // Foul Committed has conditional routing based on mode
+        if (mode === 'Physical') {
+            switchScreen('foul-physical-screen2');
+        } else if (mode === 'Technical') {
+            switchScreen('foul-technical-screen2');
+        } else {
+            // This handles the second mode selection (specific foul type) - go to player selection
+            if (window.matchLogContext && currentMatchLogTeam === 2) {
+                switchScreen('player-buttons-team2');
+            } else {
+                switchScreen('player-buttons');
+            }
+        }
+    } else if (currentAction === 'Pressured Shot') {
+        // Pressured Shot goes directly to player selection, skipping definition screen
+        if (window.matchLogContext && currentMatchLogTeam === 2) {
+            switchScreen('player-buttons-team2');
+        } else {
+            switchScreen('player-buttons');
+        }
+    } else if (currentAction === 'Card Received') {
+        // Card Received has conditional routing based on mode
+        if (mode === 'Yellow Card' || mode === 'Black Card' || mode === 'Red Card (Direct)' || mode === 'Red Card (Y+Y/Y+B)') {
+            // First mode selection (card type) - go to Screen 2
+            switchScreen('card-received-screen2');
+        } else {
+            // Second mode selection (reason) - go to player selection
+            if (window.matchLogContext && currentMatchLogTeam === 2) {
+                switchScreen('player-buttons-team2');
+            } else {
+                switchScreen('player-buttons');
+            }
+        }
+    } else if (currentAction === '45 Entry') {
+        // 45 Entry has conditional routing based on mode
+        if (mode === 'Carry (Fast)' || mode === 'Carry (Slow)' || mode === 'Other') {
+            // Single player selection, then log action
+            if (window.matchLogContext && currentMatchLogTeam === 2) {
+                switchScreen('player-buttons-team2');
+            } else {
+                switchScreen('player-buttons');
+            }
+        } else {
+            // Kickpass or Handpass - go to first player selection
+            if (window.matchLogContext && currentMatchLogTeam === 2) {
+                switchScreen('player-buttons-team2');
+            } else {
+                switchScreen('player-buttons');
+            }
+        }
+    } else if (currentAction === 'Source of Shot') {
+        // Source of Shot logs action directly after mode selection
+        logAction();
+    } else if (currentAction === 'Opp. Kickout') {
+        // Opp. Kickout always goes to definition screen first
+        switchScreen('definition-opp-kickout');
     } else if (actionDefinitionMap[currentAction]) {
         switchScreen(actionDefinitionMap[currentAction]);
-    } else if (coordinatesEnabled && (currentAction === 'Point - Score' || currentAction === 'Goal - Score' || currentAction === 'Point - Against' || currentAction === 'Goal - Against' || currentAction === 'Miss - Against')) {
-        switchScreen('coordinate-screen'); // Go to coordinate screen for specified actions
+    } else if (currentAction.includes('(Team 2)') || (window.matchLogContext && currentMatchLogTeam === 2)) {
+        // Team 2 actions go to Team 2 player selection
+        switchScreen('player-buttons-team2');
     } else {
         switchScreen('player-buttons');
     }
@@ -245,17 +367,61 @@ function selectMode(mode) {
 function selectDefinition(definition) {
     currentDefinition = definition;
 
-    if (coordinatesEnabled && (currentAction === 'Point - Miss' || currentAction === '2-Point - Score' || currentAction === 'Goal - Miss' || currentAction === 'Ball - Won' || currentAction === 'Ball - Lost' || currentAction === 'Kickout - For' || currentAction === 'Kickout - Against' || currentAction === 'Free Won' || currentAction === '2-Point - Against' || currentAction === 'Miss - Against')) {
+    if (currentAction === 'Our Kickout') {
+        // Our Kickout has conditional routing based on mode
+        if (currentMode === 'Won Clean' || currentMode === 'Won Break' || currentMode === 'Won Sideline' || currentMode === 'Won Foul') {
+            // Go to Team 1 player selection
+            switchScreen('player-buttons');
+        } else if (currentMode === 'Lost Clean' || currentMode === 'Lost Break' || currentMode === 'Lost Sideline' || currentMode === 'Lost Foul') {
+            // Go to Team 2 player selection
+            switchScreen('player-buttons-team2');
+        }
+    } else if (currentAction === 'Opp. Kickout') {
+        // Opp. Kickout has conditional routing based on mode
+        if (currentMode === 'Won Clean' || currentMode === 'Won Break' || currentMode === 'Won Sideline' || currentMode === 'Won Foul') {
+            // Team 2 won the kickout - go to Team 2 player selection
+            switchScreen('player-buttons-team2');
+        } else if (currentMode === 'Lost Clean' || currentMode === 'Lost Break' || currentMode === 'Lost Sideline' || currentMode === 'Lost Foul') {
+            // Team 2 lost the kickout (Team 1 won) - go to Team 1 player selection
+            switchScreen('player-buttons');
+        }
+    } else if (coordinatesEnabled && (currentAction === '2-Point - Score' || currentAction === 'Ball - Won' || currentAction === 'Ball - Lost' || currentAction === 'Kickout - Against' || currentAction === '2-Point - Against' || currentAction === 'Miss - Against')) {
         switchScreen('coordinate-screen'); // Go to coordinate screen for specified actions after definition screen
     } else {
-        switchScreen('player-buttons');
+        // Check for Team 2 context
+        if (window.matchLogContext && currentMatchLogTeam === 2) {
+            switchScreen('player-buttons-team2');
+        } else {
+            switchScreen('player-buttons');
+        }
     }
 }
 
 function selectPlayer(player) {
     currentPlayer = player;
     if (currentAction === 'Handpass' || currentAction === 'Kickpass') {
-        switchScreen('player-buttons-second');
+        // Check for Team 2 context for second player selection
+        if (window.matchLogContext && currentMatchLogTeam === 2) {
+            switchScreen('player-buttons-second-team2');
+        } else {
+            switchScreen('player-buttons-second');
+        }
+    } else if (currentAction === '45 Entry') {
+        // 45 Entry has conditional routing based on mode
+        if (currentMode === 'Carry (Fast)' || currentMode === 'Carry (Slow)' || currentMode === 'Other') {
+            // Single player selection, then log action
+            logAction();
+        } else {
+            // Kickpass or Handpass - go to second player selection
+            // Check for Team 2 context for second player selection
+            if (window.matchLogContext && currentMatchLogTeam === 2) {
+                switchScreen('player-buttons-second-team2');
+            } else {
+                switchScreen('player-buttons-second');
+            }
+        }
+    } else if (coordinatesEnabled && (currentAction === 'Point - Score' || currentAction === '2-Point - Score' || currentAction === 'Goal - Score' || currentAction === 'Point - Score (Team 2)' || currentAction === '2-Point - Score (Team 2)' || currentAction === 'Goal - Score (Team 2)' || currentAction === 'Point - Miss' || currentAction === 'Goal - Miss' || currentAction === 'Our Kickout' || currentAction === 'Opp. Kickout' || currentAction === 'Point - Against' || currentAction === 'Goal - Against' || currentAction === 'Miss - Against' || currentAction === 'Carry' || currentAction === 'Free Won' || currentAction === 'Ball Lost (Forced)' || currentAction === 'Ball Lost (Unforced)' || currentAction === 'Ball Won (Forced)' || currentAction === 'Ball Won (Unforced)' || currentAction === 'Foul Committed')) {
+        switchScreen('coordinate-screen'); // Go to coordinate screen after player selection
     } else {
         logAction();
     }
@@ -263,43 +429,103 @@ function selectPlayer(player) {
 
 function selectSecondPlayer(player) {
     secondPlayer = player;
-    logAction();
+    if (currentAction === '45 Entry') {
+        // 45 Entry doesn't use coordinates, log action directly
+        logAction();
+    } else if (coordinatesEnabled && (currentAction === 'Handpass' || currentAction === 'Kickpass')) {
+        switchScreen('coordinate-screen'); // Go to coordinate screen after second player selection
+    } else {
+        logAction();
+    }
 }
 
 function logAction() {
-    const entry = {
-        action: currentAction,
-        mode: currentMode,
-        definition: currentDefinition,
-        player: playerNames[currentPlayer] || currentPlayer,
-        player2: playerNames[secondPlayer] || secondPlayer || '',
-        coordinates1: currentCoordinates1 || '',
-        coordinates2: currentCoordinates2 || '',
-        notes: []
-    };
+    try {
+        const entry = {
+            action: currentAction,
+            mode: currentMode,
+            definition: currentDefinition,
+            player: currentPlayer > 100 ? (oppositionPlayerNames[currentPlayer] || currentPlayer) : (playerNames[currentPlayer] || currentPlayer),
+            player2: secondPlayer > 100 ? (oppositionPlayerNames[secondPlayer] || secondPlayer || '') : (playerNames[secondPlayer] || secondPlayer || ''),
+            coordinates1: currentCoordinates1 || '',
+            coordinates2: currentCoordinates2 || '',
+            notes: []
+        };
+        
+        // Store the actual team name at the time of logging
+        const teamCode = getTeamFromAction(entry);
+        const getCurrentTeamDisplayName = (team) => {
+            if (team === 'team1') {
+                const team1Button = document.getElementById('rename-team-1-button');
+                return team1Button ? team1Button.textContent.trim() : 'Team 1';
+            } else {
+                const team2Button = document.getElementById('rename-team-2-button');
+                return team2Button ? team2Button.textContent.trim() : 'Team 2';
+            }
+        };
+        entry.team = getCurrentTeamDisplayName(teamCode);
 
-    actionsLog.push(entry);
-    updateSummary();
+        actionsLog.push(entry);
+        updateSummary();
 
-    if (currentAction === 'Point - Score') {
-        team1Points++;
-    } else if (currentAction === '2-Point - Score') {
-        team1Points += 2;
-    } else if (currentAction === 'Goal - Score') {
-        team1Goals++;
-    } else if (currentAction === 'Point - Against') {
-        team2Points++;
-    } else if (currentAction === '2-Point - Against') {
-        team2Points += 2;
-    } else if (currentAction === 'Goal - Against') {
-        team2Goals++;
+        if (currentAction === 'Point - Score') {
+            if (window.matchLogContext && currentMatchLogTeam === 2) {
+                team2Points++;
+            } else {
+                team1Points++;
+            }
+        } else if (currentAction === '2-Point - Score') {
+            if (window.matchLogContext && currentMatchLogTeam === 2) {
+                team2Points += 2;
+            } else {
+                team1Points += 2;
+            }
+        } else if (currentAction === 'Goal - Score') {
+            if (window.matchLogContext && currentMatchLogTeam === 2) {
+                team2Goals++;
+            } else {
+                team1Goals++;
+            }
+        } else if (currentAction === 'Point - Score (Team 2)') {
+            team2Points++;
+        } else if (currentAction === '2-Point - Score (Team 2)') {
+            team2Points += 2;
+        } else if (currentAction === 'Goal - Score (Team 2)') {
+            team2Goals++;
+        } else if (currentAction === 'Point - Against') {
+            team2Points++;
+        } else if (currentAction === '2-Point - Against') {
+            team2Points += 2;
+        } else if (currentAction === 'Goal - Against') {
+            team2Goals++;
+        }
+
+        updateCounters();
+        resetSelection();
+        resetCoordinateScreen(); // Reset the coordinate screen after logging the action
+        
+        // Add success animation to the action button that was clicked
+        const actionButton = document.querySelector(`[data-action="${currentAction}"]`);
+        if (actionButton) {
+            actionButton.classList.add('swap-success');
+            setTimeout(() => {
+                actionButton.classList.remove('swap-success');
+            }, 600);
+        }
+        
+        // Return to appropriate screen based on context
+        if (window.matchLogContext) {
+            switchScreen('match-log-action-buttons');
+            window.matchLogContext = false; // Reset context
+        } else {
+            switchScreen('action-buttons');
+        }
+        
+        filterActions();
+    } catch (error) {
+        console.error('Error in logAction:', error);
+        alert('An error occurred while logging the action. Please try again.');
     }
-
-    updateCounters();
-    resetSelection();
-    resetCoordinateScreen(); // Reset the coordinate screen after logging the action
-    switchScreen('action-buttons'); // Ensure to return to Stats screen
-    filterActions();
 }
 
 function logPointAgainst() {
@@ -307,11 +533,25 @@ function logPointAgainst() {
         action: currentAction,
         mode: currentMode,
         definition: currentDefinition,
-        player: currentMode === 'Mistake' ? (playerNames[currentPlayer] || currentPlayer) : '', // Log player if Mistake
+        player: currentMode === 'Mistake' ? (currentPlayer > 100 ? (oppositionPlayerNames[currentPlayer] || currentPlayer) : (playerNames[currentPlayer] || currentPlayer)) : '', // Log player if Mistake
         player2: '',
         coordinates1: currentCoordinates1 || '',
         coordinates2: currentCoordinates2 || ''
     };
+    
+    // Store the actual team name at the time of logging
+    const teamCode = getTeamFromAction(entry);
+    const getCurrentTeamDisplayName = (team) => {
+        if (team === 'team1') {
+            const team1Button = document.getElementById('rename-team-1-button');
+            return team1Button ? team1Button.textContent.trim() : 'Team 1';
+        } else {
+            const team2Button = document.getElementById('rename-team-2-button');
+            return team2Button ? team2Button.textContent.trim() : 'Team 2';
+        }
+    };
+    entry.team = getCurrentTeamDisplayName(teamCode);
+    
     actionsLog.push(entry);
     updateSummary();
     team2Points++;
@@ -325,11 +565,25 @@ function logGoalAgainst() {
         action: currentAction,
         mode: currentMode,
         definition: currentDefinition,
-        player: currentMode === 'Mistake' ? (playerNames[currentPlayer] || currentPlayer) : '', // Log player if Mistake
+        player: currentMode === 'Mistake' ? (currentPlayer > 100 ? (oppositionPlayerNames[currentPlayer] || currentPlayer) : (playerNames[currentPlayer] || currentPlayer)) : '', // Log player if Mistake
         player2: '',
         coordinates1: currentCoordinates1 || '',
         coordinates2: currentCoordinates2 || ''
     };
+    
+    // Store the actual team name at the time of logging
+    const teamCode = getTeamFromAction(entry);
+    const getCurrentTeamDisplayName = (team) => {
+        if (team === 'team1') {
+            const team1Button = document.getElementById('rename-team-1-button');
+            return team1Button ? team1Button.textContent.trim() : 'Team 1';
+        } else {
+            const team2Button = document.getElementById('rename-team-2-button');
+            return team2Button ? team2Button.textContent.trim() : 'Team 2';
+        }
+    };
+    entry.team = getCurrentTeamDisplayName(teamCode);
+    
     actionsLog.push(entry);
     updateSummary();
     team2Goals++;
@@ -346,6 +600,20 @@ function logMissAgainst() {
         player: '', // Leave player column clear
         player2: ''
     };
+    
+    // Store the actual team name at the time of logging
+    const teamCode = getTeamFromAction(entry);
+    const getCurrentTeamDisplayName = (team) => {
+        if (team === 'team1') {
+            const team1Button = document.getElementById('rename-team-1-button');
+            return team1Button ? team1Button.textContent.trim() : 'Team 1';
+        } else {
+            const team2Button = document.getElementById('rename-team-2-button');
+            return team2Button ? team2Button.textContent.trim() : 'Team 2';
+        }
+    };
+    entry.team = getCurrentTeamDisplayName(teamCode);
+    
     actionsLog.push(entry);
     updateSummary();
     updateCounters();
@@ -355,7 +623,13 @@ function logMissAgainst() {
 
 function returnToActionScreen() {
     resetSelection();
+    // Check if we're in Match Log context
+    if (window.matchLogContext) {
+        switchScreen('match-log-action-buttons');
+        window.matchLogContext = false; // Reset the context
+    } else {
     switchScreen('action-buttons');
+    }
 }
 
 function returnToFirstPlayerScreen() {
@@ -364,15 +638,21 @@ function returnToFirstPlayerScreen() {
 
 function returnToModeScreen() {
     const actionModeMap = {
+        'Point - Score': 'mode-point-score',
+        '2-Point - Score': 'mode-2-point-score',
+        'Goal - Score': 'mode-goal-score',
         'Point - Miss': 'mode-point-miss',
         'Goal - Miss': 'mode-goal-miss',
+        '45 Entry': 'mode-45-entry',
+        'Source of Shot': 'mode-source-of-shot',
         'Free Won': 'mode-free-won',
         'Ball - Won': 'mode-ball-won',
         'Ball - Lost': 'mode-ball-lost',
         'Goal - Against': 'mode-goal-against',
         'Point - Against': 'mode-point-against',
         'Miss - Against': 'mode-miss-against',
-        'Kickout - For': 'mode-kickout-for',
+        'Our Kickout': 'mode-our-kickout',
+        'Opp. Kickout': 'mode-opp-kickout',
         'Kickout - Against': 'mode-kickout-against',
         '2-Point - Against': 'mode-2-point-against'
     };
@@ -385,6 +665,12 @@ function returnToModeScreen() {
 }
 
 function switchScreen(screenId) {
+    // Check if we're in Match Log context and trying to return to action-buttons
+    if (window.matchLogContext && screenId === 'action-buttons') {
+        screenId = 'match-log-action-buttons';
+        window.matchLogContext = false; // Reset the context
+    }
+    
     document.querySelectorAll('.screen').forEach(screen => {
         screen.classList.remove('active');
     });
@@ -417,6 +703,7 @@ function updateSummary() {
                     if (key !== 'action' && filters.action && entry.action !== filters.action) return false;
                     if (key !== 'definition' && filters.definition && entry.definition !== filters.definition) return false;
                     if (key !== 'mode' && filters.mode && entry.mode !== filters.mode) return false;
+                    if (key !== 'team' && filters.team && entry.team !== filters.team) return false;
                     return true;
                 })
                 .map(entry => entry[key])
@@ -427,13 +714,7 @@ function updateSummary() {
     // First row: column labels
     const headerLabelRow = document.createElement('tr');
 
-    ['Action', 'Mode', 'Definition', 'Player'].forEach(label => {
-        const th = document.createElement('th');
-        th.textContent = label;
-        headerLabelRow.appendChild(th);
-    });
-
-    ['Player 2', 'X1', 'Y1', 'X2', 'Y2', 'Notes'].forEach(label => {
+    ['Action', 'Add_1', 'Add_2', 'Team', 'Player_1', 'Player_2', 'X1', 'Y1', 'X2', 'Y2', 'Notes'].forEach(label => {
         const th = document.createElement('th');
         th.textContent = label;
         headerLabelRow.appendChild(th);
@@ -447,6 +728,7 @@ function updateSummary() {
     filterRow.appendChild(createFilterHeader('', 'action', uniqueValues('action')));
     filterRow.appendChild(createFilterHeader('', 'mode', uniqueValues('mode')));
     filterRow.appendChild(createFilterHeader('', 'definition', uniqueValues('definition')));
+    filterRow.appendChild(createFilterHeader('', 'team', uniqueValues('team')));
     filterRow.appendChild(createFilterHeader('', 'player', uniqueValues('player')));
 
     for (let i = 0; i < 6; i++) {
@@ -463,6 +745,7 @@ function updateSummary() {
             if (filters.action && entry.action !== filters.action) return false;
             if (filters.definition && entry.definition !== filters.definition) return false;
             if (filters.mode && entry.mode !== filters.mode) return false;
+            if (filters.team && entry.team !== filters.team) return false;
             return true;
         });
 
@@ -472,9 +755,10 @@ function updateSummary() {
         const row = document.createElement('tr');
 
         const actionCell = document.createElement('td');
-        const modeCell = document.createElement('td');
-        const definitionCell = document.createElement('td');
-        const playerCell = document.createElement('td');
+        const add1Cell = document.createElement('td');
+        const add2Cell = document.createElement('td');
+        const teamCell = document.createElement('td');
+        const player1Cell = document.createElement('td');
         const player2Cell = document.createElement('td');
         const x1Cell = document.createElement('td');
         const y1Cell = document.createElement('td');
@@ -482,9 +766,11 @@ function updateSummary() {
         const y2Cell = document.createElement('td');
 
         actionCell.textContent = entry.action;
-        modeCell.textContent = entry.mode;
-        definitionCell.textContent = entry.definition;
-        playerCell.textContent = entry.player;
+        add1Cell.textContent = entry.mode;
+        add2Cell.textContent = entry.definition;
+        // Use the stored team name directly (no conversion needed)
+        teamCell.textContent = entry.team;
+        player1Cell.textContent = entry.player;
         player2Cell.textContent = entry.player2;
 
         if (entry.coordinates1) {
@@ -500,9 +786,10 @@ function updateSummary() {
         }
 
         row.appendChild(actionCell);
-        row.appendChild(modeCell);
-        row.appendChild(definitionCell);
-        row.appendChild(playerCell);
+        row.appendChild(add1Cell);
+        row.appendChild(add2Cell);
+        row.appendChild(teamCell);
+        row.appendChild(player1Cell);
         row.appendChild(player2Cell);
         row.appendChild(x1Cell);
         row.appendChild(y1Cell);
@@ -576,15 +863,28 @@ function deleteEntry(index) {
     const entry = actionsLog[index];
 
     // Adjust score based on deleted action
+    const teamCode = getTeamFromAction(entry);
     switch (entry.action) {
         case 'Point - Score':
-            team1Points -= 1;
+            if (teamCode === 'team2') {
+                team2Points -= 1;
+            } else {
+                team1Points -= 1;
+            }
             break;
         case '2-Point - Score':
-            team1Points -= 2;
+            if (teamCode === 'team2') {
+                team2Points -= 2;
+            } else {
+                team1Points -= 2;
+            }
             break;
         case 'Goal - Score':
-            team1Goals -= 1;
+            if (teamCode === 'team2') {
+                team2Goals -= 1;
+            } else {
+                team1Goals -= 1;
+            }
             break;
         case 'Point - Against':
             team2Points -= 1;
@@ -671,15 +971,28 @@ function undoDelete() {
         actionsLog.splice(deletedIndex, 0, deletedEntry);
         
         // Restore score counters
+        const teamCode = getTeamFromAction(deletedEntry);
         switch (deletedEntry.action) {
             case 'Point - Score':
-                team1Points += 1;
+                if (teamCode === 'team2') {
+                    team2Points += 1;
+                } else {
+                    team1Points += 1;
+                }
                 break;
             case '2-Point - Score':
-                team1Points += 2;
+                if (teamCode === 'team2') {
+                    team2Points += 2;
+                } else {
+                    team1Points += 2;
+                }
                 break;
             case 'Goal - Score':
-                team1Goals += 1;
+                if (teamCode === 'team2') {
+                    team2Goals += 1;
+                } else {
+                    team1Goals += 1;
+                }
                 break;
             case 'Point - Against':
                 team2Points += 1;
@@ -1047,6 +1360,9 @@ function openTab(tabName) {
     });
     document.getElementById(tabName).classList.add('active');
 
+    // Clear Match Log context when switching tabs
+    window.matchLogContext = false;
+
     if (tabName === 'review') {
         refreshReviewTab();  // Call the refresh function when the review tab is shown
     } else if (tabName === 'summary') {
@@ -1069,20 +1385,36 @@ function renameTeam(team) {
     if (team === '1') {
         const newName = document.getElementById('rename-team-1-input').value;
         if (newName.trim() !== '') {
+            // Update the team button text
+            const team1Button = document.getElementById('rename-team-1-button');
+            if (team1Button) {
+                team1Button.textContent = newName.trim();
+            }
+            // Update banner team name
             document.querySelectorAll('.counter-container .team-name')[0].textContent = `${newName}:`;
             document.getElementById('rename-team-1-input').style.display = 'none';
             document.getElementById('confirm-rename-button-1').style.display = 'none';
             document.getElementById('rename-team-1-input').value = ''; // Clear the input box
+            // Update Match Log team names
+            updateMatchLogTeamNames();
         } else {
             alert('Please enter a valid team name.');
         }
     } else if (team === '2') {
         const newName = document.getElementById('rename-team-2-input').value;
         if (newName.trim() !== '') {
+            // Update the team button text
+            const team2Button = document.getElementById('rename-team-2-button');
+            if (team2Button) {
+                team2Button.textContent = newName.trim();
+            }
+            // Update banner team name
             document.querySelectorAll('.counter-container .team-name')[1].textContent = `${newName}:`;
             document.getElementById('rename-team-2-input').style.display = 'none';
             document.getElementById('confirm-rename-button-2').style.display = 'none';
             document.getElementById('rename-team-2-input').value = ''; // Clear the input box
+            // Update Match Log team names
+            updateMatchLogTeamNames();
         } else {
             alert('Please enter a valid team name.');
         }
@@ -1108,6 +1440,11 @@ function updatePlayerLabels() {
     for (let i = 101; i <= 130; i++) {
         const oppBtn = document.getElementById(`opp-player-${i - 100}-button`);
         if (oppBtn) oppBtn.textContent = oppositionPlayerNames[i];
+        
+        // Update Team 2 player selection screens (both first and second)
+        document.querySelectorAll(`.player-button[aria-label="Select Player ${i}"]`).forEach(button => {
+            button.textContent = oppositionPlayerNames[i];
+        });
     }
 }
 
@@ -1142,6 +1479,10 @@ function confirmChanges() {
         }
     }
     updatePlayerLabels();
+    
+    // Update Match Log team names
+    updateMatchLogTeamNames();
+    
     alert('Changes confirmed.');
 }
 
@@ -1210,10 +1551,10 @@ const drawPitch = () => {
     // Draw the clockwise rotated semicircle
     drawClockwiseRotatedSemicircle(clockwiseRotatedSemicircle);
     // Arc at the bottom
-    const arcBottom = generateArcPoints(40, 0, 40, Math.atan2(21 - 0, 6 - 40), Math.atan2(21 - 0, 74 - 40), 100);
+    arcBottom = generateArcPoints(40, 0, 40, Math.atan2(21 - 0, 6 - 40), Math.atan2(21 - 0, 74 - 40), 100);
     drawArc(arcBottom);
     // Arc at the top
-    const arcTop = generateArcPoints(40, 140, 40, Math.atan2(119 - 140, 74 - 40), Math.atan2(119 - 140, 6 - 40), 100);
+    arcTop = generateArcPoints(40, 140, 40, Math.atan2(119 - 140, 74 - 40), Math.atan2(119 - 140, 6 - 40), 100);
     drawArc(arcTop);
 }
 
@@ -1322,7 +1663,7 @@ canvas.addEventListener('click', (e) => {
 
     // 💡 Restrict 2-Point - Score to valid locations
     if (currentAction === '2-Point - Score' && !isValid2PointLocation(x, y)) {
-        showCoordinateWarning('Invalid location: 2-point scores must be outside the arc and the 21m line.');
+        showCoordinateWarning('Invalid location: 2-point scores must be outside both arcs and between the 21m lines.');
         return;
     }
 
@@ -1343,7 +1684,7 @@ canvas.addEventListener('click', (e) => {
 });
 
 // --- code for 2-Point coordinates ---
-const arcTop = generateArcPoints(40, 140, 40, Math.atan2(119 - 140, 74 - 40), Math.atan2(119 - 140, 6 - 40), 100);
+// arcTop is now defined globally in drawPitch function
 
 function isPointInsidePolygon(x, y, polygonPoints) {
     let inside = false;
@@ -1359,13 +1700,19 @@ function isPointInsidePolygon(x, y, polygonPoints) {
 }
 
 function isValid2PointLocation(x, y) {
-    // y must be ≤ 119 (outside the 21 line)
-    const beyond21Line = y <= 119;
+    // y must be ≤ 119 (outside the 21 line at top)
+    const beyond21LineTop = y <= 119;
+    
+    // y must be ≥ 21 (outside the 21 line at bottom)
+    const beyond21LineBottom = y >= 21;
 
-    // Use arcTop, which is already generated with 100 points
-    const insideArc = isPointInsidePolygon(x, y, arcTop);
+    // Cannot be inside the top arc
+    const insideTopArc = isPointInsidePolygon(x, y, arcTop);
+    
+    // Cannot be inside the bottom arc
+    const insideBottomArc = isPointInsidePolygon(x, y, arcBottom);
 
-    return beyond21Line && !insideArc;
+    return beyond21LineTop && beyond21LineBottom && !insideTopArc && !insideBottomArc;
 }
 
 // Warning for invalid 2-pointer
@@ -1380,42 +1727,48 @@ function showCoordinateWarning(message) {
 }
 
 confirmCoordinatesButton.addEventListener('click', () => {
-    if (currentAction === 'Handpass' || currentAction === 'Kickpass' || currentAction === 'Carry') {
-        if (!firstMarkerConfirmed) {
+    try {
+        if (currentAction === 'Handpass' || currentAction === 'Kickpass' || currentAction === 'Carry') {
+            if (!firstMarkerConfirmed) {
+                if (marker1.x !== null && marker1.y !== null) {
+                    currentCoordinates1 = `(${marker1.x}, ${marker1.y})`;
+                    firstMarkerConfirmed = true;
+                    document.getElementById('coordinate-display-2').style.display = 'block'; // Show second coordinate display
+                } else {
+                    alert('Please place a marker on the pitch.');
+                }
+            } else {
+                if (marker2.x !== null && marker2.y !== null) {
+                    currentCoordinates2 = `(${marker2.x}, ${marker2.y})`;
+                    // For Handpass, Kickpass, and Carry, log the action directly after second coordinate
+                    logAction();
+                } else {
+                    alert('Please place the second marker on the pitch.');
+                }
+            }
+        } else {
             if (marker1.x !== null && marker1.y !== null) {
                 currentCoordinates1 = `(${marker1.x}, ${marker1.y})`;
-                firstMarkerConfirmed = true;
-                document.getElementById('coordinate-display-2').style.display = 'block'; // Show second coordinate display
+
+                // For opposition tracking actions, log immediately without player selection
+                if (
+                    currentAction === 'Point - Against' ||
+                    currentAction === '2-Point - Against' ||
+                    currentAction === 'Goal - Against' ||
+                    currentAction === 'Miss - Against'
+                ) {
+                    logAction();
+                } else {
+                    // For actions that already went through player selection, log the action directly
+                    logAction();
+                }
             } else {
                 alert('Please place a marker on the pitch.');
             }
-        } else {
-            if (marker2.x !== null && marker2.y !== null) {
-                currentCoordinates2 = `(${marker2.x}, ${marker2.y})`;
-                switchScreen('player-buttons'); // Go to first player selection screen after confirming the second marker
-            } else {
-                alert('Please place the second marker on the pitch.');
-            }
         }
-    } else {
-        if (marker1.x !== null && marker1.y !== null) {
-            currentCoordinates1 = `(${marker1.x}, ${marker1.y})`;
-
-            // For opposition tracking actions, log immediately without player selection
-            if (
-                currentAction === 'Point - Against' ||
-                currentAction === '2-Point - Against' ||
-                currentAction === 'Goal - Against' ||
-                currentAction === 'Miss - Against'
-            ) {
-                logAction();
-                switchScreen('action-buttons');
-            } else {
-                switchScreen('player-buttons'); // Go to player selection screen for other actions
-            }
-        } else {
-            alert('Please place a marker on the pitch.');
-        }
+    } catch (error) {
+        console.error('Error in coordinate confirmation:', error);
+        alert('An error occurred while confirming coordinates. Please try again.');
     }
 });
 
@@ -1438,13 +1791,17 @@ const reviewCanvas = document.getElementById('review-pitch');
 const reviewCtx = reviewCanvas.getContext('2d');
 
 const drawReviewPitch = () => {
-    reviewCtx.clearRect(0, 0, reviewCanvas.width, reviewCanvas.height);
+    const canvasWidth = window.reviewCanvasWidth || reviewCanvas.width;
+    const canvasHeight = window.reviewCanvasHeight || reviewCanvas.height;
+    
+    reviewCtx.clearRect(0, 0, canvasWidth, canvasHeight);
 
     const drawReviewLine = (startX, startY, endX, endY) => {
         reviewCtx.beginPath();
         reviewCtx.moveTo(mapXReview(startX), mapYReview(startY));
         reviewCtx.lineTo(mapXReview(endX), mapYReview(endY));
         reviewCtx.strokeStyle = 'black';  // Ensure the line color is black
+        reviewCtx.lineWidth = 1;
         reviewCtx.stroke();
     };
 
@@ -1482,11 +1839,11 @@ const drawReviewPitch = () => {
     drawReviewClockwiseRotatedSemicircle(clockwiseRotatedSemicircle);
 
     // Arc at the bottom
-    const arcBottom = generateArcPoints(40, 0, 40, Math.atan2(21 - 0, 6 - 40), Math.atan2(21 - 0, 74 - 40), 100);
+    arcBottom = generateArcPoints(40, 0, 40, Math.atan2(21 - 0, 6 - 40), Math.atan2(21 - 0, 74 - 40), 100);
     drawReviewArc(arcBottom);
 
     // Arc at the top
-    const arcTop = generateArcPoints(40, 140, 40, Math.atan2(119 - 140, 74 - 40), Math.atan2(119 - 140, 6 - 40), 100);
+    arcTop = generateArcPoints(40, 140, 40, Math.atan2(119 - 140, 74 - 40), Math.atan2(119 - 140, 6 - 40), 100);
     drawReviewArc(arcTop);
 };
 
@@ -1516,8 +1873,14 @@ const drawReviewClockwiseRotatedSemicircle = (semicircle) => {
     reviewCtx.stroke();
 };
 
-const mapXReview = x => (x / 80) * reviewCanvas.width;
-const mapYReview = y => reviewCanvas.height - (y / 140) * reviewCanvas.height;
+const mapXReview = x => {
+    const canvasWidth = window.reviewCanvasWidth || reviewCanvas.width;
+    return (x / 80) * canvasWidth;
+};
+const mapYReview = y => {
+    const canvasHeight = window.reviewCanvasHeight || reviewCanvas.height;
+    return canvasHeight - (y / 140) * canvasHeight;
+};
 
 let reviewMarkers = []; // Store marker positions
 
@@ -1638,7 +2001,7 @@ const filterActions = () => {
             drawReviewMarker(x1, y1, color, entry, 'Ball - Won', markerType);
         }
 
-        if (showOwnKickouts && entry.action === 'Kickout - For') {
+        if (showOwnKickouts && (entry.action === 'Our Kickout' || entry.action === 'Opp. Kickout')) {
             let color = 'white';
             let markerType = 'cross';
 
@@ -1651,7 +2014,7 @@ const filterActions = () => {
                 }
             }
 
-            drawReviewMarker(x1, y1, color, entry, 'Kickout - For', markerType);
+            drawReviewMarker(x1, y1, color, entry, entry.action, markerType);
         }
 
         if (showOppKickouts && entry.action === 'Kickout - Against') {
@@ -1790,6 +2153,23 @@ function showSummaryBox(x, y, entry, color) {
                 { label: 'How', value: entry.mode }
             ]
         },
+        '45 Entry': {
+            title: '45 Entry',
+            fields: entry.player2 ? [
+                { label: 'Player 1', value: entry.player },
+                { label: 'Player 2', value: entry.player2 },
+                { label: 'Type', value: entry.mode }
+            ] : [
+                { label: 'Player', value: entry.player },
+                { label: 'Type', value: entry.mode }
+            ]
+        },
+        'Source of Shot': {
+            title: 'Source of Shot',
+            fields: [
+                { label: 'Type', value: entry.mode }
+            ]
+        },
         'Goal - Score': {
             title: 'Goal - Score',
             fields: [
@@ -1856,8 +2236,16 @@ function showSummaryBox(x, y, entry, color) {
                 { label: 'Player', value: entry.player }
             ]
         },
-        'Kickout - For': {
-            title: 'Kickout For',
+        'Our Kickout': {
+            title: 'Our Kickout',
+            fields: [
+                { label: 'Won/Lost', value: entry.mode },
+                { label: 'Contest', value: entry.definition },
+                { label: 'Pass To', value: entry.player }
+            ]
+        },
+        'Opp. Kickout': {
+            title: 'Opp. Kickout',
             fields: [
                 { label: 'Won/Lost', value: entry.mode },
                 { label: 'Contest', value: entry.definition },
@@ -1937,7 +2325,7 @@ function showSummaryBox(x, y, entry, color) {
 
     // Add event listener with a small delay to prevent immediate closure
     setTimeout(() => {
-        document.addEventListener('click', handleDocumentClick);
+    document.addEventListener('click', handleDocumentClick);
     }, 100);
 }
 
@@ -1957,7 +2345,7 @@ const drawPassMarkersAndArrow = (x1, y1, x2, y2, color, entry, actionType) => {
 
     // Draw the filled arrowhead
     const headlen = 15; // length of head in pixels
-    const angle = Math.atan2(mapYReview(y2) - mapYReview(y1), mapX(x2) - mapX(x1));
+    const angle = Math.atan2(mapYReview(y2) - mapYReview(y1), mapXReview(x2) - mapXReview(x1));
     reviewCtx.beginPath();
     reviewCtx.moveTo(mapXReview(x2), mapYReview(y2));
     reviewCtx.lineTo(mapXReview(x2) - headlen * Math.cos(angle - Math.PI / 6), mapYReview(y2) - headlen * Math.sin(angle - Math.PI / 6));
@@ -1989,12 +2377,344 @@ filterActions();
 
 const refreshReviewTab = () => {
     filterActions();
+    // Initialize the new Review tab functionality
+    initializeReviewTab();
+    // Ensure pitch is properly sized and drawn
+    setTimeout(() => {
+        resizePitch();
+        if (window.drawReviewPitch) {
+            window.drawReviewPitch();
+        }
+    }, 100);
 };
 
 const calculateDistance = (x1, y1, x2, y2) => {
     const dx = x2 - x1;
     const dy = y2 - y1;
     return Math.sqrt(dx * dx + dy * dy).toFixed(2);
+};
+
+// Review Tab - New Design Functions
+let reviewTabState = {
+    sheetOpen: false,
+    dragStartY: 0,
+    dragCurrentY: 0,
+    isDragging: false,
+    animationFrame: null
+};
+
+const initializeReviewTab = () => {
+    // Set up pitch sizing
+    resizePitch();
+    
+    // Set up filter sheet interactions
+    setupFilterSheet();
+    
+    // Set up drag/swipe interactions
+    setupDragInteractions();
+    
+    // Set up keyboard navigation
+    setupKeyboardNavigation();
+    
+    // Set up resize listener
+    setupResizeListener();
+};
+
+const resizePitch = () => {
+    const pitchWrapper = document.getElementById('pitch-wrapper');
+    const canvas = document.getElementById('review-pitch');
+    
+    if (!pitchWrapper || !canvas) return;
+    
+    // Calculate available dimensions
+    const topBarHeight = 60; // Height of top controls
+    const peekHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--peek-height')) || 48;
+    const margins = 32; // Total vertical margins
+    
+    const availableWidth = window.innerWidth;
+    const availableHeight = window.innerHeight - topBarHeight - peekHeight - margins;
+    
+    // Calculate scale to fit pitch (80x140 coordinate system)
+    const scaleX = availableWidth / 80;
+    const scaleY = availableHeight / 140;
+    const scale = Math.min(scaleX, scaleY);
+    
+    // Calculate actual pixel dimensions
+    const pixelWidth = 80 * scale;
+    const pixelHeight = 140 * scale;
+    
+    // Set canvas size with device pixel ratio for crisp rendering
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = pixelWidth * dpr;
+    canvas.height = pixelHeight * dpr;
+    canvas.style.width = pixelWidth + 'px';
+    canvas.style.height = pixelHeight + 'px';
+    
+    // Reset and scale the drawing context for crisp rendering
+    const ctx = canvas.getContext('2d');
+    ctx.save(); // Save the current state
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+    ctx.scale(dpr, dpr); // Scale for device pixel ratio
+    
+    // Update global canvas dimensions for mapping functions
+    window.reviewCanvasWidth = pixelWidth;
+    window.reviewCanvasHeight = pixelHeight;
+    
+    // Update CSS variable for pitch container height
+    document.documentElement.style.setProperty('--pitch-available-height', availableHeight + 'px');
+    
+    // Redraw the pitch
+    drawReviewPitch();
+};
+
+// Make drawReviewPitch globally accessible
+window.drawReviewPitch = drawReviewPitch;
+
+const setupFilterSheet = () => {
+    const filterPeek = document.getElementById('filter-peek');
+    const filterSheet = document.getElementById('filter-sheet');
+    const filterBackdrop = document.getElementById('filter-backdrop');
+    
+    if (!filterPeek || !filterSheet || !filterBackdrop) return;
+    
+    // Click to toggle
+    filterPeek.addEventListener('click', toggleFilterSheet);
+    filterBackdrop.addEventListener('click', closeFilterSheet);
+    
+    // Keyboard support
+    filterPeek.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleFilterSheet();
+        }
+    });
+};
+
+const toggleFilterSheet = () => {
+    if (reviewTabState.sheetOpen) {
+        closeFilterSheet();
+    } else {
+        openFilterSheet();
+    }
+};
+
+const openFilterSheet = () => {
+    const filterSheet = document.getElementById('filter-sheet');
+    const filterPeek = document.getElementById('filter-peek');
+    const filterBackdrop = document.getElementById('filter-backdrop');
+    
+    if (!filterSheet || !filterPeek || !filterBackdrop) return;
+    
+    reviewTabState.sheetOpen = true;
+    
+    // Update DOM state
+    filterSheet.classList.add('open');
+    filterSheet.setAttribute('aria-hidden', 'false');
+    filterPeek.setAttribute('aria-expanded', 'true');
+    filterBackdrop.classList.add('active');
+    
+    // Lock body scroll
+    document.body.classList.add('sheet-open');
+    
+    // Focus first interactive element in sheet
+    const firstFocusable = filterSheet.querySelector('input, button, [tabindex]:not([tabindex="-1"])');
+    if (firstFocusable) {
+        firstFocusable.focus();
+    }
+    
+    // Set up focus trap
+    setupFocusTrap();
+};
+
+const closeFilterSheet = () => {
+    const filterSheet = document.getElementById('filter-sheet');
+    const filterPeek = document.getElementById('filter-peek');
+    const filterBackdrop = document.getElementById('filter-backdrop');
+    
+    if (!filterSheet || !filterPeek || !filterBackdrop) return;
+    
+    reviewTabState.sheetOpen = false;
+    
+    // Update DOM state
+    filterSheet.classList.remove('open');
+    filterSheet.setAttribute('aria-hidden', 'true');
+    filterPeek.setAttribute('aria-expanded', 'false');
+    filterBackdrop.classList.remove('active');
+    
+    // Unlock body scroll
+    document.body.classList.remove('sheet-open');
+    
+    // Return focus to peek handle
+    filterPeek.focus();
+    
+    // Remove focus trap
+    removeFocusTrap();
+};
+
+const setupDragInteractions = () => {
+    const filterSheet = document.getElementById('filter-sheet');
+    const filterPeek = document.getElementById('filter-peek');
+    
+    if (!filterSheet || !filterPeek) return;
+    
+    // Handle pointer events (touch and mouse)
+    const handlePointerDown = (e) => {
+        reviewTabState.dragStartY = e.clientY || e.touches[0].clientY;
+        reviewTabState.isDragging = true;
+        reviewTabState.dragCurrentY = reviewTabState.dragStartY;
+        
+        // Add dragging class for visual feedback
+        filterSheet.classList.add('dragging');
+        
+        // Prevent default to avoid scrolling
+        e.preventDefault();
+    };
+    
+    const handlePointerMove = (e) => {
+        if (!reviewTabState.isDragging) return;
+        
+        const currentY = e.clientY || e.touches[0].clientY;
+        const deltaY = currentY - reviewTabState.dragStartY;
+        
+        // Get sheet height and peek height
+        const sheetHeight = filterSheet.offsetHeight;
+        const peekHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--peek-height')) || 48;
+        
+        // Calculate new transform value
+        let newTransform;
+        if (reviewTabState.sheetOpen) {
+            // When open, drag down to close
+            newTransform = Math.max(0, Math.min(deltaY, sheetHeight - peekHeight));
+        } else {
+            // When closed, drag up to open
+            newTransform = Math.max(sheetHeight - peekHeight, Math.min(deltaY, 0));
+        }
+        
+        // Apply transform temporarily
+        filterSheet.style.transform = `translateY(${newTransform}px)`;
+        
+        reviewTabState.dragCurrentY = currentY;
+        
+        e.preventDefault();
+    };
+    
+    const handlePointerUp = (e) => {
+        if (!reviewTabState.isDragging) return;
+        
+        reviewTabState.isDragging = false;
+        filterSheet.classList.remove('dragging');
+        
+        const deltaY = reviewTabState.dragCurrentY - reviewTabState.dragStartY;
+        const sheetHeight = filterSheet.offsetHeight;
+        const peekHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--peek-height')) || 48;
+        const threshold = sheetHeight * 0.3; // 30% of sheet height
+        
+        // Determine if we should open or close based on drag distance and direction
+        if (reviewTabState.sheetOpen) {
+            // Sheet is open - close if dragged down enough
+            if (deltaY > threshold) {
+                closeFilterSheet();
+            } else {
+                // Snap back to open position
+                filterSheet.style.transform = '';
+            }
+        } else {
+            // Sheet is closed - open if dragged up enough
+            if (deltaY < -threshold) {
+                openFilterSheet();
+            } else {
+                // Snap back to closed position
+                filterSheet.style.transform = '';
+            }
+        }
+        
+        // Clear temporary transform after animation
+        setTimeout(() => {
+            filterSheet.style.transform = '';
+        }, 300);
+    };
+    
+    // Add event listeners
+    filterPeek.addEventListener('pointerdown', handlePointerDown, { passive: false });
+    filterSheet.addEventListener('pointerdown', handlePointerDown, { passive: false });
+    
+    document.addEventListener('pointermove', handlePointerMove, { passive: false });
+    document.addEventListener('pointerup', handlePointerUp, { passive: false });
+    
+    // Fallback for touch events on older devices
+    filterPeek.addEventListener('touchstart', handlePointerDown, { passive: false });
+    filterSheet.addEventListener('touchstart', handlePointerDown, { passive: false });
+    document.addEventListener('touchmove', handlePointerMove, { passive: false });
+    document.addEventListener('touchend', handlePointerUp, { passive: false });
+};
+
+const setupKeyboardNavigation = () => {
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && reviewTabState.sheetOpen) {
+            closeFilterSheet();
+        }
+    });
+};
+
+const setupFocusTrap = () => {
+    const filterSheet = document.getElementById('filter-sheet');
+    if (!filterSheet) return;
+    
+    const focusableElements = filterSheet.querySelectorAll(
+        'input, button, [tabindex]:not([tabindex="-1"])'
+    );
+    
+    if (focusableElements.length === 0) return;
+    
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+    
+    const handleTabKey = (e) => {
+        if (e.key !== 'Tab') return;
+        
+        if (e.shiftKey) {
+            // Shift + Tab
+            if (document.activeElement === firstElement) {
+                e.preventDefault();
+                lastElement.focus();
+            }
+        } else {
+            // Tab
+            if (document.activeElement === lastElement) {
+                e.preventDefault();
+                firstElement.focus();
+            }
+        }
+    };
+    
+    document.addEventListener('keydown', handleTabKey);
+    
+    // Store the handler for cleanup
+    reviewTabState.focusTrapHandler = handleTabKey;
+};
+
+const removeFocusTrap = () => {
+    if (reviewTabState.focusTrapHandler) {
+        document.removeEventListener('keydown', reviewTabState.focusTrapHandler);
+        reviewTabState.focusTrapHandler = null;
+    }
+};
+
+const setupResizeListener = () => {
+    let resizeTimeout;
+    
+    const handleResize = () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            resizePitch();
+        }, 100); // Debounce resize events
+    };
+    
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    
+    // Store the handler for cleanup if needed
+    reviewTabState.resizeHandler = handleResize;
 };
 
 // Allowing dynamic changes to player names
@@ -2085,6 +2805,9 @@ function confirmTeamEdit() {
 
     // Update scoreboard label (counter area)
     document.querySelectorAll('.counter-container .team-name')[editingTeamIndex - 1].textContent = `${newName}:`;
+
+    // Update Match Log team names
+    updateMatchLogTeamNames();
 
     // Hide popup
     const popup = document.getElementById('team-edit-popup');
@@ -2705,6 +3428,164 @@ function switchTeamView(teamType) {
     }
 }
 
+// Match Log Team Switching
+let currentMatchLogTeam = 1; // Track which team is selected in Match Log
+
+function switchMatchLogTeam(teamNumber) {
+    currentMatchLogTeam = teamNumber;
+    
+    // Update toggle buttons
+    const team1Toggle = document.getElementById('match-log-team-1-toggle');
+    const team2Toggle = document.getElementById('match-log-team-2-toggle');
+    
+    if (teamNumber === 1) {
+        team1Toggle.classList.add('active');
+        team2Toggle.classList.remove('active');
+    } else {
+        team2Toggle.classList.add('active');
+        team1Toggle.classList.remove('active');
+    }
+    
+    // Update action button borders to show selected team
+    updateMatchLogActionButtonBorders();
+    
+    
+    // Remove focus to prevent stuck pressed state
+    if (teamNumber === 1) {
+        team1Toggle.blur();
+    } else {
+        team2Toggle.blur();
+    }
+}
+
+
+function updateMatchLogActionButtonBorders() {
+    const actionButtons = document.querySelectorAll('#match-log-action-buttons .action-button');
+    
+    actionButtons.forEach(button => {
+        // Remove existing team classes
+        button.classList.remove('team-1-active', 'team-2-active');
+        
+        // Add appropriate team class
+        if (currentMatchLogTeam === 1) {
+            button.classList.add('team-1-active');
+        } else {
+            button.classList.add('team-2-active');
+        }
+    });
+    
+    // Update action button text based on current team
+    updateMatchLogActionButtonText();
+}
+
+function updateMatchLogActionButtonText() {
+    // Find the kickout button by looking for either "Our Kickout" or "Opp. Kickout" data-action
+    const kickoutButton = document.querySelector('#match-log-action-buttons .action-button[data-action="Our Kickout"], #match-log-action-buttons .action-button[data-action="Opp. Kickout"]');
+    
+    if (kickoutButton) {
+        if (currentMatchLogTeam === 1) {
+            // Team 1 selected - show "Our Kickout"
+            kickoutButton.textContent = 'Our Kickout';
+            kickoutButton.setAttribute('data-action', 'Our Kickout');
+            kickoutButton.setAttribute('onclick', "selectMatchLogAction('Our Kickout')");
+        } else {
+            // Team 2 selected - show "Opp. Kickout"
+            kickoutButton.textContent = 'Opp. Kickout';
+            kickoutButton.setAttribute('data-action', 'Opp. Kickout');
+            kickoutButton.setAttribute('onclick', "selectMatchLogAction('Opp. Kickout')");
+        }
+    }
+}
+
+function selectMatchLogAction(action) {
+    // Set the current action
+    currentAction = action;
+    
+    // Check if this action has an existing flow
+    const hasExistingFlow = checkActionFlow(action);
+    
+    if (hasExistingFlow) {
+        // Use existing flow for both Team 1 and Team 2
+        // Store the current tab context
+        window.matchLogContext = true;
+        // Use the existing selectAction function
+        selectAction(action);
+    } else {
+        // No existing flow - show message
+        alert(`Action "${action}" does not have a complete flow yet. This will be implemented in a future update.`);
+    }
+}
+
+function checkActionFlow(action) {
+    // List of actions that have existing flows (Team 1 and Team 2)
+    const actionsWithFlows = [
+        'Point - Score',
+        '2-Point - Score', 
+        'Goal - Score',
+        'Point - Score (Team 2)',
+        '2-Point - Score (Team 2)',
+        'Goal - Score (Team 2)',
+        'Point - Miss',
+        'Goal - Miss',
+        '45 Entry',
+        'Source of Shot',
+        'Free Won',
+        'Handpass',
+        'Kickpass',
+        'Carry',
+        'Ball - Won',
+        'Ball Won (Forced)',
+        'Ball Won (Unforced)',
+        'Ball - Lost',
+        'Ball Lost (Forced)',
+        'Ball Lost (Unforced)',
+        'Foul Committed',
+        'Pressured Shot',
+        'Card Received',
+        'Our Kickout',
+        'Opp. Kickout',
+        'Kickout - Against',
+        'Point - Against',
+        '2-Point - Against',
+        'Goal - Against',
+        'Miss - Against'
+    ];
+    
+    return actionsWithFlows.includes(action);
+}
+
+function updateMatchLogTeamNames() {
+    // Use setTimeout to ensure DOM is ready
+    setTimeout(() => {
+        // Update Team 1 name
+        const team1Name = document.getElementById('match-log-team-1-name');
+        const team1Button = document.getElementById('rename-team-1-button');
+        
+        if (team1Name && team1Button) {
+            team1Name.textContent = team1Button.textContent.trim();
+        }
+        
+        // Update Team 2 name
+        const team2Name = document.getElementById('match-log-team-2-name');
+        const team2Button = document.getElementById('rename-team-2-button');
+        
+        if (team2Name && team2Button) {
+            team2Name.textContent = team2Button.textContent.trim();
+        }
+        
+        // Update action button titles
+        updateActionButtonTitles();
+        
+        // Update action button text based on current team
+        updateMatchLogActionButtonText();
+    }, 10);
+}
+
+function updateActionButtonTitles() {
+    // This function is no longer needed - action buttons use static titles
+    // Keeping the function to avoid breaking existing calls
+}
+
 // Enhanced substitutes toggle with team support
 function toggleSubstitutes(teamType = currentTeamView) {
     let subsSection, toggleBtn;
@@ -2928,7 +3809,7 @@ function applyTeamCustomization(teamNumber) {
         }
     }
     
-    // Apply to player selection screens (only for Team 1 - our team)
+    // Apply to player selection screens
     if (teamNumber === 1) {
         // Apply to "Select Player" screen buttons
         document.querySelectorAll('#player-buttons .player-button[aria-label^="Select Player"]').forEach(button => {
@@ -2943,6 +3824,28 @@ function applyTeamCustomization(teamNumber) {
         
         // Apply to "Select Receiver" screen buttons
         document.querySelectorAll('#player-buttons-second .player-button[aria-label^="Select Receiver"]').forEach(button => {
+            button.style.setProperty('background', style.background, 'important');
+            button.style.setProperty('color', style.color, 'important');
+            if (style.border) button.style.border = style.border;
+            
+            if (customization.pattern === 'checkered' && customization.hasSecondary) {
+                button.style.backgroundSize = '20px 20px';
+            }
+        });
+    } else if (teamNumber === 2) {
+        // Apply to Team 2 first player selection screen buttons
+        document.querySelectorAll('#player-buttons-team2 .player-button[aria-label^="Select Player"]').forEach(button => {
+            button.style.setProperty('background', style.background, 'important');
+            button.style.setProperty('color', style.color, 'important');
+            if (style.border) button.style.border = style.border;
+            
+            if (customization.pattern === 'checkered' && customization.hasSecondary) {
+                button.style.backgroundSize = '20px 20px';
+            }
+        });
+        
+        // Apply to Team 2 second player selection screen buttons
+        document.querySelectorAll('#player-buttons-second-team2 .player-button[aria-label^="Select Player"]').forEach(button => {
             button.style.setProperty('background', style.background, 'important');
             button.style.setProperty('color', style.color, 'important');
             if (style.border) button.style.border = style.border;
@@ -3289,25 +4192,35 @@ function createTimelineItem(action, index) {
 }
 
 function getTeamFromAction(action) {
-    // Team 1 actions (our team)
-    const team1Actions = [
+    // First, check if the action already has stored team information
+    if (action.team) {
+        // Get the current team names to compare
+        const team1Button = document.getElementById('rename-team-1-button');
+        const team2Button = document.getElementById('rename-team-2-button');
+        const currentTeam1Name = team1Button ? team1Button.textContent.trim() : 'Team 1';
+        const currentTeam2Name = team2Button ? team2Button.textContent.trim() : 'Team 2';
+        
+        // Check if the stored team name matches Team 2
+        if (action.team === currentTeam2Name || action.team.includes('Team 2') || action.team.includes('team2')) {
+            return 'team2';
+        } else {
+            return 'team1';
+        }
+    }
+    
+    // Always Team 1 actions (our team) - unless in Team 2 Match Log context
+    const alwaysTeam1Actions = [
         'Point - Score',
-        '2-Point - Score', 
-        'Point - Miss',
+        '2-Point - Score',
         'Goal - Score',
+        'Point - Miss',
         'Goal - Miss',
-        'Free - Won',
-        'Handpass',
-        'Kickpass',
-        'Carry',
-        'Ball - Won',
-        'Ball - Lost',
-        'Foul',
-        'Kickout - For'
+        '45 Entry',
+        'Source of Shot'
     ];
     
-    // Team 2 actions (opposition)
-    const team2Actions = [
+    // Always Team 2 actions (opposition)
+    const alwaysTeam2Actions = [
         'Kickout - Against',
         'Point - Against',
         '2-Point - Against', 
@@ -3315,24 +4228,33 @@ function getTeamFromAction(action) {
         'Miss - Against'
     ];
     
-    // Check if it's a team 2 action
-    if (team2Actions.includes(action.action)) {
-        return 'team2';
-    }
-    
-    // Check if it's a team 1 action
-    if (team1Actions.includes(action.action)) {
+    // Check always Team 1 actions first - but consider Match Log context
+    if (alwaysTeam1Actions.includes(action.action)) {
+        // If we're in Team 2 Match Log context, these actions belong to Team 2
+        if (window.matchLogContext && currentMatchLogTeam === 2) {
+            return 'team2';
+        }
         return 'team1';
     }
     
-    // Check if the player is from opposition team (player index 101-130)
-    if (action.player) {
-        const playerIndex = Object.keys(oppositionPlayerNames).find(key => 
-            oppositionPlayerNames[key] === action.player
-        );
-        if (playerIndex) {
-            return 'team2';
-        }
+    // Check always Team 2 actions
+    if (alwaysTeam2Actions.includes(action.action)) {
+        return 'team2';
+    }
+    
+    // Special case: Our Kickout - always Team 1
+    if (action.action === 'Our Kickout') {
+        return 'team1';
+    }
+    
+    // Special case: Opp. Kickout - always Team 2
+    if (action.action === 'Opp. Kickout') {
+        return 'team2';
+    }
+    
+    // For any other actions, check if we're in Match Log context
+    if (window.matchLogContext && currentMatchLogTeam) {
+        return currentMatchLogTeam === 1 ? 'team1' : 'team2';
     }
     
     // Default to team 1
@@ -4038,6 +4960,9 @@ function applyTeamSheetData(teamNumber, data) {
         bannerTeamName.textContent = `${data.teamName}:`;
     }
     
+    // Update Match Log team names
+    updateMatchLogTeamNames();
+    
     // Update save button text
     const saveButton = document.getElementById(`save-team-${teamNumber}-button`);
     if (saveButton) {
@@ -4111,18 +5036,51 @@ function applyTeamSheetData(teamNumber, data) {
     
     // Update UI
     updatePlayerLabels();
+    
+    // Update Match Log team names and action button titles
+    updateMatchLogTeamNames();
 }
 
 // Apply team design across the app
 function applyTeamDesign(teamNumber, data) {
     const root = document.documentElement;
     
+    // Helper function to convert hex to RGB
+    function hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
+    
     if (teamNumber === 1) {
         root.style.setProperty('--team1-primary', data.primaryColor);
         root.style.setProperty('--team1-secondary', data.secondaryColor);
+        
+        // Set RGB values for CSS rgba() usage
+        const primaryRgb = hexToRgb(data.primaryColor);
+        const secondaryRgb = hexToRgb(data.secondaryColor);
+        if (primaryRgb) {
+            root.style.setProperty('--team1-primary-rgb', `${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}`);
+        }
+        if (secondaryRgb) {
+            root.style.setProperty('--team1-secondary-rgb', `${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}`);
+        }
     } else {
         root.style.setProperty('--team2-primary', data.primaryColor);
         root.style.setProperty('--team2-secondary', data.secondaryColor);
+        
+        // Set RGB values for CSS rgba() usage
+        const primaryRgb = hexToRgb(data.primaryColor);
+        const secondaryRgb = hexToRgb(data.secondaryColor);
+        if (primaryRgb) {
+            root.style.setProperty('--team2-primary-rgb', `${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}`);
+        }
+        if (secondaryRgb) {
+            root.style.setProperty('--team2-secondary-rgb', `${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}`);
+        }
     }
     
     // Apply colors and patterns to team buttons
