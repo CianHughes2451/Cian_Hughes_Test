@@ -2183,7 +2183,7 @@ const drawReviewMarker = (x, y, color, entry, actionType, markerType = 'circle')
         const mappedX = mapXReview(x);
         const mappedY = mapYReview(y);
         reviewCtx.beginPath();
-        reviewCtx.arc(mappedX, mappedY, 8, 0, Math.PI * 2);
+        reviewCtx.arc(mappedX, mappedY, 5, 0, Math.PI * 2);
         reviewCtx.fillStyle = '#065f46'; // Very dark green fill
         reviewCtx.fill();
     } else if (markerType === 'twoPointScore') {
@@ -2208,8 +2208,8 @@ const drawReviewMarker = (x, y, color, entry, actionType, markerType = 'circle')
         const mappedX = mapXReview(x);
         const mappedY = mapYReview(y);
         const spikes = 5;
-        const outerRadius = 10;
-        const innerRadius = 5;
+        const outerRadius = 6;
+        const innerRadius = 3;
         
         reviewCtx.beginPath();
         for (let i = 0; i < spikes * 2; i++) {
@@ -2231,7 +2231,7 @@ const drawReviewMarker = (x, y, color, entry, actionType, markerType = 'circle')
         const mappedX = mapXReview(x);
         const mappedY = mapYReview(y);
         reviewCtx.beginPath();
-        reviewCtx.arc(mappedX, mappedY, 8, 0, Math.PI * 2);
+        reviewCtx.arc(mappedX, mappedY, 5, 0, Math.PI * 2);
         reviewCtx.strokeStyle = '#dc2626'; // Red color
         reviewCtx.lineWidth = 3; // Thick walls for visibility
         reviewCtx.stroke();
@@ -2242,8 +2242,8 @@ const drawReviewMarker = (x, y, color, entry, actionType, markerType = 'circle')
         const mappedX = mapXReview(x);
         const mappedY = mapYReview(y);
         const spikes = 5;
-        const outerRadius = 8;
-        const innerRadius = 4;
+        const outerRadius = 6;
+        const innerRadius = 3;
         
         reviewCtx.beginPath();
         for (let i = 0; i < spikes * 2; i++) {
@@ -2264,84 +2264,20 @@ const drawReviewMarker = (x, y, color, entry, actionType, markerType = 'circle')
         // Reset line width to default
         reviewCtx.lineWidth = 1;
     } else if (markerType === 'kickoutWonUncontested') {
-        // Draw white filled diamond
+        // Draw black filled circle
         const mappedX = mapXReview(x);
         const mappedY = mapYReview(y);
-        const size = 8;
+        const radius = 6;
         
         reviewCtx.beginPath();
-        reviewCtx.moveTo(mappedX, mappedY - size); // Top
-        reviewCtx.lineTo(mappedX + size, mappedY); // Right
-        reviewCtx.lineTo(mappedX, mappedY + size); // Bottom
-        reviewCtx.lineTo(mappedX - size, mappedY); // Left
-        reviewCtx.closePath();
-        reviewCtx.fillStyle = 'white';
+        reviewCtx.arc(mappedX, mappedY, radius, 0, Math.PI * 2);
+        reviewCtx.fillStyle = 'black';
         reviewCtx.fill();
     } else if (markerType === 'kickoutWonContested') {
-        // Draw white filled diamond with black dot
-        const mappedX = mapXReview(x);
-        const mappedY = mapYReview(y);
-        const size = 8;
-        
-        reviewCtx.beginPath();
-        reviewCtx.moveTo(mappedX, mappedY - size); // Top
-        reviewCtx.lineTo(mappedX + size, mappedY); // Right
-        reviewCtx.lineTo(mappedX, mappedY + size); // Bottom
-        reviewCtx.lineTo(mappedX - size, mappedY); // Left
-        reviewCtx.closePath();
-        reviewCtx.fillStyle = 'white';
-        reviewCtx.fill();
-        
-        // Add black dot in center
-        reviewCtx.beginPath();
-        reviewCtx.arc(mappedX, mappedY, 2, 0, Math.PI * 2);
-        reviewCtx.fillStyle = 'black';
-        reviewCtx.fill();
-    } else if (markerType === 'kickoutLostUncontested') {
-        // Draw white hollow diamond
-        const mappedX = mapXReview(x);
-        const mappedY = mapYReview(y);
-        const size = 8;
-        
-        reviewCtx.beginPath();
-        reviewCtx.moveTo(mappedX, mappedY - size); // Top
-        reviewCtx.lineTo(mappedX + size, mappedY); // Right
-        reviewCtx.lineTo(mappedX, mappedY + size); // Bottom
-        reviewCtx.lineTo(mappedX - size, mappedY); // Left
-        reviewCtx.closePath();
-        reviewCtx.strokeStyle = 'white';
-        reviewCtx.lineWidth = 2;
-        reviewCtx.stroke();
-        // Reset line width to default
-        reviewCtx.lineWidth = 1;
-    } else if (markerType === 'kickoutLostContested') {
-        // Draw white hollow diamond with black dot
-        const mappedX = mapXReview(x);
-        const mappedY = mapYReview(y);
-        const size = 8;
-        
-        reviewCtx.beginPath();
-        reviewCtx.moveTo(mappedX, mappedY - size); // Top
-        reviewCtx.lineTo(mappedX + size, mappedY); // Right
-        reviewCtx.lineTo(mappedX, mappedY + size); // Bottom
-        reviewCtx.lineTo(mappedX - size, mappedY); // Left
-        reviewCtx.closePath();
-        reviewCtx.strokeStyle = 'white';
-        reviewCtx.lineWidth = 2;
-        reviewCtx.stroke();
-        
-        // Add black dot in center
-        reviewCtx.beginPath();
-        reviewCtx.arc(mappedX, mappedY, 2, 0, Math.PI * 2);
-        reviewCtx.fillStyle = 'black';
-        reviewCtx.fill();
-        // Reset line width to default
-        reviewCtx.lineWidth = 1;
-    } else if (markerType === 'kickoutTeam2WonUncontested') {
         // Draw black filled diamond
         const mappedX = mapXReview(x);
         const mappedY = mapYReview(y);
-        const size = 8;
+        const size = 6;
         
         reviewCtx.beginPath();
         reviewCtx.moveTo(mappedX, mappedY - size); // Top
@@ -2351,32 +2287,38 @@ const drawReviewMarker = (x, y, color, entry, actionType, markerType = 'circle')
         reviewCtx.closePath();
         reviewCtx.fillStyle = 'black';
         reviewCtx.fill();
-    } else if (markerType === 'kickoutTeam2WonContested') {
-        // Draw black filled diamond with white dot
+    } else if (markerType === 'kickoutLostUncontested') {
+        // Draw black hollow circle with X inside
         const mappedX = mapXReview(x);
         const mappedY = mapYReview(y);
-        const size = 8;
+        const radius = 6;
         
+        // Draw hollow circle
         reviewCtx.beginPath();
-        reviewCtx.moveTo(mappedX, mappedY - size); // Top
-        reviewCtx.lineTo(mappedX + size, mappedY); // Right
-        reviewCtx.lineTo(mappedX, mappedY + size); // Bottom
-        reviewCtx.lineTo(mappedX - size, mappedY); // Left
-        reviewCtx.closePath();
-        reviewCtx.fillStyle = 'black';
-        reviewCtx.fill();
+        reviewCtx.arc(mappedX, mappedY, radius, 0, Math.PI * 2);
+        reviewCtx.strokeStyle = 'black';
+        reviewCtx.lineWidth = 2;
+        reviewCtx.stroke();
         
-        // Add white dot in center
+        // Draw X inside
         reviewCtx.beginPath();
-        reviewCtx.arc(mappedX, mappedY, 2, 0, Math.PI * 2);
-        reviewCtx.fillStyle = 'white';
-        reviewCtx.fill();
-    } else if (markerType === 'kickoutTeam2LostUncontested') {
-        // Draw black hollow diamond
+        reviewCtx.moveTo(mappedX - 4, mappedY - 4);
+        reviewCtx.lineTo(mappedX + 4, mappedY + 4);
+        reviewCtx.moveTo(mappedX + 4, mappedY - 4);
+        reviewCtx.lineTo(mappedX - 4, mappedY + 4);
+        reviewCtx.strokeStyle = 'black';
+        reviewCtx.lineWidth = 2;
+        reviewCtx.stroke();
+        
+        // Reset line width to default
+        reviewCtx.lineWidth = 1;
+    } else if (markerType === 'kickoutLostContested') {
+        // Draw black hollow diamond with X inside
         const mappedX = mapXReview(x);
         const mappedY = mapYReview(y);
-        const size = 8;
+        const size = 6;
         
+        // Draw hollow diamond
         reviewCtx.beginPath();
         reviewCtx.moveTo(mappedX, mappedY - size); // Top
         reviewCtx.lineTo(mappedX + size, mappedY); // Right
@@ -2386,36 +2328,102 @@ const drawReviewMarker = (x, y, color, entry, actionType, markerType = 'circle')
         reviewCtx.strokeStyle = 'black';
         reviewCtx.lineWidth = 2;
         reviewCtx.stroke();
+        
+        // Draw X inside
+        reviewCtx.beginPath();
+        reviewCtx.moveTo(mappedX - 4, mappedY - 4);
+        reviewCtx.lineTo(mappedX + 4, mappedY + 4);
+        reviewCtx.moveTo(mappedX + 4, mappedY - 4);
+        reviewCtx.lineTo(mappedX - 4, mappedY + 4);
+        reviewCtx.strokeStyle = 'black';
+        reviewCtx.lineWidth = 2;
+        reviewCtx.stroke();
+        
+        // Reset line width to default
+        reviewCtx.lineWidth = 1;
+    } else if (markerType === 'kickoutTeam2WonUncontested') {
+        // Draw navy filled circle
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        const radius = 6;
+        
+        reviewCtx.beginPath();
+        reviewCtx.arc(mappedX, mappedY, radius, 0, Math.PI * 2);
+        reviewCtx.fillStyle = '#1e3a8a'; // Navy color
+        reviewCtx.fill();
+    } else if (markerType === 'kickoutTeam2WonContested') {
+        // Draw navy filled diamond
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        const size = 6;
+        
+        reviewCtx.beginPath();
+        reviewCtx.moveTo(mappedX, mappedY - size); // Top
+        reviewCtx.lineTo(mappedX + size, mappedY); // Right
+        reviewCtx.lineTo(mappedX, mappedY + size); // Bottom
+        reviewCtx.lineTo(mappedX - size, mappedY); // Left
+        reviewCtx.closePath();
+        reviewCtx.fillStyle = '#1e3a8a'; // Navy color
+        reviewCtx.fill();
+    } else if (markerType === 'kickoutTeam2LostUncontested') {
+        // Draw navy hollow circle with X inside
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        const radius = 6;
+        
+        // Draw hollow circle
+        reviewCtx.beginPath();
+        reviewCtx.arc(mappedX, mappedY, radius, 0, Math.PI * 2);
+        reviewCtx.strokeStyle = '#1e3a8a'; // Navy color
+        reviewCtx.lineWidth = 2;
+        reviewCtx.stroke();
+        
+        // Draw X inside
+        reviewCtx.beginPath();
+        reviewCtx.moveTo(mappedX - 4, mappedY - 4);
+        reviewCtx.lineTo(mappedX + 4, mappedY + 4);
+        reviewCtx.moveTo(mappedX + 4, mappedY - 4);
+        reviewCtx.lineTo(mappedX - 4, mappedY + 4);
+        reviewCtx.strokeStyle = '#1e3a8a'; // Navy color
+        reviewCtx.lineWidth = 2;
+        reviewCtx.stroke();
+        
         // Reset line width to default
         reviewCtx.lineWidth = 1;
     } else if (markerType === 'kickoutTeam2LostContested') {
-        // Draw black hollow diamond with white dot
+        // Draw navy hollow diamond with X inside
         const mappedX = mapXReview(x);
         const mappedY = mapYReview(y);
-        const size = 8;
+        const size = 6;
         
+        // Draw hollow diamond
         reviewCtx.beginPath();
         reviewCtx.moveTo(mappedX, mappedY - size); // Top
         reviewCtx.lineTo(mappedX + size, mappedY); // Right
         reviewCtx.lineTo(mappedX, mappedY + size); // Bottom
         reviewCtx.lineTo(mappedX - size, mappedY); // Left
         reviewCtx.closePath();
-        reviewCtx.strokeStyle = 'black';
+        reviewCtx.strokeStyle = '#1e3a8a'; // Navy color
         reviewCtx.lineWidth = 2;
         reviewCtx.stroke();
         
-        // Add white dot in center
+        // Draw X inside
         reviewCtx.beginPath();
-        reviewCtx.arc(mappedX, mappedY, 2, 0, Math.PI * 2);
-        reviewCtx.fillStyle = 'white';
-        reviewCtx.fill();
+        reviewCtx.moveTo(mappedX - 4, mappedY - 4);
+        reviewCtx.lineTo(mappedX + 4, mappedY + 4);
+        reviewCtx.moveTo(mappedX + 4, mappedY - 4);
+        reviewCtx.lineTo(mappedX - 4, mappedY + 4);
+        reviewCtx.strokeStyle = '#1e3a8a'; // Navy color
+        reviewCtx.lineWidth = 2;
+        reviewCtx.stroke();
+        
         // Reset line width to default
         reviewCtx.lineWidth = 1;
     } else if (markerType === 'freeWon') {
         // Draw turquoise rounded hexagon
         const mappedX = mapXReview(x);
         const mappedY = mapYReview(y);
-        const size = 8;
+        const size = 6;
         
         reviewCtx.beginPath();
         
@@ -2439,7 +2447,7 @@ const drawReviewMarker = (x, y, color, entry, actionType, markerType = 'circle')
         // Draw red-orange downward triangle
         const mappedX = mapXReview(x);
         const mappedY = mapYReview(y);
-        const size = 8;
+        const size = 6;
         
         reviewCtx.beginPath();
         reviewCtx.moveTo(mappedX, mappedY - size); // Top point
@@ -2452,7 +2460,7 @@ const drawReviewMarker = (x, y, color, entry, actionType, markerType = 'circle')
         // Draw red-orange hollow triangle
         const mappedX = mapXReview(x);
         const mappedY = mapYReview(y);
-        const size = 8;
+        const size = 6;
         
         reviewCtx.beginPath();
         reviewCtx.moveTo(mappedX, mappedY - size); // Top point
@@ -2468,7 +2476,7 @@ const drawReviewMarker = (x, y, color, entry, actionType, markerType = 'circle')
         // Draw royal blue filled upward triangle
         const mappedX = mapXReview(x);
         const mappedY = mapYReview(y);
-        const size = 8;
+        const size = 6;
         
         reviewCtx.beginPath();
         reviewCtx.moveTo(mappedX, mappedY + size); // Bottom point
@@ -2481,7 +2489,7 @@ const drawReviewMarker = (x, y, color, entry, actionType, markerType = 'circle')
         // Draw royal blue hollow upward triangle
         const mappedX = mapXReview(x);
         const mappedY = mapYReview(y);
-        const size = 8;
+        const size = 6;
         
         reviewCtx.beginPath();
         reviewCtx.moveTo(mappedX, mappedY + size); // Bottom point
@@ -2497,7 +2505,7 @@ const drawReviewMarker = (x, y, color, entry, actionType, markerType = 'circle')
         // Draw deep purple filled square with white dot
         const mappedX = mapXReview(x);
         const mappedY = mapYReview(y);
-        const size = 8;
+        const size = 6;
         
         // Draw filled square
         reviewCtx.beginPath();
@@ -2514,7 +2522,7 @@ const drawReviewMarker = (x, y, color, entry, actionType, markerType = 'circle')
         // Draw deep purple filled square
         const mappedX = mapXReview(x);
         const mappedY = mapYReview(y);
-        const size = 8;
+        const size = 6;
         
         reviewCtx.beginPath();
         reviewCtx.rect(mappedX - size, mappedY - size, size * 2, size * 2);
@@ -2545,20 +2553,20 @@ const drawHandpassMarker = (x1, y1, x2, y2, color, entry) => {
     
     // Draw start point (larger filled circle)
     reviewCtx.beginPath();
-    reviewCtx.arc(mappedX1, mappedY1, 6, 0, Math.PI * 2);
+    reviewCtx.arc(mappedX1, mappedY1, 4, 0, Math.PI * 2);
     reviewCtx.fillStyle = color;
     reviewCtx.fill();
     
     // Draw end point (larger filled circle)
     reviewCtx.beginPath();
-    reviewCtx.arc(mappedX2, mappedY2, 6, 0, Math.PI * 2);
+    reviewCtx.arc(mappedX2, mappedY2, 4, 0, Math.PI * 2);
     reviewCtx.fillStyle = color;
     reviewCtx.fill();
     
     // Draw arrow just before the end point circle
-    const arrowLength = 8;
+    const arrowLength = 6;
     const arrowAngle = Math.PI / 6; // 30 degrees
-    const circleRadius = 6;
+    const circleRadius = 4;
     
     // Calculate arrow start point (just before the circle)
     const arrowStartX = mappedX2 - (circleRadius + 2) * Math.cos(angle);
@@ -2606,20 +2614,20 @@ const drawKickpassMarker = (x1, y1, x2, y2, color, entry) => {
     
     // Draw start point (filled circle)
     reviewCtx.beginPath();
-    reviewCtx.arc(mappedX1, mappedY1, 6, 0, Math.PI * 2);
+    reviewCtx.arc(mappedX1, mappedY1, 4, 0, Math.PI * 2);
     reviewCtx.fillStyle = color;
     reviewCtx.fill();
     
     // Draw end point (filled circle)
     reviewCtx.beginPath();
-    reviewCtx.arc(mappedX2, mappedY2, 6, 0, Math.PI * 2);
+    reviewCtx.arc(mappedX2, mappedY2, 4, 0, Math.PI * 2);
     reviewCtx.fillStyle = color;
     reviewCtx.fill();
     
     // Draw arrow just before the end point circle
-    const arrowLength = 8;
+    const arrowLength = 6;
     const arrowAngle = Math.PI / 6; // 30 degrees
-    const circleRadius = 6;
+    const circleRadius = 4;
     
     // Calculate arrow start point (just before the circle)
     const arrowStartX = mappedX2 - (circleRadius + 2) * Math.cos(angle);
@@ -2667,20 +2675,20 @@ const drawCarryMarker = (x1, y1, x2, y2, color, entry) => {
     
     // Draw start point (filled circle)
     reviewCtx.beginPath();
-    reviewCtx.arc(mappedX1, mappedY1, 6, 0, Math.PI * 2);
+    reviewCtx.arc(mappedX1, mappedY1, 4, 0, Math.PI * 2);
     reviewCtx.fillStyle = color;
     reviewCtx.fill();
     
     // Draw end point (filled circle)
     reviewCtx.beginPath();
-    reviewCtx.arc(mappedX2, mappedY2, 6, 0, Math.PI * 2);
+    reviewCtx.arc(mappedX2, mappedY2, 4, 0, Math.PI * 2);
     reviewCtx.fillStyle = color;
     reviewCtx.fill();
     
     // Draw arrow just before the end point circle
-    const arrowLength = 8;
+    const arrowLength = 6;
     const arrowAngle = Math.PI / 6; // 30 degrees
-    const circleRadius = 6;
+    const circleRadius = 4;
     
     // Calculate arrow start point (just before the circle)
     const arrowStartX = mappedX2 - (circleRadius + 2) * Math.cos(angle);
