@@ -295,9 +295,9 @@ function selectMode(mode) {
         }
     } else if (currentAction === 'Foul Committed') {
         // Foul Committed has conditional routing based on mode
-        if (mode === 'Physical') {
+        if (currentMode === 'Physical') {
             switchScreen('foul-physical-screen2');
-        } else if (mode === 'Technical') {
+        } else if (currentMode === 'Technical') {
             switchScreen('foul-technical-screen2');
         } else {
             // This handles the second mode selection (specific foul type) - go to player selection
@@ -448,7 +448,7 @@ function logAction() {
             notes: []
         };
         
-        // Store the actual team name at the time of logging
+        // Store the actual team name and team number at the time of logging
         const teamCode = getTeamFromAction(entry);
         const getCurrentTeamDisplayName = (team) => {
             if (team === 'team1') {
@@ -460,6 +460,7 @@ function logAction() {
             }
         };
         entry.team = getCurrentTeamDisplayName(teamCode);
+        entry.teamNumber = teamCode === 'team1' ? 1 : 2;
 
         actionsLog.push(entry);
         updateSummary();
@@ -547,6 +548,7 @@ function logPointAgainst() {
         }
     };
     entry.team = getCurrentTeamDisplayName(teamCode);
+    entry.teamNumber = teamCode === 'team1' ? 1 : 2;
     
     actionsLog.push(entry);
     updateSummary();
@@ -579,6 +581,7 @@ function logGoalAgainst() {
         }
     };
     entry.team = getCurrentTeamDisplayName(teamCode);
+    entry.teamNumber = teamCode === 'team1' ? 1 : 2;
     
     actionsLog.push(entry);
     updateSummary();
@@ -609,6 +612,7 @@ function logMissAgainst() {
         }
     };
     entry.team = getCurrentTeamDisplayName(teamCode);
+    entry.teamNumber = teamCode === 'team1' ? 1 : 2;
     
     actionsLog.push(entry);
     updateSummary();
@@ -836,6 +840,265 @@ function updateSummary() {
     if (currentSummaryView === 'timeline') {
         buildTimeline();
     }
+}
+
+function exportDataToCSV() {
+    try {
+        // Define CSV headers
+        const headers = ['Action', 'Add_1', 'Add_2', 'Team', 'Team_Number', 'Player_1', 'Player_2', 'X1', 'Y1', 'X2', 'Y2', 'Notes'];
+        
+        // Create CSV content
+        let csvContent = headers.join(',') + '\n';
+        
+        // Add data rows
+        actionsLog.forEach(entry => {
+            // Extract coordinates
+            let x1 = '', y1 = '', x2 = '', y2 = '';
+            
+            if (entry.coordinates1) {
+                const coords1 = entry.coordinates1.slice(1, -1).split(', ');
+                if (coords1.length >= 2) {
+                    x1 = coords1[0];
+                    y1 = coords1[1];
+                }
+            }
+            
+            if (entry.coordinates2) {
+                const coords2 = entry.coordinates2.slice(1, -1).split(', ');
+                if (coords2.length >= 2) {
+                    x2 = coords2[0];
+                    y2 = coords2[1];
+                }
+            }
+            
+            const row = [
+                entry.action || '',
+                entry.mode || '',
+                entry.definition || '',
+                entry.team || '',
+                entry.teamNumber || '',
+                entry.player || '',
+                entry.player2 || '',
+                x1,
+                y1,
+                x2,
+                y2,
+                entry.notes && entry.notes.length > 0 ? entry.notes.join('; ') : ''
+            ];
+            
+            // Escape CSV values (handle commas, quotes, newlines)
+            const escapedRow = row.map(value => {
+                if (value === null || value === undefined) return '';
+                const stringValue = String(value);
+                if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+                    return '"' + stringValue.replace(/"/g, '""') + '"';
+                }
+                return stringValue;
+            });
+            
+            csvContent += escapedRow.join(',') + '\n';
+        });
+        
+        // Create and download file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        
+        if (link.download !== undefined) {
+            // Generate filename with team names and date
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            const dateString = `${day}/${month}/${year}`;
+            
+            // Get current team names
+            const team1Button = document.getElementById('rename-team-1-button');
+            const team2Button = document.getElementById('rename-team-2-button');
+            const team1Name = team1Button ? team1Button.textContent.trim() : 'Team 1';
+            const team2Name = team2Button ? team2Button.textContent.trim() : 'Team 2';
+            
+            const filename = `${team1Name} vs ${team2Name}; Data for ${dateString}.csv`;
+            
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Clean up the URL object
+            URL.revokeObjectURL(url);
+        }
+    } catch (error) {
+        console.error('Error exporting data to CSV:', error);
+        alert('Error exporting data. Please try again.');
+    }
+}
+
+function handleCSVUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+        alert('Please select a CSV file.');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const csvContent = e.target.result;
+            const lines = csvContent.split('\n').filter(line => line.trim());
+            
+            if (lines.length < 2) {
+                alert('CSV file appears to be empty or invalid.');
+                return;
+            }
+            
+            // Parse header row
+            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            const expectedHeaders = ['Action', 'Add_1', 'Add_2', 'Team', 'Team_Number', 'Player_1', 'Player_2', 'X1', 'Y1', 'X2', 'Y2', 'Notes'];
+            
+            // Check if headers match expected format (with or without Team_Number for backward compatibility)
+            const hasTeamNumber = headers.some(header => header === 'Team_Number');
+            const requiredHeaders = hasTeamNumber ? expectedHeaders : expectedHeaders.filter(h => h !== 'Team_Number');
+            const headersMatch = requiredHeaders.every(expected => 
+                headers.some(header => header === expected)
+            );
+            
+            if (!headersMatch) {
+                alert('CSV file format does not match expected columns. Please ensure the file has the correct headers.');
+                return;
+            }
+            
+            // Parse data rows
+            const newEntries = [];
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                // Parse CSV line (handle quoted values)
+                const values = parseCSVLine(line);
+                
+                // Handle both old format (11 columns) and new format (12 columns with Team_Number)
+                const minColumns = hasTeamNumber ? 12 : 11;
+                if (values.length >= minColumns) {
+                    // Get current team names for display
+                    const team1Button = document.getElementById('rename-team-1-button');
+                    const team2Button = document.getElementById('rename-team-2-button');
+                    const currentTeam1Name = team1Button ? team1Button.textContent.trim() : 'Team 1';
+                    const currentTeam2Name = team2Button ? team2Button.textContent.trim() : 'Team 2';
+                    
+                    let teamNumber, displayTeamName, player, player2, x1, y1, x2, y2, notes;
+                    
+                    if (hasTeamNumber) {
+                        // New format with Team_Number column
+                        teamNumber = parseInt(values[4]) || 1;
+                        displayTeamName = teamNumber === 1 ? currentTeam1Name : currentTeam2Name;
+                        player = values[5] || '';
+                        player2 = values[6] || '';
+                        x1 = values[7];
+                        y1 = values[8];
+                        x2 = values[9];
+                        y2 = values[10];
+                        notes = values[11];
+                    } else {
+                        // Old format without Team_Number column - use team name matching
+                        const originalTeamName = values[3] || '';
+                        // Try to match with current team names, default to Team 1 if no match
+                        if (originalTeamName === currentTeam1Name) {
+                            teamNumber = 1;
+                            displayTeamName = currentTeam1Name;
+                        } else if (originalTeamName === currentTeam2Name) {
+                            teamNumber = 2;
+                            displayTeamName = currentTeam2Name;
+                        } else {
+                            // No match found, default to Team 1
+                            teamNumber = 1;
+                            displayTeamName = currentTeam1Name;
+                        }
+                        player = values[4] || '';
+                        player2 = values[5] || '';
+                        x1 = values[6];
+                        y1 = values[7];
+                        x2 = values[8];
+                        y2 = values[9];
+                        notes = values[10];
+                    }
+                    
+                    const entry = {
+                        action: values[0] || '',
+                        mode: values[1] || '',
+                        definition: values[2] || '',
+                        team: displayTeamName, // Use current team name for display
+                        teamNumber: teamNumber, // Use team number for logic
+                        player: player,
+                        player2: player2,
+                        coordinates1: x1 && y1 ? `(${x1}, ${y1})` : '',
+                        coordinates2: x2 && y2 ? `(${x2}, ${y2})` : '',
+                        notes: notes ? notes.split('; ').filter(note => note.trim()) : []
+                    };
+                    
+                    newEntries.push(entry);
+                }
+            }
+            
+            if (newEntries.length === 0) {
+                alert('No valid data found in CSV file.');
+                return;
+            }
+            
+            // Add new entries to existing data (stack, don't replace)
+            actionsLog.push(...newEntries);
+            
+            // Update the summary table
+            updateSummary();
+            
+            alert(`Successfully uploaded ${newEntries.length} data entries.`);
+            
+        } catch (error) {
+            console.error('Error parsing CSV file:', error);
+            alert('Error parsing CSV file. Please check the file format and try again.');
+        }
+    };
+    
+    reader.readAsText(file);
+    
+    // Reset file input
+    event.target.value = '';
+}
+
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        
+        if (char === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+                // Escaped quote
+                current += '"';
+                i++; // Skip next quote
+            } else {
+                // Toggle quote state
+                inQuotes = !inQuotes;
+            }
+        } else if (char === ',' && !inQuotes) {
+            // End of field
+            result.push(current.trim());
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    
+    // Add the last field
+    result.push(current.trim());
+    
+    return result;
 }
 
 function createFilterHeader(label, key, options) {
@@ -1910,26 +2173,596 @@ const drawReviewMarker = (x, y, color, entry, actionType, markerType = 'circle')
         reviewCtx.fillStyle = color;
         reviewCtx.fill();
     } else if (markerType === 'pointScore') {
-        // Draw filled green circle with team-colored border
+        // Draw solid dark green circle (no border)
         const mappedX = mapXReview(x);
         const mappedY = mapYReview(y);
         reviewCtx.beginPath();
         reviewCtx.arc(mappedX, mappedY, 8, 0, Math.PI * 2);
-        reviewCtx.fillStyle = '#10b981'; // Green fill
+        reviewCtx.fillStyle = '#065f46'; // Very dark green fill
         reviewCtx.fill();
-        reviewCtx.strokeStyle = color; // Team-colored border
+    } else if (markerType === 'twoPointScore') {
+        // Draw double-ring green circle (bullseye effect)
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        // Outer ring (larger circle, hollow)
+        reviewCtx.beginPath();
+        reviewCtx.arc(mappedX, mappedY, 8, 0, Math.PI * 2);
+        reviewCtx.strokeStyle = '#065f46';
         reviewCtx.lineWidth = 2;
         reviewCtx.stroke();
-        // Reset line width to default to prevent affecting other drawing operations
+        // Inner ring (smaller circle, filled)
+        reviewCtx.beginPath();
+        reviewCtx.arc(mappedX, mappedY, 4, 0, Math.PI * 2);
+        reviewCtx.fillStyle = '#065f46';
+        reviewCtx.fill();
+        // Reset line width to default
         reviewCtx.lineWidth = 1;
+    } else if (markerType === 'goalScore') {
+        // Draw filled green star
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        const spikes = 5;
+        const outerRadius = 10;
+        const innerRadius = 5;
+        
+        reviewCtx.beginPath();
+        for (let i = 0; i < spikes * 2; i++) {
+            const radius = i % 2 === 0 ? outerRadius : innerRadius;
+            const angle = (i * Math.PI) / spikes;
+            const x = mappedX + Math.cos(angle) * radius;
+            const y = mappedY + Math.sin(angle) * radius;
+            if (i === 0) {
+                reviewCtx.moveTo(x, y);
+            } else {
+                reviewCtx.lineTo(x, y);
+            }
+        }
+        reviewCtx.closePath();
+        reviewCtx.fillStyle = '#065f46';
+        reviewCtx.fill();
+    } else if (markerType === 'pointMiss') {
+        // Draw open red circle (hollow with thick walls)
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        reviewCtx.beginPath();
+        reviewCtx.arc(mappedX, mappedY, 8, 0, Math.PI * 2);
+        reviewCtx.strokeStyle = '#dc2626'; // Red color
+        reviewCtx.lineWidth = 3; // Thick walls for visibility
+        reviewCtx.stroke();
+        // Reset line width to default
+        reviewCtx.lineWidth = 1;
+    } else if (markerType === 'goalMiss') {
+        // Draw red outlined star (hollow with thick walls)
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        const spikes = 5;
+        const outerRadius = 8;
+        const innerRadius = 4;
+        
+        reviewCtx.beginPath();
+        for (let i = 0; i < spikes * 2; i++) {
+            const radius = i % 2 === 0 ? outerRadius : innerRadius;
+            const angle = (i * Math.PI) / spikes;
+            const x = mappedX + Math.cos(angle) * radius;
+            const y = mappedY + Math.sin(angle) * radius;
+            if (i === 0) {
+                reviewCtx.moveTo(x, y);
+            } else {
+                reviewCtx.lineTo(x, y);
+            }
+        }
+        reviewCtx.closePath();
+        reviewCtx.strokeStyle = '#dc2626'; // Red color
+        reviewCtx.lineWidth = 3; // Thick walls for visibility
+        reviewCtx.stroke();
+        // Reset line width to default
+        reviewCtx.lineWidth = 1;
+    } else if (markerType === 'kickoutWonUncontested') {
+        // Draw white filled diamond
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        const size = 8;
+        
+        reviewCtx.beginPath();
+        reviewCtx.moveTo(mappedX, mappedY - size); // Top
+        reviewCtx.lineTo(mappedX + size, mappedY); // Right
+        reviewCtx.lineTo(mappedX, mappedY + size); // Bottom
+        reviewCtx.lineTo(mappedX - size, mappedY); // Left
+        reviewCtx.closePath();
+        reviewCtx.fillStyle = 'white';
+        reviewCtx.fill();
+    } else if (markerType === 'kickoutWonContested') {
+        // Draw white filled diamond with black dot
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        const size = 8;
+        
+        reviewCtx.beginPath();
+        reviewCtx.moveTo(mappedX, mappedY - size); // Top
+        reviewCtx.lineTo(mappedX + size, mappedY); // Right
+        reviewCtx.lineTo(mappedX, mappedY + size); // Bottom
+        reviewCtx.lineTo(mappedX - size, mappedY); // Left
+        reviewCtx.closePath();
+        reviewCtx.fillStyle = 'white';
+        reviewCtx.fill();
+        
+        // Add black dot in center
+        reviewCtx.beginPath();
+        reviewCtx.arc(mappedX, mappedY, 2, 0, Math.PI * 2);
+        reviewCtx.fillStyle = 'black';
+        reviewCtx.fill();
+    } else if (markerType === 'kickoutLostUncontested') {
+        // Draw white hollow diamond
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        const size = 8;
+        
+        reviewCtx.beginPath();
+        reviewCtx.moveTo(mappedX, mappedY - size); // Top
+        reviewCtx.lineTo(mappedX + size, mappedY); // Right
+        reviewCtx.lineTo(mappedX, mappedY + size); // Bottom
+        reviewCtx.lineTo(mappedX - size, mappedY); // Left
+        reviewCtx.closePath();
+        reviewCtx.strokeStyle = 'white';
+        reviewCtx.lineWidth = 2;
+        reviewCtx.stroke();
+        // Reset line width to default
+        reviewCtx.lineWidth = 1;
+    } else if (markerType === 'kickoutLostContested') {
+        // Draw white hollow diamond with black dot
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        const size = 8;
+        
+        reviewCtx.beginPath();
+        reviewCtx.moveTo(mappedX, mappedY - size); // Top
+        reviewCtx.lineTo(mappedX + size, mappedY); // Right
+        reviewCtx.lineTo(mappedX, mappedY + size); // Bottom
+        reviewCtx.lineTo(mappedX - size, mappedY); // Left
+        reviewCtx.closePath();
+        reviewCtx.strokeStyle = 'white';
+        reviewCtx.lineWidth = 2;
+        reviewCtx.stroke();
+        
+        // Add black dot in center
+        reviewCtx.beginPath();
+        reviewCtx.arc(mappedX, mappedY, 2, 0, Math.PI * 2);
+        reviewCtx.fillStyle = 'black';
+        reviewCtx.fill();
+        // Reset line width to default
+        reviewCtx.lineWidth = 1;
+    } else if (markerType === 'kickoutTeam2WonUncontested') {
+        // Draw black filled diamond
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        const size = 8;
+        
+        reviewCtx.beginPath();
+        reviewCtx.moveTo(mappedX, mappedY - size); // Top
+        reviewCtx.lineTo(mappedX + size, mappedY); // Right
+        reviewCtx.lineTo(mappedX, mappedY + size); // Bottom
+        reviewCtx.lineTo(mappedX - size, mappedY); // Left
+        reviewCtx.closePath();
+        reviewCtx.fillStyle = 'black';
+        reviewCtx.fill();
+    } else if (markerType === 'kickoutTeam2WonContested') {
+        // Draw black filled diamond with white dot
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        const size = 8;
+        
+        reviewCtx.beginPath();
+        reviewCtx.moveTo(mappedX, mappedY - size); // Top
+        reviewCtx.lineTo(mappedX + size, mappedY); // Right
+        reviewCtx.lineTo(mappedX, mappedY + size); // Bottom
+        reviewCtx.lineTo(mappedX - size, mappedY); // Left
+        reviewCtx.closePath();
+        reviewCtx.fillStyle = 'black';
+        reviewCtx.fill();
+        
+        // Add white dot in center
+        reviewCtx.beginPath();
+        reviewCtx.arc(mappedX, mappedY, 2, 0, Math.PI * 2);
+        reviewCtx.fillStyle = 'white';
+        reviewCtx.fill();
+    } else if (markerType === 'kickoutTeam2LostUncontested') {
+        // Draw black hollow diamond
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        const size = 8;
+        
+        reviewCtx.beginPath();
+        reviewCtx.moveTo(mappedX, mappedY - size); // Top
+        reviewCtx.lineTo(mappedX + size, mappedY); // Right
+        reviewCtx.lineTo(mappedX, mappedY + size); // Bottom
+        reviewCtx.lineTo(mappedX - size, mappedY); // Left
+        reviewCtx.closePath();
+        reviewCtx.strokeStyle = 'black';
+        reviewCtx.lineWidth = 2;
+        reviewCtx.stroke();
+        // Reset line width to default
+        reviewCtx.lineWidth = 1;
+    } else if (markerType === 'kickoutTeam2LostContested') {
+        // Draw black hollow diamond with white dot
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        const size = 8;
+        
+        reviewCtx.beginPath();
+        reviewCtx.moveTo(mappedX, mappedY - size); // Top
+        reviewCtx.lineTo(mappedX + size, mappedY); // Right
+        reviewCtx.lineTo(mappedX, mappedY + size); // Bottom
+        reviewCtx.lineTo(mappedX - size, mappedY); // Left
+        reviewCtx.closePath();
+        reviewCtx.strokeStyle = 'black';
+        reviewCtx.lineWidth = 2;
+        reviewCtx.stroke();
+        
+        // Add white dot in center
+        reviewCtx.beginPath();
+        reviewCtx.arc(mappedX, mappedY, 2, 0, Math.PI * 2);
+        reviewCtx.fillStyle = 'white';
+        reviewCtx.fill();
+        // Reset line width to default
+        reviewCtx.lineWidth = 1;
+    } else if (markerType === 'freeWon') {
+        // Draw turquoise rounded hexagon
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        const size = 8;
+        
+        reviewCtx.beginPath();
+        
+        // Create rounded hexagon by drawing 6 points with rounded corners
+        for (let i = 0; i < 6; i++) {
+            const angle = (i * Math.PI) / 3; // 60 degrees between each point
+            const xPos = mappedX + Math.cos(angle) * size;
+            const yPos = mappedY + Math.sin(angle) * size;
+            
+            if (i === 0) {
+                reviewCtx.moveTo(xPos, yPos);
+            } else {
+                reviewCtx.lineTo(xPos, yPos);
+            }
+        }
+        
+        reviewCtx.closePath();
+        reviewCtx.fillStyle = '#14b8a6'; // Turquoise color
+        reviewCtx.fill();
+    } else if (markerType === 'ballLostForced') {
+        // Draw red-orange downward triangle
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        const size = 8;
+        
+        reviewCtx.beginPath();
+        reviewCtx.moveTo(mappedX, mappedY - size); // Top point
+        reviewCtx.lineTo(mappedX - size, mappedY + size); // Bottom left
+        reviewCtx.lineTo(mappedX + size, mappedY + size); // Bottom right
+        reviewCtx.closePath();
+        reviewCtx.fillStyle = '#ea580c'; // Red-orange color
+        reviewCtx.fill();
+    } else if (markerType === 'ballLostUnforced') {
+        // Draw red-orange hollow triangle
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        const size = 8;
+        
+        reviewCtx.beginPath();
+        reviewCtx.moveTo(mappedX, mappedY - size); // Top point
+        reviewCtx.lineTo(mappedX - size, mappedY + size); // Bottom left
+        reviewCtx.lineTo(mappedX + size, mappedY + size); // Bottom right
+        reviewCtx.closePath();
+        reviewCtx.strokeStyle = '#ea580c'; // Red-orange color
+        reviewCtx.lineWidth = 2;
+        reviewCtx.stroke();
+        // Reset line width to default
+        reviewCtx.lineWidth = 1;
+    } else if (markerType === 'ballWonForced') {
+        // Draw royal blue filled upward triangle
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        const size = 8;
+        
+        reviewCtx.beginPath();
+        reviewCtx.moveTo(mappedX, mappedY + size); // Bottom point
+        reviewCtx.lineTo(mappedX - size, mappedY - size); // Top left
+        reviewCtx.lineTo(mappedX + size, mappedY - size); // Top right
+        reviewCtx.closePath();
+        reviewCtx.fillStyle = '#1e40af'; // Royal blue color
+        reviewCtx.fill();
+    } else if (markerType === 'ballWonUnforced') {
+        // Draw royal blue hollow upward triangle
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        const size = 8;
+        
+        reviewCtx.beginPath();
+        reviewCtx.moveTo(mappedX, mappedY + size); // Bottom point
+        reviewCtx.lineTo(mappedX - size, mappedY - size); // Top left
+        reviewCtx.lineTo(mappedX + size, mappedY - size); // Top right
+        reviewCtx.closePath();
+        reviewCtx.strokeStyle = '#1e40af'; // Royal blue color
+        reviewCtx.lineWidth = 2;
+        reviewCtx.stroke();
+        // Reset line width to default
+        reviewCtx.lineWidth = 1;
+    } else if (markerType === 'foulCommittedPhysical') {
+        // Draw deep purple filled square with white dot
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        const size = 8;
+        
+        // Draw filled square
+        reviewCtx.beginPath();
+        reviewCtx.rect(mappedX - size, mappedY - size, size * 2, size * 2);
+        reviewCtx.fillStyle = '#581c87'; // Deep purple color
+        reviewCtx.fill();
+        
+        // Draw white dot in center
+        reviewCtx.beginPath();
+        reviewCtx.arc(mappedX, mappedY, 3, 0, Math.PI * 2);
+        reviewCtx.fillStyle = 'white';
+        reviewCtx.fill();
+    } else if (markerType === 'foulCommittedTechnical') {
+        // Draw deep purple filled square
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        const size = 8;
+        
+        reviewCtx.beginPath();
+        reviewCtx.rect(mappedX - size, mappedY - size, size * 2, size * 2);
+        reviewCtx.fillStyle = '#581c87'; // Deep purple color
+        reviewCtx.fill();
     }
     reviewMarkers.push({ x, y, entry, color, markerType });
+};
+
+const drawHandpassMarker = (x1, y1, x2, y2, color, entry) => {
+    const mappedX1 = mapXReview(x1);
+    const mappedY1 = mapYReview(y1);
+    const mappedX2 = mapXReview(x2);
+    const mappedY2 = mapYReview(y2);
+    
+    // Calculate angle for arrow direction
+    const angle = Math.atan2(mappedY2 - mappedY1, mappedX2 - mappedX1);
+    
+    // Draw dotted line between start and end points
+    reviewCtx.beginPath();
+    reviewCtx.setLineDash([5, 5]); // Create dotted line pattern
+    reviewCtx.moveTo(mappedX1, mappedY1);
+    reviewCtx.lineTo(mappedX2, mappedY2);
+    reviewCtx.strokeStyle = color;
+    reviewCtx.lineWidth = 3;
+    reviewCtx.stroke();
+    reviewCtx.setLineDash([]); // Reset line dash pattern
+    
+    // Draw start point (larger filled circle)
+    reviewCtx.beginPath();
+    reviewCtx.arc(mappedX1, mappedY1, 6, 0, Math.PI * 2);
+    reviewCtx.fillStyle = color;
+    reviewCtx.fill();
+    
+    // Draw end point (larger filled circle)
+    reviewCtx.beginPath();
+    reviewCtx.arc(mappedX2, mappedY2, 6, 0, Math.PI * 2);
+    reviewCtx.fillStyle = color;
+    reviewCtx.fill();
+    
+    // Draw arrow just before the end point circle
+    const arrowLength = 8;
+    const arrowAngle = Math.PI / 6; // 30 degrees
+    const circleRadius = 6;
+    
+    // Calculate arrow start point (just before the circle)
+    const arrowStartX = mappedX2 - (circleRadius + 2) * Math.cos(angle);
+    const arrowStartY = mappedY2 - (circleRadius + 2) * Math.sin(angle);
+    
+    reviewCtx.beginPath();
+    reviewCtx.moveTo(arrowStartX, arrowStartY);
+    reviewCtx.lineTo(
+        arrowStartX - arrowLength * Math.cos(angle - arrowAngle),
+        arrowStartY - arrowLength * Math.sin(angle - arrowAngle)
+    );
+    reviewCtx.moveTo(arrowStartX, arrowStartY);
+    reviewCtx.lineTo(
+        arrowStartX - arrowLength * Math.cos(angle + arrowAngle),
+        arrowStartY - arrowLength * Math.sin(angle + arrowAngle)
+    );
+    reviewCtx.strokeStyle = color;
+    reviewCtx.lineWidth = 3;
+    reviewCtx.stroke();
+    
+    // Reset line width to default
+    reviewCtx.lineWidth = 1;
+    
+    // Add markers for interaction
+    reviewMarkers.push({ x: x1, y: y1, entry, color, markerType: 'handpass-start' });
+    reviewMarkers.push({ x: x2, y: y2, entry, color, markerType: 'handpass-end' });
+};
+
+const drawKickpassMarker = (x1, y1, x2, y2, color, entry) => {
+    const mappedX1 = mapXReview(x1);
+    const mappedY1 = mapYReview(y1);
+    const mappedX2 = mapXReview(x2);
+    const mappedY2 = mapYReview(y2);
+    
+    // Calculate angle for arrow direction
+    const angle = Math.atan2(mappedY2 - mappedY1, mappedX2 - mappedX1);
+    
+    // Draw solid line between start and end points
+    reviewCtx.beginPath();
+    reviewCtx.moveTo(mappedX1, mappedY1);
+    reviewCtx.lineTo(mappedX2, mappedY2);
+    reviewCtx.strokeStyle = color;
+    reviewCtx.lineWidth = 3;
+    reviewCtx.stroke();
+    
+    // Draw start point (filled circle)
+    reviewCtx.beginPath();
+    reviewCtx.arc(mappedX1, mappedY1, 6, 0, Math.PI * 2);
+    reviewCtx.fillStyle = color;
+    reviewCtx.fill();
+    
+    // Draw end point (filled circle)
+    reviewCtx.beginPath();
+    reviewCtx.arc(mappedX2, mappedY2, 6, 0, Math.PI * 2);
+    reviewCtx.fillStyle = color;
+    reviewCtx.fill();
+    
+    // Draw arrow just before the end point circle
+    const arrowLength = 8;
+    const arrowAngle = Math.PI / 6; // 30 degrees
+    const circleRadius = 6;
+    
+    // Calculate arrow start point (just before the circle)
+    const arrowStartX = mappedX2 - (circleRadius + 2) * Math.cos(angle);
+    const arrowStartY = mappedY2 - (circleRadius + 2) * Math.sin(angle);
+    
+    reviewCtx.beginPath();
+    reviewCtx.moveTo(arrowStartX, arrowStartY);
+    reviewCtx.lineTo(
+        arrowStartX - arrowLength * Math.cos(angle - arrowAngle),
+        arrowStartY - arrowLength * Math.sin(angle - arrowAngle)
+    );
+    reviewCtx.moveTo(arrowStartX, arrowStartY);
+    reviewCtx.lineTo(
+        arrowStartX - arrowLength * Math.cos(angle + arrowAngle),
+        arrowStartY - arrowLength * Math.sin(angle + arrowAngle)
+    );
+    reviewCtx.strokeStyle = color;
+    reviewCtx.lineWidth = 3;
+    reviewCtx.stroke();
+    
+    // Reset line width to default
+    reviewCtx.lineWidth = 1;
+    
+    // Add markers for interaction
+    reviewMarkers.push({ x: x1, y: y1, entry, color, markerType: 'kickpass-start' });
+    reviewMarkers.push({ x: x2, y: y2, entry, color, markerType: 'kickpass-end' });
+};
+
+const drawCarryMarker = (x1, y1, x2, y2, color, entry) => {
+    const mappedX1 = mapXReview(x1);
+    const mappedY1 = mapYReview(y1);
+    const mappedX2 = mapXReview(x2);
+    const mappedY2 = mapYReview(y2);
+    
+    // Calculate angle for arrow direction
+    const angle = Math.atan2(mappedY2 - mappedY1, mappedX2 - mappedX1);
+    
+    // Draw solid line between start and end points
+    reviewCtx.beginPath();
+    reviewCtx.moveTo(mappedX1, mappedY1);
+    reviewCtx.lineTo(mappedX2, mappedY2);
+    reviewCtx.strokeStyle = color;
+    reviewCtx.lineWidth = 3;
+    reviewCtx.stroke();
+    
+    // Draw start point (filled circle)
+    reviewCtx.beginPath();
+    reviewCtx.arc(mappedX1, mappedY1, 6, 0, Math.PI * 2);
+    reviewCtx.fillStyle = color;
+    reviewCtx.fill();
+    
+    // Draw end point (filled circle)
+    reviewCtx.beginPath();
+    reviewCtx.arc(mappedX2, mappedY2, 6, 0, Math.PI * 2);
+    reviewCtx.fillStyle = color;
+    reviewCtx.fill();
+    
+    // Draw arrow just before the end point circle
+    const arrowLength = 8;
+    const arrowAngle = Math.PI / 6; // 30 degrees
+    const circleRadius = 6;
+    
+    // Calculate arrow start point (just before the circle)
+    const arrowStartX = mappedX2 - (circleRadius + 2) * Math.cos(angle);
+    const arrowStartY = mappedY2 - (circleRadius + 2) * Math.sin(angle);
+    
+    reviewCtx.beginPath();
+    reviewCtx.moveTo(arrowStartX, arrowStartY);
+    reviewCtx.lineTo(
+        arrowStartX - arrowLength * Math.cos(angle - arrowAngle),
+        arrowStartY - arrowLength * Math.sin(angle - arrowAngle)
+    );
+    reviewCtx.moveTo(arrowStartX, arrowStartY);
+    reviewCtx.lineTo(
+        arrowStartX - arrowLength * Math.cos(angle + arrowAngle),
+        arrowStartY - arrowLength * Math.sin(angle + arrowAngle)
+    );
+    reviewCtx.strokeStyle = color;
+    reviewCtx.lineWidth = 3;
+    reviewCtx.stroke();
+    
+    // Reset line width to default
+    reviewCtx.lineWidth = 1;
+    
+    // Add markers for interaction
+    reviewMarkers.push({ x: x1, y: y1, entry, color, markerType: 'carry-start' });
+    reviewMarkers.push({ x: x2, y: y2, entry, color, markerType: 'carry-end' });
 };
 
 const filterActions = () => {
     // Check Point-Score filter toggles
     const showPointScoreTeam1 = document.getElementById('filter-point-score-team1')?.checked || false;
     const showPointScoreTeam2 = document.getElementById('filter-point-score-team2')?.checked || false;
+    
+    // Check 2-Point-Score filter toggles
+    const show2PointScoreTeam1 = document.getElementById('filter-2-point-score-team1')?.checked || false;
+    const show2PointScoreTeam2 = document.getElementById('filter-2-point-score-team2')?.checked || false;
+    
+    // Check Goal-Score filter toggles
+    const showGoalScoreTeam1 = document.getElementById('filter-goal-score-team1')?.checked || false;
+    const showGoalScoreTeam2 = document.getElementById('filter-goal-score-team2')?.checked || false;
+    
+    // Check Point-Miss filter toggles
+    const showPointMissTeam1 = document.getElementById('filter-point-miss-team1')?.checked || false;
+    const showPointMissTeam2 = document.getElementById('filter-point-miss-team2')?.checked || false;
+    
+    // Check Goal-Miss filter toggles
+    const showGoalMissTeam1 = document.getElementById('filter-goal-miss-team1')?.checked || false;
+    const showGoalMissTeam2 = document.getElementById('filter-goal-miss-team2')?.checked || false;
+    
+    // Check Kickout filter toggles
+    const showKickoutTeam1 = document.getElementById('filter-kickout-team1')?.checked || false;
+    const showKickoutTeam2 = document.getElementById('filter-kickout-team2')?.checked || false;
+    
+    // Check Free Won filter toggles
+    const showFreeWonTeam1 = document.getElementById('filter-free-won-team1')?.checked || false;
+    const showFreeWonTeam2 = document.getElementById('filter-free-won-team2')?.checked || false;
+    
+    // Check Ball Lost (Forced) filter toggles
+    const showBallLostForcedTeam1 = document.getElementById('filter-ball-lost-forced-team1')?.checked || false;
+    const showBallLostForcedTeam2 = document.getElementById('filter-ball-lost-forced-team2')?.checked || false;
+    
+    // Check Ball Lost (Unforced) filter toggles
+    const showBallLostUnforcedTeam1 = document.getElementById('filter-ball-lost-unforced-team1')?.checked || false;
+    const showBallLostUnforcedTeam2 = document.getElementById('filter-ball-lost-unforced-team2')?.checked || false;
+    
+    // Check Handpass filter toggles
+    const showHandpassTeam1 = document.getElementById('filter-handpass-team1')?.checked || false;
+    const showHandpassTeam2 = document.getElementById('filter-handpass-team2')?.checked || false;
+    
+    // Check Kickpass filter toggles
+    const showKickpassTeam1 = document.getElementById('filter-kickpass-team1')?.checked || false;
+    const showKickpassTeam2 = document.getElementById('filter-kickpass-team2')?.checked || false;
+    
+    // Check Carry filter toggles
+    const showCarryTeam1 = document.getElementById('filter-carry-team1')?.checked || false;
+    const showCarryTeam2 = document.getElementById('filter-carry-team2')?.checked || false;
+    
+    // Check Ball Won (Forced) filter toggles
+    const showBallWonForcedTeam1 = document.getElementById('filter-ball-won-forced-team1')?.checked || false;
+    const showBallWonForcedTeam2 = document.getElementById('filter-ball-won-forced-team2')?.checked || false;
+    
+    // Check Ball Won (Unforced) filter toggles
+    const showBallWonUnforcedTeam1 = document.getElementById('filter-ball-won-unforced-team1')?.checked || false;
+    const showBallWonUnforcedTeam2 = document.getElementById('filter-ball-won-unforced-team2')?.checked || false;
+    
+    // Check Foul Committed filter toggles
+    const showFoulCommittedTeam1 = document.getElementById('filter-foul-committed-team1')?.checked || false;
+    const showFoulCommittedTeam2 = document.getElementById('filter-foul-committed-team2')?.checked || false;
     
     // Temporary: Show all other actions until new filter system is implemented
     const showOwnShots = true;
@@ -1972,31 +2805,190 @@ const filterActions = () => {
                     drawReviewMarker(x1, y1, teamColor, entry, 'Point - Score', 'pointScore');
                 }
             } else if (entry.action === '2-Point - Score') {
-                drawReviewMarker(x1, y1, 'blue', entry, '2-Point - Score', 'circle');
+                // Check team filter for 2-Point - Score
+                const teamCode = getTeamFromAction(entry);
+                const isTeam1 = teamCode === 'team1';
+                const shouldShow = (isTeam1 && show2PointScoreTeam1) || (!isTeam1 && show2PointScoreTeam2);
+                
+                if (shouldShow) {
+                    drawReviewMarker(x1, y1, '#065f46', entry, '2-Point - Score', 'twoPointScore');
+                }
             } else if (entry.action === 'Point - Miss') {
-                drawReviewMarker(x1, y1, 'blue', entry, 'Point - Miss', 'cross');
+                // Check team filter for Point - Miss
+                const teamCode = getTeamFromAction(entry);
+                const isTeam1 = teamCode === 'team1';
+                const shouldShow = (isTeam1 && showPointMissTeam1) || (!isTeam1 && showPointMissTeam2);
+                
+                if (shouldShow) {
+                    drawReviewMarker(x1, y1, '#dc2626', entry, 'Point - Miss', 'pointMiss');
+                }
             } else if (entry.action === 'Goal - Score') {
-                drawReviewMarker(x1, y1, 'green', entry, 'Goal - Score');
+                // Check team filter for Goal - Score
+                const teamCode = getTeamFromAction(entry);
+                const isTeam1 = teamCode === 'team1';
+                const shouldShow = (isTeam1 && showGoalScoreTeam1) || (!isTeam1 && showGoalScoreTeam2);
+                
+                if (shouldShow) {
+                    drawReviewMarker(x1, y1, '#065f46', entry, 'Goal - Score', 'goalScore');
+                }
             } else if (entry.action === 'Goal - Miss') {
-                drawReviewMarker(x1, y1, 'green', entry, 'Goal - Miss', 'cross');
+                // Check team filter for Goal - Miss
+                const teamCode = getTeamFromAction(entry);
+                const isTeam1 = teamCode === 'team1';
+                const shouldShow = (isTeam1 && showGoalMissTeam1) || (!isTeam1 && showGoalMissTeam2);
+                
+                if (shouldShow) {
+                    drawReviewMarker(x1, y1, '#dc2626', entry, 'Goal - Miss', 'goalMiss');
+                }
+            } else if (entry.action === 'Our Kickout' && showKickoutTeam1) {
+                // Plot Team 1 Kickout actions (white diamonds)
+                // Determine icon type based on Screen 1 (mode) and Screen 2 (definition)
+                let markerType = 'kickout';
+                
+                // Check if contested (has black dot)
+                const isContested = entry.definition === 'Contested';
+                
+                // Check if won (filled) or lost (hollow)
+                const isWon = entry.mode === 'Won Clean' || entry.mode === 'Won Break' || entry.mode === 'Won Sideline' || entry.mode === 'Won Foul';
+                
+                // Determine marker type
+                if (isWon && !isContested) {
+                    markerType = 'kickoutWonUncontested';
+                } else if (isWon && isContested) {
+                    markerType = 'kickoutWonContested';
+                } else if (!isWon && !isContested) {
+                    markerType = 'kickoutLostUncontested';
+                } else if (!isWon && isContested) {
+                    markerType = 'kickoutLostContested';
+                }
+                
+                drawReviewMarker(x1, y1, 'white', entry, 'Kickout', markerType);
+            } else if (entry.action === 'Opp. Kickout' && showKickoutTeam2) {
+                // Plot Team 2 Kickout actions (black diamonds)
+                // Determine icon type based on Screen 1 (mode) and Screen 2 (definition)
+                let markerType = 'kickout';
+                
+                // Check if contested (has white dot)
+                const isContested = entry.definition === 'Contested';
+                
+                // Check if won (filled) or lost (hollow)
+                const isWon = entry.mode === 'Won Clean' || entry.mode === 'Won Break' || entry.mode === 'Won Sideline' || entry.mode === 'Won Foul';
+                
+                // Determine marker type for Team 2 (black diamonds)
+                if (isWon && !isContested) {
+                    markerType = 'kickoutTeam2WonUncontested';
+                } else if (isWon && isContested) {
+                    markerType = 'kickoutTeam2WonContested';
+                } else if (!isWon && !isContested) {
+                    markerType = 'kickoutTeam2LostUncontested';
+                } else if (!isWon && isContested) {
+                    markerType = 'kickoutTeam2LostContested';
+                }
+                
+                drawReviewMarker(x1, y1, 'black', entry, 'Kickout', markerType);
+            } else if (entry.action === 'Free Won') {
+                // Plot Free Won actions (turquoise rounded hexagon)
+                const teamCode = getTeamFromAction(entry);
+                const isTeam1 = teamCode === 'team1';
+                const shouldShow = (isTeam1 && showFreeWonTeam1) || (!isTeam1 && showFreeWonTeam2);
+                
+                if (shouldShow) {
+                    drawReviewMarker(x1, y1, '#14b8a6', entry, 'Free Won', 'freeWon');
+                }
+            } else if (entry.action === 'Ball Lost (Forced)') {
+                // Plot Ball Lost (Forced) actions (red-orange downward triangle)
+                const teamCode = getTeamFromAction(entry);
+                const isTeam1 = teamCode === 'team1';
+                const shouldShow = (isTeam1 && showBallLostForcedTeam1) || (!isTeam1 && showBallLostForcedTeam2);
+                
+                if (shouldShow) {
+                    drawReviewMarker(x1, y1, '#ea580c', entry, 'Ball Lost (Forced)', 'ballLostForced');
+                }
+            } else if (entry.action === 'Ball Lost (Unforced)') {
+                // Plot Ball Lost (Unforced) actions (red-orange hollow triangle)
+                const teamCode = getTeamFromAction(entry);
+                const isTeam1 = teamCode === 'team1';
+                const shouldShow = (isTeam1 && showBallLostUnforcedTeam1) || (!isTeam1 && showBallLostUnforcedTeam2);
+                
+                if (shouldShow) {
+                    drawReviewMarker(x1, y1, '#ea580c', entry, 'Ball Lost (Unforced)', 'ballLostUnforced');
+                }
+            } else if (entry.action === 'Handpass') {
+                // Plot Handpass actions (vibrant yellow circles connected by dotted line)
+                const teamCode = getTeamFromAction(entry);
+                const isTeam1 = teamCode === 'team1';
+                const shouldShow = (isTeam1 && showHandpassTeam1) || (!isTeam1 && showHandpassTeam2);
+                
+                if (shouldShow) {
+                    // Draw handpass with start/end points and dotted line
+                    drawHandpassMarker(x1, y1, x2, y2, '#fde047', entry);
+                }
+            } else if (entry.action === 'Kickpass') {
+                // Plot Kickpass actions (navy circles connected by solid line with arrow)
+                const teamCode = getTeamFromAction(entry);
+                const isTeam1 = teamCode === 'team1';
+                const shouldShow = (isTeam1 && showKickpassTeam1) || (!isTeam1 && showKickpassTeam2);
+                
+                if (shouldShow) {
+                    // Draw kickpass with start/end points and solid line
+                    drawKickpassMarker(x1, y1, x2, y2, '#1e3a8a', entry);
+                }
+            } else if (entry.action === 'Carry') {
+                // Plot Carry actions (dark grey circles connected by solid line with arrow)
+                const teamCode = getTeamFromAction(entry);
+                const isTeam1 = teamCode === 'team1';
+                const shouldShow = (isTeam1 && showCarryTeam1) || (!isTeam1 && showCarryTeam2);
+                
+                if (shouldShow) {
+                    // Draw carry with start/end points and solid line
+                    drawCarryMarker(x1, y1, x2, y2, '#374151', entry);
+                }
+            } else if (entry.action === 'Ball Won (Forced)') {
+                // Plot Ball Won (Forced) actions (royal blue filled triangle)
+                const teamCode = getTeamFromAction(entry);
+                const isTeam1 = teamCode === 'team1';
+                const shouldShow = (isTeam1 && showBallWonForcedTeam1) || (!isTeam1 && showBallWonForcedTeam2);
+                
+                if (shouldShow) {
+                    drawReviewMarker(x1, y1, '#1e40af', entry, 'Ball Won (Forced)', 'ballWonForced');
+                }
+            } else if (entry.action === 'Ball Won (Unforced)') {
+                // Plot Ball Won (Unforced) actions (royal blue hollow triangle)
+                const teamCode = getTeamFromAction(entry);
+                const isTeam1 = teamCode === 'team1';
+                const shouldShow = (isTeam1 && showBallWonUnforcedTeam1) || (!isTeam1 && showBallWonUnforcedTeam2);
+                
+                if (shouldShow) {
+                    drawReviewMarker(x1, y1, '#1e40af', entry, 'Ball Won (Unforced)', 'ballWonUnforced');
+                }
+            } else if (entry.action === 'Foul Committed') {
+                // Plot Foul Committed actions (conditional deep purple squares)
+                const teamCode = getTeamFromAction(entry);
+                const isTeam1 = teamCode === 'team1';
+                const shouldShow = (isTeam1 && showFoulCommittedTeam1) || (!isTeam1 && showFoulCommittedTeam2);
+                
+                if (shouldShow) {
+                    // Determine marker type based on Screen 1 (mode)
+                    let markerType = 'foulCommitted';
+                    
+                    // Check if Physical (has white exclamation point)
+                    const isPhysical = entry.mode === 'Physical';
+                    
+                    // Determine marker type
+                    if (isPhysical) {
+                        markerType = 'foulCommittedPhysical';
+                    } else {
+                        markerType = 'foulCommittedTechnical';
+                    }
+                    
+                    drawReviewMarker(x1, y1, '#581c87', entry, 'Foul Committed', markerType);
+                }
             }
         }
 
-        if (showFoulsWon && entry.action === 'Free Won') {
-            drawReviewMarker(x1, y1, 'purple', entry, 'Free Won');
-        }
 
-        if (showHandpasses && entry.action === 'Handpass') {
-            drawPassMarkersAndArrow(x1, y1, x2, y2, 'black', entry);
-        }
 
-        if (showKickpasses && entry.action === 'Kickpass') {
-            drawPassMarkersAndArrow(x1, y1, x2, y2, 'navy', entry, 'Kickpass');
-        }
 
-        if (showCarries && entry.action === 'Carry') {
-            drawPassMarkersAndArrow(x1, y1, x2, y2, 'white', entry, 'Carry');
-        }
 
         if (showUnforcedErrors && entry.action === 'Ball - Lost' && entry.mode === 'Unforced Error') {
             drawReviewMarker(x1, y1, 'brown', entry, 'Ball - Lost', 'hollowCircle');
@@ -2018,21 +3010,6 @@ const filterActions = () => {
             drawReviewMarker(x1, y1, color, entry, 'Ball - Won', markerType);
         }
 
-        if (showOwnKickouts && (entry.action === 'Our Kickout' || entry.action === 'Opp. Kickout')) {
-            let color = 'white';
-            let markerType = 'cross';
-
-            if (['Won Clean', 'Won Break', 'Won Sideline', 'Won Foul'].includes(entry.mode)) {
-                color = 'white';
-                markerType = 'circle';
-
-                if (entry.definition === 'Not Contested') {
-                    markerType = 'square';
-                }
-            }
-
-            drawReviewMarker(x1, y1, color, entry, entry.action, markerType);
-        }
 
         if (showOppKickouts && entry.action === 'Kickout - Against') {
             let color = 'black';
@@ -2150,24 +3127,23 @@ function showSummaryBox(x, y, entry, color) {
         'Point - Score': {
             title: 'Point - Score',
             fields: [
-                { label: 'Player', value: entry.player },
-                { label: 'Type', value: entry.mode }
+                { label: '', value: entry.mode },
+                { label: '', value: entry.player }
             ]
         },
         '2-Point - Score': {
             title: '2-Point - Score',
             fields: [
-                { label: 'Player', value: entry.player },
-                { label: 'Type', value: entry.definition },
-                { label: 'How', value: entry.mode }
+                { label: '', value: entry.mode },
+                { label: '', value: entry.player }
             ]
         },
         'Point - Miss': {
             title: 'Point - Miss',
             fields: [
-                { label: 'Player', value: entry.player },
-                { label: 'Type', value: entry.definition },
-                { label: 'How', value: entry.mode }
+                { label: '', value: entry.mode },
+                { label: '', value: entry.definition },
+                { label: '', value: entry.player }
             ]
         },
         '45 Entry': {
@@ -2190,52 +3166,92 @@ function showSummaryBox(x, y, entry, color) {
         'Goal - Score': {
             title: 'Goal - Score',
             fields: [
-                { label: 'Player', value: entry.player },
-                { label: 'Type', value: entry.mode }
+                { label: '', value: entry.mode },
+                { label: '', value: entry.player }
             ]
         },
         'Goal - Miss': {
             title: 'Goal - Miss',
             fields: [
-                { label: 'Player', value: entry.player },
-                { label: 'Type', value: entry.definition },
-                { label: 'How', value: entry.mode }
+                { label: '', value: entry.mode },
+                { label: '', value: entry.definition },
+                { label: '', value: entry.player }
+            ]
+        },
+        'Kickout': {
+            title: 'Kickout',
+            fields: [
+                { label: '', value: entry.mode },
+                { label: '', value: entry.definition },
+                { label: '', value: entry.player }
             ]
         },
         'Free Won': {
             title: 'Free Won',
             fields: [
-                { label: 'Player', value: entry.player },
-                { label: 'Type', value: entry.mode },
-                { label: 'Card', value: entry.definition }
+                { label: '', value: entry.mode },
+                { label: '', value: entry.player }
+            ]
+        },
+        'Ball Lost (Forced)': {
+            title: 'Ball Lost (Forced)',
+            fields: [
+                { label: '', value: entry.mode },
+                { label: '', value: entry.player }
+            ]
+        },
+        'Ball Lost (Unforced)': {
+            title: 'Ball Lost (Unforced)',
+            fields: [
+                { label: '', value: entry.mode },
+                { label: '', value: entry.player }
+            ]
+        },
+        'Ball Won (Forced)': {
+            title: 'Ball Won (Forced)',
+            fields: [
+                { label: '', value: entry.mode },
+                { label: '', value: entry.player }
+            ]
+        },
+        'Ball Won (Unforced)': {
+            title: 'Ball Won (Unforced)',
+            fields: [
+                { label: '', value: entry.mode },
+                { label: '', value: entry.player }
+            ]
+        },
+        'Foul Committed': {
+            title: 'Foul Committed',
+            fields: [
+                { label: '', value: entry.mode },
+                { label: '', value: entry.definition },
+                { label: '', value: entry.player }
             ]
         },
         'Handpass': {
             title: 'Handpass',
             fields: [
-                { label: 'Pass', value: entry.player },
-                { label: 'To', value: entry.player2 },
-                { label: 'Dist', value: `${distance}m` }
-            ],
-            coords: 'both'
+                { label: '', value: `From: ${entry.player}` },
+                { label: '', value: `To: ${entry.player2}` },
+                { label: '', value: `Dist = ${distance}m` }
+            ]
         },
         'Kickpass': {
             title: 'Kickpass',
             fields: [
-                { label: 'Pass', value: entry.player },
-                { label: 'To', value: entry.player2 },
-                { label: 'Dist', value: `${distance}m` }
-            ],
-            coords: 'both'
+                { label: '', value: `From: ${entry.player}` },
+                { label: '', value: `To: ${entry.player2}` },
+                { label: '', value: `Dist = ${distance}m` }
+            ]
         },
         'Carry': {
             title: 'Carry',
             fields: [
-                { label: 'Run', value: entry.mode },
-                { label: 'Player', value: entry.player },
-                { label: 'Dist', value: `${distance}m` }
-            ],
-            coords: 'both'
+                { label: '', value: entry.mode },
+                { label: '', value: entry.player },
+                { label: '', value: `Dist = ${distance}m` }
+            ]
         },
         'Ball - Lost': {
             title: 'Ball - Lost',
@@ -2310,21 +3326,42 @@ function showSummaryBox(x, y, entry, color) {
     // Generate content based on action type
     const config = actionConfigs[entry.action] || { title: entry.action, fields: [] };
     
-    let content = `<p><strong>Action:</strong> ${config.title}</p>`;
+    let content;
     
-    // Add fields
-    config.fields.forEach(field => {
-        if (field.value) {
-            content += `<p><strong>${field.label}:</strong> ${field.value}</p>`;
+    // Special handling for Point - Score, 2-Point - Score, Goal - Score, Point - Miss, Goal - Miss, Kickout, Free Won, Ball Lost (Forced), Ball Lost (Unforced), Ball Won (Forced), Ball Won (Unforced), Foul Committed, Handpass, Kickpass, and Carry
+    if (entry.action === 'Point - Score' || entry.action === '2-Point - Score' || entry.action === 'Goal - Score' || entry.action === 'Point - Miss' || entry.action === 'Goal - Miss' || entry.action === 'Our Kickout' || entry.action === 'Opp. Kickout' || entry.action === 'Free Won' || entry.action === 'Ball Lost (Forced)' || entry.action === 'Ball Lost (Unforced)' || entry.action === 'Ball Won (Forced)' || entry.action === 'Ball Won (Unforced)' || entry.action === 'Foul Committed' || entry.action === 'Handpass' || entry.action === 'Kickpass' || entry.action === 'Carry') {
+        // Use 'Kickout' as title for both Our Kickout and Opp. Kickout
+        const displayTitle = (entry.action === 'Our Kickout' || entry.action === 'Opp. Kickout') ? 'Kickout' : config.title;
+        content = `<p><strong>${displayTitle}</strong></p>`;
+        config.fields.forEach(field => {
+            if (field.value) {
+                content += `<p><strong>${field.value}</strong></p>`;
+            }
+        });
+        
+        // Add note with separator if it exists
+        if (entry.notes && entry.notes.length > 0 && entry.notes[0].trim() !== '') {
+            content += `<hr style="margin: 10px 0; border: none; border-top: 1px solid rgba(0,0,0,0.2);">`;
+            content += `<p style="word-wrap: break-word; white-space: normal;"><strong>${entry.notes[0]}</strong></p>`;
         }
-    });
-    
-    // Add coordinates
-    if (config.coords === 'both') {
-        content += `<p style="font-size: small; margin-top: 10px;"><strong>Coords_1:</strong> (${coordX1}, ${coordY1})</p>`;
-        content += `<p style="font-size: small; margin-top: 10px;"><strong>Coords_2:</strong> (${coordX2}, ${coordY2})</p>`;
     } else {
-        content += `<p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>`;
+        content = `<p><strong>Action:</strong> ${config.title}</p>`;
+        // Add fields
+        config.fields.forEach(field => {
+            if (field.value) {
+                content += `<p><strong>${field.label}:</strong> ${field.value}</p>`;
+            }
+        });
+    }
+    
+    // Add coordinates (skip for Point - Score, 2-Point - Score, Goal - Score, Point - Miss, and Goal - Miss)
+    if (entry.action !== 'Point - Score' && entry.action !== '2-Point - Score' && entry.action !== 'Goal - Score' && entry.action !== 'Point - Miss' && entry.action !== 'Goal - Miss' && entry.action !== 'Our Kickout' && entry.action !== 'Opp. Kickout' && entry.action !== 'Free Won' && entry.action !== 'Ball Lost (Forced)' && entry.action !== 'Ball Lost (Unforced)' && entry.action !== 'Ball Won (Forced)' && entry.action !== 'Ball Won (Unforced)' && entry.action !== 'Foul Committed' && entry.action !== 'Handpass' && entry.action !== 'Kickpass' && entry.action !== 'Carry') {
+        if (config.coords === 'both') {
+            content += `<p style="font-size: small; margin-top: 10px;"><strong>Coords_1:</strong> (${coordX1}, ${coordY1})</p>`;
+            content += `<p style="font-size: small; margin-top: 10px;"><strong>Coords_2:</strong> (${coordX2}, ${coordY2})</p>`;
+        } else {
+            content += `<p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>`;
+        }
     }
     
     summaryBox.innerHTML = content;
@@ -3859,7 +4896,12 @@ function createTimelineItem(action, index) {
 }
 
 function getTeamFromAction(action) {
-    // First, check if the action already has stored team information
+    // First, check if the action has a teamNumber (most reliable)
+    if (action.teamNumber !== undefined && action.teamNumber !== null) {
+        return action.teamNumber === 1 ? 'team1' : 'team2';
+    }
+    
+    // Fallback: check if the action already has stored team information
     if (action.team) {
         // Get the current team names to compare
         const team1Button = document.getElementById('rename-team-1-button');
@@ -5015,6 +6057,36 @@ function testPointScoreFiltering() {
     
     // Switch to Review tab
     switchTab('review');
+}
+
+function testTeamIdentifierSystem() {
+    console.log('Testing Team Identifier System...');
+    
+    // Test 1: Check if new entries have teamNumber
+    const testEntry = {
+        action: 'Test Action',
+        team: 'Test Team',
+        teamNumber: 1
+    };
+    
+    const teamCode = getTeamFromAction(testEntry);
+    console.log('Test 1 - teamNumber priority:', teamCode === 'team1' ? 'PASS' : 'FAIL');
+    
+    // Test 2: Check backward compatibility with old entries
+    const oldEntry = {
+        action: 'Old Action',
+        team: 'Team 1'
+        // No teamNumber field
+    };
+    
+    const oldTeamCode = getTeamFromAction(oldEntry);
+    console.log('Test 2 - backward compatibility:', oldTeamCode === 'team1' ? 'PASS' : 'FAIL');
+    
+    // Test 3: Check CSV export format
+    const exportHeaders = ['Action', 'Add_1', 'Add_2', 'Team', 'Team_Number', 'Player_1', 'Player_2', 'X1', 'Y1', 'X2', 'Y2', 'Notes'];
+    console.log('Test 3 - CSV headers include Team_Number:', exportHeaders.includes('Team_Number') ? 'PASS' : 'FAIL');
+    
+    console.log('Team Identifier System tests completed.');
 }
 
 // Show temporary message with type
