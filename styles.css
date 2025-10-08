@@ -3944,7 +3944,7 @@ input:checked + .slider:before {
 
 .review-controls {
     width: 100%;
-    max-width: 600px;
+    max-width: 90vw;
     margin: 0 auto;
     background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(8px);
@@ -4390,7 +4390,8 @@ input:checked + .slider:before {
     }
     
     .review-controls {
-        width: 250px;
+        width: 100%;
+        max-width: 90vw;
         min-width: 250px;
     }
     
@@ -4945,6 +4946,158 @@ input:checked + .slider:before {
     background: #047857;
 }
 
+/* Stats Tab Styles */
+.stats-container {
+    padding: var(--space-xl);
+    min-height: 100vh;
+    background: var(--color-bg);
+    color: var(--color-text-primary);
+}
+
+.stats-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--space-xl);
+    align-items: start;
+    min-height: 100vh;
+}
+
+.stats-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stats-column-left {
+    align-items: flex-start;
+}
+
+.stats-column-right {
+    align-items: flex-end;
+}
+
+.stats-column-center {
+    align-items: center;
+}
+
+/* Stats Team Pills */
+.stats-team-pill {
+    background: #000000;
+    border: 2px solid #000000;
+    color: white;
+    padding: var(--space-md) var(--space-xl);
+    border-radius: var(--radius-full);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-base);
+    min-width: 160px;
+    text-align: center;
+    transition: all var(--motion-std) var(--easing);
+    box-shadow: var(--shadow-sm);
+}
+
+.stats-team-pill:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Stats Title */
+.stats-title h1 {
+    font-size: 3rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    text-align: center;
+    margin: 0;
+    letter-spacing: 0.1em;
+}
+
+/* Stats Sections */
+.stats-section {
+    margin-top: var(--space-xl);
+    width: 100%;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60px;
+}
+
+.stat-label {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    text-align: center;
+    min-width: 80px;
+    line-height: 1.2;
+}
+
+/* Responsive font sizing for stats */
+@media screen and (max-width: 768px) {
+    .stat-value {
+        font-size: 1.2rem;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .stat-value {
+        font-size: 1rem;
+    }
+}
+
+.stat-divider-line {
+    border: none;
+    height: 1px;
+    background-color: var(--color-border);
+    margin: var(--space-md) 0;
+    width: 60%;
+}
+
+/* Dark mode stats */
+[data-theme="dark"] .stat-label {
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .stat-value {
+    color: var(--color-text-primary);
+}
+
+/* Dark mode stats container */
+[data-theme="dark"] .stats-container {
+    background: var(--color-bg);
+    color: var(--color-text-primary);
+}
+
+/* Dark mode stats title */
+[data-theme="dark"] .stats-title h1 {
+    color: var(--color-text-primary);
+}
+
+/* Responsive design for stats columns */
+@media (max-width: 768px) {
+    .stats-columns {
+        grid-template-columns: 1fr;
+        gap: var(--space-lg);
+    }
+    
+    .stats-column-left,
+    .stats-column-right {
+        align-items: center;
+    }
+    
+    .stats-title h1 {
+        font-size: 2rem;
+    }
+}
+
 /* Dark mode filters */
 [data-theme="dark"] .filter-section {
     background: var(--color-surface);
@@ -5201,7 +5354,8 @@ input:checked + .slider:before {
     }
     
     .review-controls {
-        width: 250px;
+        width: 100%;
+        max-width: 90vw;
         min-width: 250px;
     }
     
