@@ -780,26 +780,26 @@
             <div id="foul-physical-screen2" class="screen">
                 <button class="return-button" onclick="returnToModeScreen()">Return to Screen 1</button>
                 <h3>Screen 2 for Physical Fouls</h3>
-                <button class="mode-button" onclick="selectMode('Tackle')">Tackle</button>
-                <button class="mode-button" onclick="selectMode('Pulling')">Pulling</button>
-                <button class="mode-button" onclick="selectMode('Pushing')">Pushing</button>
-                <button class="mode-button" onclick="selectMode('Charging')">Charging</button>
-                <button class="mode-button" onclick="selectMode('Off-Ball Foul')">Off-Ball Foul</button>
-                <button class="mode-button" onclick="selectMode('Other')">Other</button>
+                <button class="mode-button" onclick="selectDefinition('Tackle')">Tackle</button>
+                <button class="mode-button" onclick="selectDefinition('Pulling')">Pulling</button>
+                <button class="mode-button" onclick="selectDefinition('Pushing')">Pushing</button>
+                <button class="mode-button" onclick="selectDefinition('Charging')">Charging</button>
+                <button class="mode-button" onclick="selectDefinition('Off-Ball Foul')">Off-Ball Foul</button>
+                <button class="mode-button" onclick="selectDefinition('Other')">Other</button>
             </div>
 
             <!-- Screen 2 for Technical Fouls -->
             <div id="foul-technical-screen2" class="screen">
                 <button class="return-button" onclick="returnToModeScreen()">Return to Screen 1</button>
                 <h3>Screen 2 for Technical Fouls</h3>
-                <button class="mode-button" onclick="selectMode('Overcarry')">Overcarry</button>
-                <button class="mode-button" onclick="selectMode('Double Hop')">Double Hop</button>
-                <button class="mode-button" onclick="selectMode('Illegal Handpass')">Illegal Handpass</button>
-                <button class="mode-button" onclick="selectMode('Touch on Ground')">Touch on Ground</button>
-                <button class="mode-button" onclick="selectMode('Offensive Breach')">Offensive Breach</button>
-                <button class="mode-button" onclick="selectMode('Defensive Breach')">Defensive Breach</button>
-                <button class="mode-button" onclick="selectMode('Square Ball')">Square Ball</button>
-                <button class="mode-button" onclick="selectMode('Other')">Other</button>
+                <button class="mode-button" onclick="selectDefinition('Overcarry')">Overcarry</button>
+                <button class="mode-button" onclick="selectDefinition('Double Hop')">Double Hop</button>
+                <button class="mode-button" onclick="selectDefinition('Illegal Handpass')">Illegal Handpass</button>
+                <button class="mode-button" onclick="selectDefinition('Touch on Ground')">Touch on Ground</button>
+                <button class="mode-button" onclick="selectDefinition('Offensive Breach')">Offensive Breach</button>
+                <button class="mode-button" onclick="selectDefinition('Defensive Breach')">Defensive Breach</button>
+                <button class="mode-button" onclick="selectDefinition('Square Ball')">Square Ball</button>
+                <button class="mode-button" onclick="selectDefinition('Other')">Other</button>
             </div>
 
             <!-- Definition Screen for Foul -->
@@ -1075,14 +1075,14 @@
                                     <div class="filter-row">
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-2-point-score-team1" onchange="toggleFilterVisibility('2-Point-Score', 1)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
                                         <div class="filter-name">2-Point - Score</div>
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-2-point-score-team2" onchange="toggleFilterVisibility('2-Point-Score', 2)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
@@ -1091,14 +1091,14 @@
                                     <div class="filter-row">
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-goal-score-team1" onchange="toggleFilterVisibility('Goal-Score', 1)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
                                         <div class="filter-name">Goal - Score</div>
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-goal-score-team2" onchange="toggleFilterVisibility('Goal-Score', 2)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
@@ -1107,14 +1107,14 @@
                                     <div class="filter-row">
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-point-miss-team1" onchange="toggleFilterVisibility('Point-Miss', 1)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
                                         <div class="filter-name">Point - Miss</div>
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-point-miss-team2" onchange="toggleFilterVisibility('Point-Miss', 2)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
@@ -1123,14 +1123,14 @@
                                     <div class="filter-row">
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-goal-miss-team1" onchange="toggleFilterVisibility('Goal-Miss', 1)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
                                         <div class="filter-name">Goal - Miss</div>
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-goal-miss-team2" onchange="toggleFilterVisibility('Goal-Miss', 2)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
@@ -1148,14 +1148,14 @@
                                     <div class="filter-row">
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-kickout-team1" onchange="toggleFilterVisibility('Kickout', 1)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
                                         <div class="filter-name">Kickout</div>
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-kickout-team2" onchange="toggleFilterVisibility('Kickout', 2)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
@@ -1164,14 +1164,14 @@
                                     <div class="filter-row">
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-free-won-team1" onchange="toggleFilterVisibility('Free Won', 1)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
                                         <div class="filter-name">Free Won</div>
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-free-won-team2" onchange="toggleFilterVisibility('Free Won', 2)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
@@ -1180,14 +1180,14 @@
                                     <div class="filter-row">
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-ball-lost-forced-team1" onchange="toggleFilterVisibility('Ball Lost (Forced)', 1)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
                                         <div class="filter-name">Ball Lost (Forced)</div>
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-ball-lost-forced-team2" onchange="toggleFilterVisibility('Ball Lost (Forced)', 2)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
@@ -1196,14 +1196,14 @@
                                     <div class="filter-row">
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-ball-lost-unforced-team1" onchange="toggleFilterVisibility('Ball Lost (Unforced)', 1)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
                                         <div class="filter-name">Ball Lost (Unforced)</div>
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-ball-lost-unforced-team2" onchange="toggleFilterVisibility('Ball Lost (Unforced)', 2)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
@@ -1212,14 +1212,14 @@
                                     <div class="filter-row">
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-handpass-team1" onchange="toggleFilterVisibility('Handpass', 1)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
                                         <div class="filter-name">Handpass</div>
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-handpass-team2" onchange="toggleFilterVisibility('Handpass', 2)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
@@ -1228,14 +1228,14 @@
                                     <div class="filter-row">
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-kickpass-team1" onchange="toggleFilterVisibility('Kickpass', 1)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
                                         <div class="filter-name">Kickpass</div>
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-kickpass-team2" onchange="toggleFilterVisibility('Kickpass', 2)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
@@ -1244,14 +1244,14 @@
                                     <div class="filter-row">
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-carry-team1" onchange="toggleFilterVisibility('Carry', 1)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
                                         <div class="filter-name">Carry</div>
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-carry-team2" onchange="toggleFilterVisibility('Carry', 2)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
@@ -1269,14 +1269,14 @@
                                     <div class="filter-row">
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-ball-won-forced-team1" onchange="toggleFilterVisibility('Ball Won (Forced)', 1)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
                                         <div class="filter-name">Ball Won (Forced)</div>
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-ball-won-forced-team2" onchange="toggleFilterVisibility('Ball Won (Forced)', 2)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
@@ -1285,14 +1285,14 @@
                                     <div class="filter-row">
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-ball-won-unforced-team1" onchange="toggleFilterVisibility('Ball Won (Unforced)', 1)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
                                         <div class="filter-name">Ball Won (Unforced)</div>
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-ball-won-unforced-team2" onchange="toggleFilterVisibility('Ball Won (Unforced)', 2)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
@@ -1301,14 +1301,14 @@
                                     <div class="filter-row">
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-foul-committed-team1" onchange="toggleFilterVisibility('Foul Committed', 1)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
                                         <div class="filter-name">Foul Committed</div>
                                         <div class="filter-toggle-cell">
                                             <label class="filter-toggle">
-                                                <input type="checkbox">
+                                                <input type="checkbox" id="filter-foul-committed-team2" onchange="toggleFilterVisibility('Foul Committed', 2)">
                                                 <span class="filter-slider"></span>
                                             </label>
                                         </div>
@@ -1369,7 +1369,22 @@
                             <tbody>
 
                             </tbody>
-                        </table>        
+                        </table>
+                    </div>
+                    
+                    <!-- Export Data Button -->
+                    <div class="export-data-container">
+                        <button id="export-data-btn" class="export-data-button" onclick="exportDataToCSV()">
+                            Export Data
+                        </button>
+                    </div>
+                    
+                    <!-- Upload Data Button -->
+                    <div class="upload-data-container">
+                        <input type="file" id="csv-file-input" accept=".csv" style="display: none;" onchange="handleCSVUpload(event)">
+                        <button id="upload-data-btn" class="upload-data-button" onclick="document.getElementById('csv-file-input').click()">
+                            Upload Data
+                        </button>
                     </div>
                 </div>
             </div>
