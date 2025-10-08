@@ -840,6 +840,9 @@ function updateSummary() {
     if (currentSummaryView === 'timeline') {
         buildTimeline();
     }
+    
+    // Update stats tab
+    updateStatsTab();
 }
 
 function exportDataToCSV() {
@@ -1627,6 +1630,9 @@ function openTab(tabName) {
     } else if (tabName === 'summary') {
         // Restore the previous summary view state
         switchSummaryView(currentSummaryView);
+    } else if (tabName === 'stats-tab') {
+        // Update stats when the stats tab is opened
+        updateStatsTab();
     }
 }
 
@@ -3346,21 +3352,21 @@ function showSummaryBox(x, y, entry, color) {
         }
     } else {
         content = `<p><strong>Action:</strong> ${config.title}</p>`;
-        // Add fields
-        config.fields.forEach(field => {
-            if (field.value) {
-                content += `<p><strong>${field.label}:</strong> ${field.value}</p>`;
-            }
-        });
+    // Add fields
+    config.fields.forEach(field => {
+        if (field.value) {
+            content += `<p><strong>${field.label}:</strong> ${field.value}</p>`;
+        }
+    });
     }
     
     // Add coordinates (skip for Point - Score, 2-Point - Score, Goal - Score, Point - Miss, and Goal - Miss)
     if (entry.action !== 'Point - Score' && entry.action !== '2-Point - Score' && entry.action !== 'Goal - Score' && entry.action !== 'Point - Miss' && entry.action !== 'Goal - Miss' && entry.action !== 'Our Kickout' && entry.action !== 'Opp. Kickout' && entry.action !== 'Free Won' && entry.action !== 'Ball Lost (Forced)' && entry.action !== 'Ball Lost (Unforced)' && entry.action !== 'Ball Won (Forced)' && entry.action !== 'Ball Won (Unforced)' && entry.action !== 'Foul Committed' && entry.action !== 'Handpass' && entry.action !== 'Kickpass' && entry.action !== 'Carry') {
-        if (config.coords === 'both') {
-            content += `<p style="font-size: small; margin-top: 10px;"><strong>Coords_1:</strong> (${coordX1}, ${coordY1})</p>`;
-            content += `<p style="font-size: small; margin-top: 10px;"><strong>Coords_2:</strong> (${coordX2}, ${coordY2})</p>`;
-        } else {
-            content += `<p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>`;
+    if (config.coords === 'both') {
+        content += `<p style="font-size: small; margin-top: 10px;"><strong>Coords_1:</strong> (${coordX1}, ${coordY1})</p>`;
+        content += `<p style="font-size: small; margin-top: 10px;"><strong>Coords_2:</strong> (${coordX2}, ${coordY2})</p>`;
+    } else {
+        content += `<p style="font-size: small; margin-top: 10px;"><strong>Coords:</strong> (${coordX1}, ${coordY1})</p>`;
         }
     }
     
@@ -4267,6 +4273,18 @@ function updateMatchLogTeamNames() {
         
         if (filterTeam2Name && team2Button) {
             filterTeam2Name.textContent = team2Button.textContent.trim();
+        }
+        
+        // Update Stats tab team names
+        const statsTeam1Name = document.getElementById('stats-team-1-name');
+        const statsTeam2Name = document.getElementById('stats-team-2-name');
+        
+        if (statsTeam1Name && team1Button) {
+            statsTeam1Name.textContent = team1Button.textContent.trim();
+        }
+        
+        if (statsTeam2Name && team2Button) {
+            statsTeam2Name.textContent = team2Button.textContent.trim();
         }
         
         // Update action button titles
@@ -5810,6 +5828,15 @@ function applyTeamDesign(teamNumber, data) {
         console.log(`Filter pill not found for team ${teamNumber}`);
     }
     
+    // Apply colors and patterns to Stats tab team pills
+    const statsPill = document.getElementById(`stats-team-${teamNumber}-pill`);
+    if (statsPill) {
+        console.log(`Applying team design to stats pill for team ${teamNumber}:`, data);
+        applyButtonCustomization(statsPill, data);
+    } else {
+        console.log(`Stats pill not found for team ${teamNumber}`);
+    }
+    
     // Update team toggle button text color for proper contrast
     const teamToggle = document.getElementById(`match-log-team-${teamNumber}-toggle`);
     if (teamToggle) {
@@ -6087,6 +6114,246 @@ function testTeamIdentifierSystem() {
     console.log('Test 3 - CSV headers include Team_Number:', exportHeaders.includes('Team_Number') ? 'PASS' : 'FAIL');
     
     console.log('Team Identifier System tests completed.');
+}
+
+function updateStatsTab() {
+    // Calculate total shots for each team
+    const shotActions = ['Point - Score', '2-Point - Score', 'Goal - Score', 'Point - Miss', 'Goal - Miss'];
+    
+    let team1Shots = 0;
+    let team2Shots = 0;
+    
+    // Calculate scores for each team (only scoring actions)
+    const scoreActions = ['Point - Score', '2-Point - Score', 'Goal - Score'];
+    let team1GoalScore = 0, team1TwoPointScore = 0, team1PointScore = 0;
+    let team2GoalScore = 0, team2TwoPointScore = 0, team2PointScore = 0;
+    
+    actionsLog.forEach(entry => {
+        if (shotActions.includes(entry.action)) {
+            const teamCode = getTeamFromAction(entry);
+            if (teamCode === 'team1') {
+                team1Shots++;
+            } else if (teamCode === 'team2') {
+                team2Shots++;
+            }
+        }
+        
+        if (scoreActions.includes(entry.action)) {
+            const teamCode = getTeamFromAction(entry);
+            if (teamCode === 'team1') {
+                if (entry.action === 'Goal - Score') team1GoalScore++;
+                else if (entry.action === '2-Point - Score') team1TwoPointScore++;
+                else if (entry.action === 'Point - Score') team1PointScore++;
+            } else if (teamCode === 'team2') {
+                if (entry.action === 'Goal - Score') team2GoalScore++;
+                else if (entry.action === '2-Point - Score') team2TwoPointScore++;
+                else if (entry.action === 'Point - Score') team2PointScore++;
+            }
+        }
+    });
+    
+    // Update the display
+    const team1ShotsElement = document.getElementById('stats-team-1-shots');
+    const team2ShotsElement = document.getElementById('stats-team-2-shots');
+    const team1ScoresElement = document.getElementById('stats-team-1-scores');
+    const team2ScoresElement = document.getElementById('stats-team-2-scores');
+    
+    if (team1ShotsElement) {
+        team1ShotsElement.textContent = team1Shots;
+    }
+    
+    if (team2ShotsElement) {
+        team2ShotsElement.textContent = team2Shots;
+    }
+    
+    if (team1ScoresElement) {
+        const team1TotalScores = team1GoalScore + team1TwoPointScore + team1PointScore;
+        team1ScoresElement.textContent = `${team1TotalScores} (${team1GoalScore} - ${team1TwoPointScore} - ${team1PointScore})`;
+    }
+    
+    if (team2ScoresElement) {
+        const team2TotalScores = team2GoalScore + team2TwoPointScore + team2PointScore;
+        team2ScoresElement.textContent = `${team2TotalScores} (${team2GoalScore} - ${team2TwoPointScore} - ${team2PointScore})`;
+    }
+    
+    // Calculate and display shot conversion percentages
+    const team1ConversionElement = document.getElementById('stats-team-1-conversion');
+    const team2ConversionElement = document.getElementById('stats-team-2-conversion');
+    
+    if (team1ConversionElement) {
+        const team1TotalScores = team1GoalScore + team1TwoPointScore + team1PointScore;
+        const team1Conversion = team1Shots > 0 ? Math.round((team1TotalScores / team1Shots) * 100) : 0;
+        team1ConversionElement.textContent = `${team1Conversion}%`;
+    }
+    
+    if (team2ConversionElement) {
+        const team2TotalScores = team2GoalScore + team2TwoPointScore + team2PointScore;
+        const team2Conversion = team2Shots > 0 ? Math.round((team2TotalScores / team2Shots) * 100) : 0;
+        team2ConversionElement.textContent = `${team2Conversion}%`;
+    }
+    
+    // Calculate and display shots from attacks (shots / 45 entries)
+    const team1ShotsFromAttacksElement = document.getElementById('stats-team-1-shots-from-attacks');
+    const team2ShotsFromAttacksElement = document.getElementById('stats-team-2-shots-from-attacks');
+    
+    let team145Entries = 0;
+    let team245Entries = 0;
+    
+    // Count 45 Entry actions for each team
+    actionsLog.forEach(entry => {
+        if (entry.action === '45 Entry') {
+            if (entry.teamNumber === 1) {
+                team145Entries++;
+            } else if (entry.teamNumber === 2) {
+                team245Entries++;
+            }
+        }
+    });
+    
+    if (team1ShotsFromAttacksElement) {
+        const team1ShotsFromAttacksPercentage = team145Entries > 0 ? Math.round((team1Shots / team145Entries) * 100) : 0;
+        team1ShotsFromAttacksElement.textContent = `${team1Shots}/${team145Entries} (${team1ShotsFromAttacksPercentage}%)`;
+    }
+    
+    if (team2ShotsFromAttacksElement) {
+        const team2ShotsFromAttacksPercentage = team245Entries > 0 ? Math.round((team2Shots / team245Entries) * 100) : 0;
+        team2ShotsFromAttacksElement.textContent = `${team2Shots}/${team245Entries} (${team2ShotsFromAttacksPercentage}%)`;
+    }
+    
+    // Calculate and display scores from attacks (scores / 45 entries)
+    const team1ScoresFromAttacksElement = document.getElementById('stats-team-1-scores-from-attacks');
+    const team2ScoresFromAttacksElement = document.getElementById('stats-team-2-scores-from-attacks');
+    
+    if (team1ScoresFromAttacksElement) {
+        const team1TotalScores = team1GoalScore + team1TwoPointScore + team1PointScore;
+        const team1ScoresFromAttacksPercentage = team145Entries > 0 ? Math.round((team1TotalScores / team145Entries) * 100) : 0;
+        team1ScoresFromAttacksElement.textContent = `${team1TotalScores}/${team145Entries} (${team1ScoresFromAttacksPercentage}%)`;
+    }
+    
+    if (team2ScoresFromAttacksElement) {
+        const team2TotalScores = team2GoalScore + team2TwoPointScore + team2PointScore;
+        const team2ScoresFromAttacksPercentage = team245Entries > 0 ? Math.round((team2TotalScores / team245Entries) * 100) : 0;
+        team2ScoresFromAttacksElement.textContent = `${team2TotalScores}/${team245Entries} (${team2ScoresFromAttacksPercentage}%)`;
+    }
+    
+    // Calculate and display kickout counts
+    const team1KickoutsElement = document.getElementById('stats-team-1-kickouts');
+    const team2KickoutsElement = document.getElementById('stats-team-2-kickouts');
+    
+    let team1Kickouts = 0;
+    let team2Kickouts = 0;
+    let team1KickoutsWon = 0;
+    let team2KickoutsWon = 0;
+    let team1Uncontested = 0;
+    let team2Uncontested = 0;
+    let team1UncontestedWon = 0;
+    let team2UncontestedWon = 0;
+    let team1Contested = 0;
+    let team2Contested = 0;
+    let team1ContestedWon = 0;
+    let team2ContestedWon = 0;
+    
+    actionsLog.forEach(entry => {
+        if (entry.action === 'Our Kickout') {
+            if (entry.teamNumber === 1) {
+                team1Kickouts++;
+                // Check if kickout was won (Screen 1 = Won Clean/Break/Sideline/Foul)
+                if (entry.mode === 'Won Clean' || entry.mode === 'Won Break' || entry.mode === 'Won Sideline' || entry.mode === 'Won Foul') {
+                    team1KickoutsWon++;
+                }
+                // Check if kickout was uncontested (Screen 2 = Uncontested)
+                if (entry.definition === 'Uncontested') {
+                    team1Uncontested++;
+                    // Check if uncontested kickout was also won
+                    if (entry.mode === 'Won Clean' || entry.mode === 'Won Break' || entry.mode === 'Won Sideline' || entry.mode === 'Won Foul') {
+                        team1UncontestedWon++;
+                    }
+                }
+                // Check if kickout was contested (Screen 2 = Contested)
+                if (entry.definition === 'Contested') {
+                    team1Contested++;
+                    // Check if contested kickout was also won
+                    if (entry.mode === 'Won Clean' || entry.mode === 'Won Break' || entry.mode === 'Won Sideline' || entry.mode === 'Won Foul') {
+                        team1ContestedWon++;
+                    }
+                }
+            }
+        } else if (entry.action === 'Opp. Kickout') {
+            if (entry.teamNumber === 2) {
+                team2Kickouts++;
+                // Check if kickout was won (Screen 1 = Won Clean/Break/Sideline/Foul)
+                if (entry.mode === 'Won Clean' || entry.mode === 'Won Break' || entry.mode === 'Won Sideline' || entry.mode === 'Won Foul') {
+                    team2KickoutsWon++;
+                }
+                // Check if kickout was uncontested (Screen 2 = Uncontested)
+                if (entry.definition === 'Uncontested') {
+                    team2Uncontested++;
+                    // Check if uncontested kickout was also won
+                    if (entry.mode === 'Won Clean' || entry.mode === 'Won Break' || entry.mode === 'Won Sideline' || entry.mode === 'Won Foul') {
+                        team2UncontestedWon++;
+                    }
+                }
+                // Check if kickout was contested (Screen 2 = Contested)
+                if (entry.definition === 'Contested') {
+                    team2Contested++;
+                    // Check if contested kickout was also won
+                    if (entry.mode === 'Won Clean' || entry.mode === 'Won Break' || entry.mode === 'Won Sideline' || entry.mode === 'Won Foul') {
+                        team2ContestedWon++;
+                    }
+                }
+            }
+        }
+    });
+    
+    if (team1KickoutsElement) {
+        team1KickoutsElement.textContent = team1Kickouts;
+    }
+    
+    if (team2KickoutsElement) {
+        team2KickoutsElement.textContent = team2Kickouts;
+    }
+    
+    // Calculate and display kickout win percentages
+    const team1KickoutsWonElement = document.getElementById('stats-team-1-kickouts-won');
+    const team2KickoutsWonElement = document.getElementById('stats-team-2-kickouts-won');
+    
+    if (team1KickoutsWonElement) {
+        const team1WinPercentage = team1Kickouts > 0 ? Math.round((team1KickoutsWon / team1Kickouts) * 100) : 0;
+        team1KickoutsWonElement.textContent = `${team1KickoutsWon}/${team1Kickouts} (${team1WinPercentage}% Won)`;
+    }
+    
+    if (team2KickoutsWonElement) {
+        const team2WinPercentage = team2Kickouts > 0 ? Math.round((team2KickoutsWon / team2Kickouts) * 100) : 0;
+        team2KickoutsWonElement.textContent = `${team2KickoutsWon}/${team2Kickouts} (${team2WinPercentage}% Won)`;
+    }
+    
+    // Calculate and display uncontested kickout win percentages
+    const team1UncontestedElement = document.getElementById('stats-team-1-uncontested');
+    const team2UncontestedElement = document.getElementById('stats-team-2-uncontested');
+    
+    if (team1UncontestedElement) {
+        const team1UncontestedWinPercentage = team1Uncontested > 0 ? Math.round((team1UncontestedWon / team1Uncontested) * 100) : 0;
+        team1UncontestedElement.textContent = `${team1UncontestedWon}/${team1Uncontested} (${team1UncontestedWinPercentage}% Won)`;
+    }
+    
+    if (team2UncontestedElement) {
+        const team2UncontestedWinPercentage = team2Uncontested > 0 ? Math.round((team2UncontestedWon / team2Uncontested) * 100) : 0;
+        team2UncontestedElement.textContent = `${team2UncontestedWon}/${team2Uncontested} (${team2UncontestedWinPercentage}% Won)`;
+    }
+    
+    // Calculate and display contested kickout win percentages
+    const team1ContestedElement = document.getElementById('stats-team-1-contested');
+    const team2ContestedElement = document.getElementById('stats-team-2-contested');
+    
+    if (team1ContestedElement) {
+        const team1ContestedWinPercentage = team1Contested > 0 ? Math.round((team1ContestedWon / team1Contested) * 100) : 0;
+        team1ContestedElement.textContent = `${team1ContestedWon}/${team1Contested} (${team1ContestedWinPercentage}% Won)`;
+    }
+    
+    if (team2ContestedElement) {
+        const team2ContestedWinPercentage = team2Contested > 0 ? Math.round((team2ContestedWon / team2Contested) * 100) : 0;
+        team2ContestedElement.textContent = `${team2ContestedWon}/${team2Contested} (${team2ContestedWinPercentage}% Won)`;
+    }
 }
 
 // Show temporary message with type
