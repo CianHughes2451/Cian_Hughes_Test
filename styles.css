@@ -1220,6 +1220,7 @@ input:checked + .slider:before {
     max-width: 280px;
     min-width: 240px;
     line-height: var(--line-height-normal);
+    text-align: center;
 }
 
 #summary-box p {
@@ -3938,7 +3939,7 @@ input:checked + .slider:before {
     height: auto;
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
-    background: #4ade80;
+    background: #61d94f; /* Match coordinate pitch color */
 }
 
 .review-controls {
@@ -4220,7 +4221,7 @@ input:checked + .slider:before {
 }
 
 [data-theme="dark"] #review-pitch {
-    background: #4ade80;
+    background: #61d94f; /* Match coordinate pitch color */
 }
 
 /* Point-Score Icons */
@@ -4846,6 +4847,102 @@ input:checked + .slider:before {
 [data-theme="dark"] .summary-row.selected-row {
     background: rgba(37, 99, 235, 0.2) !important;
     box-shadow: inset 2px 0 0 #2563eb;
+}
+
+/* Export Data Button Styles */
+.export-data-container {
+    margin-top: var(--space-lg);
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.export-data-button {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all var(--motion-std) var(--easing);
+    box-shadow: var(--shadow-sm);
+    font-family: var(--font-family);
+}
+
+.export-data-button:hover {
+    background: var(--color-primary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.export-data-button:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+}
+
+.export-data-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+/* Dark mode export button */
+[data-theme="dark"] .export-data-button {
+    background: #2563eb;
+    color: white;
+}
+
+[data-theme="dark"] .export-data-button:hover {
+    background: #1d4ed8;
+}
+
+/* Upload Data Button Styles */
+.upload-data-container {
+    margin-top: var(--space-lg);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.upload-data-button {
+    background: var(--color-success);
+    color: white;
+    border: none;
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all var(--motion-std) var(--easing);
+    box-shadow: var(--shadow-sm);
+    font-family: var(--font-family);
+}
+
+.upload-data-button:hover {
+    background: var(--color-success-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.upload-data-button:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+}
+
+.upload-data-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25);
+}
+
+/* Dark mode upload button */
+[data-theme="dark"] .upload-data-button {
+    background: #059669;
+    color: white;
+}
+
+[data-theme="dark"] .upload-data-button:hover {
+    background: #047857;
 }
 
 /* Dark mode filters */
