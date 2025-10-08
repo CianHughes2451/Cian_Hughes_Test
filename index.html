@@ -39,6 +39,7 @@
         <a href="javascript:void(0)" class="closebtn" id="close-sidebar">&times;</a>
         <a href="#" class="sidebar-link" data-tab="home">Team Sheets</a>
         <a href="#" class="sidebar-link" data-tab="stats">Match Log</a>
+        <a href="#" class="sidebar-link" data-tab="stats-tab">Stats</a>
         <a href="#" class="sidebar-link" data-tab="summary">Summary</a>
         <a href="#" class="sidebar-link" data-tab="review">Review</a>
         
@@ -1385,6 +1386,184 @@
                         <button id="upload-data-btn" class="upload-data-button" onclick="document.getElementById('csv-file-input').click()">
                             Upload Data
                         </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Tab Content -->
+        <div id="stats-tab" class="tab-content">
+            <div class="stats-container">
+                <div class="stats-columns">
+                    <!-- Left Column - Team 1 -->
+                    <div class="stats-column stats-column-left">
+                        <div class="stats-team-pill" id="stats-team-1-pill">
+                            <span id="stats-team-1-name">Team 1</span>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <span class="stat-value" id="stats-team-1-shots">0</span>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <span class="stat-value" id="stats-team-1-scores">0 (0 - 0 - 0)</span>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <span class="stat-value" id="stats-team-1-conversion">0%</span>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <span class="stat-value" id="stats-team-1-shots-from-attacks">0/0 (0%)</span>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <span class="stat-value" id="stats-team-1-scores-from-attacks">0/0 (0%)</span>
+                            </div>
+                        </div>
+                        <div class="stats-section stats-divider">
+                            <div class="stat-item">
+                                <hr class="stat-divider-line">
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <span class="stat-value" id="stats-team-1-kickouts">0</span>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <span class="stat-value" id="stats-team-1-kickouts-won">0/0 (0% Won)</span>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <span class="stat-value" id="stats-team-1-uncontested">0/0 (0% Won)</span>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <span class="stat-value" id="stats-team-1-contested">0/0 (0% Won)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Center Column - Stats Title -->
+                    <div class="stats-column stats-column-center">
+                        <div class="stats-title">
+                            <h1>STATS</h1>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <h3 class="stat-label">Total Shots</h3>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <h3 class="stat-label">Scores</h3>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <h3 class="stat-label">Shot Conversion</h3>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <h3 class="stat-label">Shots/Attacks</h3>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <h3 class="stat-label">Scores/Attacks</h3>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <hr class="stat-divider-line">
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <h3 class="stat-label">Kickouts</h3>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <h3 class="stat-label">Total Won</h3>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <h3 class="stat-label">Uncontested</h3>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <h3 class="stat-label">Contested</h3>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column - Team 2 -->
+                    <div class="stats-column stats-column-right">
+                        <div class="stats-team-pill" id="stats-team-2-pill">
+                            <span id="stats-team-2-name">Team 2</span>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <span class="stat-value" id="stats-team-2-shots">0</span>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <span class="stat-value" id="stats-team-2-scores">0 (0 - 0 - 0)</span>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <span class="stat-value" id="stats-team-2-conversion">0%</span>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <span class="stat-value" id="stats-team-2-shots-from-attacks">0/0 (0%)</span>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <span class="stat-value" id="stats-team-2-scores-from-attacks">0/0 (0%)</span>
+                            </div>
+                        </div>
+                        <div class="stats-section stats-divider">
+                            <div class="stat-item">
+                                <hr class="stat-divider-line">
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <span class="stat-value" id="stats-team-2-kickouts">0</span>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <span class="stat-value" id="stats-team-2-kickouts-won">0/0 (0% Won)</span>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <span class="stat-value" id="stats-team-2-uncontested">0/0 (0% Won)</span>
+                            </div>
+                        </div>
+                        <div class="stats-section">
+                            <div class="stat-item">
+                                <span class="stat-value" id="stats-team-2-contested">0/0 (0% Won)</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
