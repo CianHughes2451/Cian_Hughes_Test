@@ -1024,119 +1024,302 @@
             </div>
         </div>
 
-        <div id="review" class="tab-content review-tab" onshow="refreshReviewTab()">
-            <!-- Top Controls (optional) -->
-            <header id="top-controls" class="review-top-controls">
-                <!-- Any global controls can go here -->
-            </header>
-
-            <!-- Pitch Wrapper - Dynamic height controlled by JS -->
-            <div id="pitch-wrapper" class="pitch-container">
-                <canvas id="review-pitch" width="400" height="500"></canvas>
-            </div>
-
-            <!-- Peek Handle - Always visible at bottom -->
-            <div id="filter-peek" class="filter-peek" role="button" aria-expanded="false" tabindex="0" aria-controls="filter-sheet">
-                <div class="filter-handle"></div>
-            </div>
-
-            <!-- Filter Sheet - Slide-up overlay -->
-            <div id="filter-sheet" class="filter-sheet" aria-hidden="true" role="dialog" aria-modal="true">
-                <div class="sheet-header">
-                    <div class="filter-handle-large" aria-hidden="true"></div>
-                    <h3 class="sheet-title">Filters</h3>
+        <div id="review" class="tab-content" onshow="refreshReviewTab()">
+            <div class="review-layout">
+                <div class="pitch-wrapper">
+                    <canvas id="review-pitch" width="400" height="500"></canvas>
                 </div>
-                <div class="sheet-content">
-                    <!-- Expanded filter controls (no collapsed groups) -->
-                    <div class="filter-section">
-                        <h4 class="filter-section-title">Scoring</h4>
-                        <label class="filter-toggle-label">
-                            <input type="checkbox" id="toggle-own-shots">
-                            <span class="filter-checkmark"></span>
-                            Own Shots
-                        </label>
-                    </div>
-
-                    <div class="filter-section">
-                        <h4 class="filter-section-title">Possession</h4>
-                        <label class="filter-toggle-label">
-                            <input type="checkbox" id="toggle-fouls-won">
-                            <span class="filter-checkmark"></span>
-                            Frees Won
-                        </label>
-                        <label class="filter-toggle-label">
-                            <input type="checkbox" id="toggle-handpasses">
-                            <span class="filter-checkmark"></span>
-                            Handpasses
-                        </label>
-                        <label class="filter-toggle-label">
-                            <input type="checkbox" id="toggle-kickpasses">
-                            <span class="filter-checkmark"></span>
-                            Kickpasses
-                        </label>
-                        <label class="filter-toggle-label">
-                            <input type="checkbox" id="toggle-carries">
-                            <span class="filter-checkmark"></span>
-                            Carries
-                        </label>
-                    </div>
-
-                    <div class="filter-section">
-                        <h4 class="filter-section-title">Errors & Turnovers</h4>
-                        <label class="filter-toggle-label">
-                            <input type="checkbox" id="toggle-unforced-errors">
-                            <span class="filter-checkmark"></span>
-                            Unforced Errors
-                        </label>
-                        <label class="filter-toggle-label">
-                            <input type="checkbox" id="toggle-forced-errors">
-                            <span class="filter-checkmark"></span>
-                            Forced Errors
-                        </label>
-                        <label class="filter-toggle-label">
-                            <input type="checkbox" id="toggle-turnovers">
-                            <span class="filter-checkmark"></span>
-                            Turnovers Won
-                        </label>
-                    </div>
-
-                    <div class="filter-section">
-                        <h4 class="filter-section-title">Kickouts</h4>
-                        <label class="filter-toggle-label">
-                            <input type="checkbox" id="toggle-own-kickouts">
-                            <span class="filter-checkmark"></span>
-                            Own Kickouts
-                        </label>
-                        <label class="filter-toggle-label">
-                            <input type="checkbox" id="toggle-opp-kickouts">
-                            <span class="filter-checkmark"></span>
-                            Opp. Kickouts
-                        </label>
-                    </div>
-
-                    <div class="filter-section">
-                        <h4 class="filter-section-title">Against</h4>
-                        <label class="filter-toggle-label">
-                            <input type="checkbox" id="toggle-point-against">
-                            <span class="filter-checkmark"></span>
-                            Point Against
-                        </label>
-                        <label class="filter-toggle-label">
-                            <input type="checkbox" id="toggle-goal-against">
-                            <span class="filter-checkmark"></span>
-                            Goal Against
-                        </label>
-                        <label class="filter-toggle-label">
-                            <input type="checkbox" id="toggle-miss-against">
-                            <span class="filter-checkmark"></span>
-                            Miss Against
-                        </label>
+                
+                <div class="review-controls">
+                    <h3 class="controls-title">Filters</h3>
+                    
+                    <div class="filter-table">
+                        <!-- Column Headings -->
+                        <div class="filter-headers">
+                            <div class="filter-header filter-header-team1">
+                                <div class="team-pill team-1-pill" id="filter-team-1-name">Team 1</div>
+                            </div>
+                            <div class="filter-header filter-header-center">
+                                <!-- Empty center header -->
+                            </div>
+                            <div class="filter-header filter-header-team2">
+                                <div class="team-pill team-2-pill" id="filter-team-2-name">Team 2</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Filter Groups -->
+                        <div class="filter-groups">
+                            <!-- Attacking Group -->
+                            <div class="filter-group" data-group="attacking">
+                                <div class="filter-group-title" onclick="toggleFilterGroup('attacking')">
+                                    <span>Attacking</span>
+                                    <span class="group-toggle-icon">▼</span>
+                                </div>
+                                <div class="filter-rows collapse-content" id="attacking-content">
+                                    <div class="filter-row">
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox" id="filter-point-score-team1" onchange="toggleFilterVisibility('Point-Score', 1)">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="filter-name">Point - Score</div>
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox" id="filter-point-score-team2" onchange="toggleFilterVisibility('Point-Score', 2)">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="filter-row">
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="filter-name">2-Point - Score</div>
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="filter-row">
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="filter-name">Goal - Score</div>
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="filter-row">
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="filter-name">Point - Miss</div>
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="filter-row">
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="filter-name">Goal - Miss</div>
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Possession Group -->
+                            <div class="filter-group" data-group="possession">
+                                <div class="filter-group-title" onclick="toggleFilterGroup('possession')">
+                                    <span>Possession</span>
+                                    <span class="group-toggle-icon">▼</span>
+                                </div>
+                                <div class="filter-rows collapse-content" id="possession-content">
+                                    <div class="filter-row">
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="filter-name">Kickout</div>
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="filter-row">
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="filter-name">Free Won</div>
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="filter-row">
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="filter-name">Ball Lost (Forced)</div>
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="filter-row">
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="filter-name">Ball Lost (Unforced)</div>
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="filter-row">
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="filter-name">Handpass</div>
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="filter-row">
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="filter-name">Kickpass</div>
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="filter-row">
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="filter-name">Carry</div>
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Defence Group -->
+                            <div class="filter-group" data-group="defence">
+                                <div class="filter-group-title" onclick="toggleFilterGroup('defence')">
+                                    <span>Defence</span>
+                                    <span class="group-toggle-icon">▼</span>
+                                </div>
+                                <div class="filter-rows collapse-content" id="defence-content">
+                                    <div class="filter-row">
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="filter-name">Ball Won (Forced)</div>
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="filter-row">
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="filter-name">Ball Won (Unforced)</div>
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="filter-row">
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="filter-name">Foul Committed</div>
+                                        <div class="filter-toggle-cell">
+                                            <label class="filter-toggle">
+                                                <input type="checkbox">
+                                                <span class="filter-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Backdrop -->
-            <div id="filter-backdrop" class="filter-backdrop" aria-hidden="true"></div>
         </div>
 
         <div id="summary" class="tab-content">
