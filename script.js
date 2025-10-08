@@ -141,18 +141,14 @@ document.addEventListener('DOMContentLoaded', function () {
     addDragAndTouchEventsToPlayerButtons(); // <--- Enable drag-and-drop and touch
     filterActions();
     
-    // Initialize pitch sizing for review tab
-    setTimeout(() => {
-        if (document.getElementById('review-pitch')) {
-            resizePitch();
-        }
-    }, 200);
-    
     // Initialize team view
     switchTeamView('our-team');
     
     // Initialize Match Log team names
     updateMatchLogTeamNames();
+    
+    // Load and apply team designs
+    loadAndApplyTeamDesigns();
     
     // Initialize dark mode
     initializeDarkMode();
@@ -1791,17 +1787,13 @@ const reviewCanvas = document.getElementById('review-pitch');
 const reviewCtx = reviewCanvas.getContext('2d');
 
 const drawReviewPitch = () => {
-    const canvasWidth = window.reviewCanvasWidth || reviewCanvas.width;
-    const canvasHeight = window.reviewCanvasHeight || reviewCanvas.height;
-    
-    reviewCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+    reviewCtx.clearRect(0, 0, reviewCanvas.width, reviewCanvas.height);
 
     const drawReviewLine = (startX, startY, endX, endY) => {
         reviewCtx.beginPath();
         reviewCtx.moveTo(mapXReview(startX), mapYReview(startY));
         reviewCtx.lineTo(mapXReview(endX), mapYReview(endY));
         reviewCtx.strokeStyle = 'black';  // Ensure the line color is black
-        reviewCtx.lineWidth = 1;
         reviewCtx.stroke();
     };
 
@@ -1873,14 +1865,8 @@ const drawReviewClockwiseRotatedSemicircle = (semicircle) => {
     reviewCtx.stroke();
 };
 
-const mapXReview = x => {
-    const canvasWidth = window.reviewCanvasWidth || reviewCanvas.width;
-    return (x / 80) * canvasWidth;
-};
-const mapYReview = y => {
-    const canvasHeight = window.reviewCanvasHeight || reviewCanvas.height;
-    return canvasHeight - (y / 140) * canvasHeight;
-};
+const mapXReview = x => (x / 80) * reviewCanvas.width;
+const mapYReview = y => reviewCanvas.height - (y / 140) * reviewCanvas.height;
 
 let reviewMarkers = []; // Store marker positions
 
@@ -1923,24 +1909,42 @@ const drawReviewMarker = (x, y, color, entry, actionType, markerType = 'circle')
         reviewCtx.closePath();                         // Back to top
         reviewCtx.fillStyle = color;
         reviewCtx.fill();
+    } else if (markerType === 'pointScore') {
+        // Draw filled green circle with team-colored border
+        const mappedX = mapXReview(x);
+        const mappedY = mapYReview(y);
+        reviewCtx.beginPath();
+        reviewCtx.arc(mappedX, mappedY, 8, 0, Math.PI * 2);
+        reviewCtx.fillStyle = '#10b981'; // Green fill
+        reviewCtx.fill();
+        reviewCtx.strokeStyle = color; // Team-colored border
+        reviewCtx.lineWidth = 2;
+        reviewCtx.stroke();
+        // Reset line width to default to prevent affecting other drawing operations
+        reviewCtx.lineWidth = 1;
     }
     reviewMarkers.push({ x, y, entry, color, markerType });
 };
 
 const filterActions = () => {
-    const showOwnShots = document.getElementById('toggle-own-shots').checked;
-    const showFoulsWon = document.getElementById('toggle-fouls-won').checked;
-    const showHandpasses = document.getElementById('toggle-handpasses').checked;
-    const showKickpasses = document.getElementById('toggle-kickpasses').checked;
-    const showCarries = document.getElementById('toggle-carries').checked;
-    const showUnforcedErrors = document.getElementById('toggle-unforced-errors').checked;
-    const showForcedErrors = document.getElementById('toggle-forced-errors').checked;
-    const showOwnKickouts = document.getElementById('toggle-own-kickouts').checked;
-    const showOppKickouts = document.getElementById('toggle-opp-kickouts').checked;
-    const showPointAgainst = document.getElementById('toggle-point-against').checked;
-    const showGoalAgainst = document.getElementById('toggle-goal-against').checked;
-    const showMissAgainst = document.getElementById('toggle-miss-against').checked;
-    const showTurnovers = document.getElementById('toggle-turnovers').checked;
+    // Check Point-Score filter toggles
+    const showPointScoreTeam1 = document.getElementById('filter-point-score-team1')?.checked || false;
+    const showPointScoreTeam2 = document.getElementById('filter-point-score-team2')?.checked || false;
+    
+    // Temporary: Show all other actions until new filter system is implemented
+    const showOwnShots = true;
+    const showFoulsWon = true;
+    const showHandpasses = true;
+    const showKickpasses = true;
+    const showCarries = true;
+    const showUnforcedErrors = true;
+    const showForcedErrors = true;
+    const showOwnKickouts = true;
+    const showOppKickouts = true;
+    const showPointAgainst = true;
+    const showGoalAgainst = true;
+    const showMissAgainst = true;
+    const showTurnovers = true;
 
     // Clear the pitch and remove any existing markers
     drawReviewPitch();
@@ -1953,7 +1957,20 @@ const filterActions = () => {
 
         if (showOwnShots) {
             if (entry.action === 'Point - Score') {
-                drawReviewMarker(x1, y1, 'blue', entry, 'Point - Score');
+                // Check team filter for Point - Score
+                const teamCode = getTeamFromAction(entry);
+                const isTeam1 = teamCode === 'team1';
+                const shouldShow = (isTeam1 && showPointScoreTeam1) || (!isTeam1 && showPointScoreTeam2);
+                
+                if (shouldShow) {
+                    // Get team colors for styling
+                    const team1Primary = getComputedStyle(document.documentElement).getPropertyValue('--team1-primary').trim() || '#3b82f6';
+                    const team2Primary = getComputedStyle(document.documentElement).getPropertyValue('--team2-primary').trim() || '#ef4444';
+                    const teamColor = isTeam1 ? team1Primary : team2Primary;
+                    
+                    // Use the existing drawReviewMarker function with team-specific color
+                    drawReviewMarker(x1, y1, teamColor, entry, 'Point - Score', 'pointScore');
+                }
             } else if (entry.action === '2-Point - Score') {
                 drawReviewMarker(x1, y1, 'blue', entry, '2-Point - Score', 'circle');
             } else if (entry.action === 'Point - Miss') {
@@ -2345,7 +2362,7 @@ const drawPassMarkersAndArrow = (x1, y1, x2, y2, color, entry, actionType) => {
 
     // Draw the filled arrowhead
     const headlen = 15; // length of head in pixels
-    const angle = Math.atan2(mapYReview(y2) - mapYReview(y1), mapXReview(x2) - mapXReview(x1));
+    const angle = Math.atan2(mapYReview(y2) - mapYReview(y1), mapX(x2) - mapX(x1));
     reviewCtx.beginPath();
     reviewCtx.moveTo(mapXReview(x2), mapYReview(y2));
     reviewCtx.lineTo(mapXReview(x2) - headlen * Math.cos(angle - Math.PI / 6), mapYReview(y2) - headlen * Math.sin(angle - Math.PI / 6));
@@ -2357,364 +2374,20 @@ const drawPassMarkersAndArrow = (x1, y1, x2, y2, color, entry, actionType) => {
 
 reviewCanvas.addEventListener('click', handleCanvasClick);
 
-// Event listeners for toggles
-document.getElementById('toggle-own-shots').addEventListener('change', filterActions);
-document.getElementById('toggle-fouls-won').addEventListener('change', filterActions);
-document.getElementById('toggle-handpasses').addEventListener('change', filterActions);
-document.getElementById('toggle-kickpasses').addEventListener('change', filterActions);
-document.getElementById('toggle-carries').addEventListener('change', filterActions);
-document.getElementById('toggle-unforced-errors').addEventListener('change', filterActions);
-document.getElementById('toggle-forced-errors').addEventListener('change', filterActions);
-document.getElementById('toggle-own-kickouts').addEventListener('change', filterActions);
-document.getElementById('toggle-opp-kickouts').addEventListener('change', filterActions);
-document.getElementById('toggle-point-against').addEventListener('change', filterActions);
-document.getElementById('toggle-goal-against').addEventListener('change', filterActions);
-document.getElementById('toggle-miss-against').addEventListener('change', filterActions);
-document.getElementById('toggle-turnovers').addEventListener('change', filterActions);
+// Event listeners for toggles - REMOVED (old filter structure no longer exists)
+// New filter system will be implemented later
 
 // Call filterActions on load to ensure markers are managed based on initial state
 filterActions();
 
 const refreshReviewTab = () => {
     filterActions();
-    // Initialize the new Review tab functionality
-    initializeReviewTab();
-    // Ensure pitch is properly sized and drawn
-    setTimeout(() => {
-        resizePitch();
-        if (window.drawReviewPitch) {
-            window.drawReviewPitch();
-        }
-    }, 100);
 };
 
 const calculateDistance = (x1, y1, x2, y2) => {
     const dx = x2 - x1;
     const dy = y2 - y1;
     return Math.sqrt(dx * dx + dy * dy).toFixed(2);
-};
-
-// Review Tab - New Design Functions
-let reviewTabState = {
-    sheetOpen: false,
-    dragStartY: 0,
-    dragCurrentY: 0,
-    isDragging: false,
-    animationFrame: null
-};
-
-const initializeReviewTab = () => {
-    // Set up pitch sizing
-    resizePitch();
-    
-    // Set up filter sheet interactions
-    setupFilterSheet();
-    
-    // Set up drag/swipe interactions
-    setupDragInteractions();
-    
-    // Set up keyboard navigation
-    setupKeyboardNavigation();
-    
-    // Set up resize listener
-    setupResizeListener();
-};
-
-const resizePitch = () => {
-    const pitchWrapper = document.getElementById('pitch-wrapper');
-    const canvas = document.getElementById('review-pitch');
-    
-    if (!pitchWrapper || !canvas) return;
-    
-    // Calculate available dimensions
-    const topBarHeight = 60; // Height of top controls
-    const peekHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--peek-height')) || 48;
-    const margins = 32; // Total vertical margins
-    
-    const availableWidth = window.innerWidth;
-    const availableHeight = window.innerHeight - topBarHeight - peekHeight - margins;
-    
-    // Calculate scale to fit pitch (80x140 coordinate system)
-    const scaleX = availableWidth / 80;
-    const scaleY = availableHeight / 140;
-    const scale = Math.min(scaleX, scaleY);
-    
-    // Calculate actual pixel dimensions
-    const pixelWidth = 80 * scale;
-    const pixelHeight = 140 * scale;
-    
-    // Set canvas size with device pixel ratio for crisp rendering
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = pixelWidth * dpr;
-    canvas.height = pixelHeight * dpr;
-    canvas.style.width = pixelWidth + 'px';
-    canvas.style.height = pixelHeight + 'px';
-    
-    // Reset and scale the drawing context for crisp rendering
-    const ctx = canvas.getContext('2d');
-    ctx.save(); // Save the current state
-    ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
-    ctx.scale(dpr, dpr); // Scale for device pixel ratio
-    
-    // Update global canvas dimensions for mapping functions
-    window.reviewCanvasWidth = pixelWidth;
-    window.reviewCanvasHeight = pixelHeight;
-    
-    // Update CSS variable for pitch container height
-    document.documentElement.style.setProperty('--pitch-available-height', availableHeight + 'px');
-    
-    // Redraw the pitch
-    drawReviewPitch();
-};
-
-// Make drawReviewPitch globally accessible
-window.drawReviewPitch = drawReviewPitch;
-
-const setupFilterSheet = () => {
-    const filterPeek = document.getElementById('filter-peek');
-    const filterSheet = document.getElementById('filter-sheet');
-    const filterBackdrop = document.getElementById('filter-backdrop');
-    
-    if (!filterPeek || !filterSheet || !filterBackdrop) return;
-    
-    // Click to toggle
-    filterPeek.addEventListener('click', toggleFilterSheet);
-    filterBackdrop.addEventListener('click', closeFilterSheet);
-    
-    // Keyboard support
-    filterPeek.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            toggleFilterSheet();
-        }
-    });
-};
-
-const toggleFilterSheet = () => {
-    if (reviewTabState.sheetOpen) {
-        closeFilterSheet();
-    } else {
-        openFilterSheet();
-    }
-};
-
-const openFilterSheet = () => {
-    const filterSheet = document.getElementById('filter-sheet');
-    const filterPeek = document.getElementById('filter-peek');
-    const filterBackdrop = document.getElementById('filter-backdrop');
-    
-    if (!filterSheet || !filterPeek || !filterBackdrop) return;
-    
-    reviewTabState.sheetOpen = true;
-    
-    // Update DOM state
-    filterSheet.classList.add('open');
-    filterSheet.setAttribute('aria-hidden', 'false');
-    filterPeek.setAttribute('aria-expanded', 'true');
-    filterBackdrop.classList.add('active');
-    
-    // Lock body scroll
-    document.body.classList.add('sheet-open');
-    
-    // Focus first interactive element in sheet
-    const firstFocusable = filterSheet.querySelector('input, button, [tabindex]:not([tabindex="-1"])');
-    if (firstFocusable) {
-        firstFocusable.focus();
-    }
-    
-    // Set up focus trap
-    setupFocusTrap();
-};
-
-const closeFilterSheet = () => {
-    const filterSheet = document.getElementById('filter-sheet');
-    const filterPeek = document.getElementById('filter-peek');
-    const filterBackdrop = document.getElementById('filter-backdrop');
-    
-    if (!filterSheet || !filterPeek || !filterBackdrop) return;
-    
-    reviewTabState.sheetOpen = false;
-    
-    // Update DOM state
-    filterSheet.classList.remove('open');
-    filterSheet.setAttribute('aria-hidden', 'true');
-    filterPeek.setAttribute('aria-expanded', 'false');
-    filterBackdrop.classList.remove('active');
-    
-    // Unlock body scroll
-    document.body.classList.remove('sheet-open');
-    
-    // Return focus to peek handle
-    filterPeek.focus();
-    
-    // Remove focus trap
-    removeFocusTrap();
-};
-
-const setupDragInteractions = () => {
-    const filterSheet = document.getElementById('filter-sheet');
-    const filterPeek = document.getElementById('filter-peek');
-    
-    if (!filterSheet || !filterPeek) return;
-    
-    // Handle pointer events (touch and mouse)
-    const handlePointerDown = (e) => {
-        reviewTabState.dragStartY = e.clientY || e.touches[0].clientY;
-        reviewTabState.isDragging = true;
-        reviewTabState.dragCurrentY = reviewTabState.dragStartY;
-        
-        // Add dragging class for visual feedback
-        filterSheet.classList.add('dragging');
-        
-        // Prevent default to avoid scrolling
-        e.preventDefault();
-    };
-    
-    const handlePointerMove = (e) => {
-        if (!reviewTabState.isDragging) return;
-        
-        const currentY = e.clientY || e.touches[0].clientY;
-        const deltaY = currentY - reviewTabState.dragStartY;
-        
-        // Get sheet height and peek height
-        const sheetHeight = filterSheet.offsetHeight;
-        const peekHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--peek-height')) || 48;
-        
-        // Calculate new transform value
-        let newTransform;
-        if (reviewTabState.sheetOpen) {
-            // When open, drag down to close
-            newTransform = Math.max(0, Math.min(deltaY, sheetHeight - peekHeight));
-        } else {
-            // When closed, drag up to open
-            newTransform = Math.max(sheetHeight - peekHeight, Math.min(deltaY, 0));
-        }
-        
-        // Apply transform temporarily
-        filterSheet.style.transform = `translateY(${newTransform}px)`;
-        
-        reviewTabState.dragCurrentY = currentY;
-        
-        e.preventDefault();
-    };
-    
-    const handlePointerUp = (e) => {
-        if (!reviewTabState.isDragging) return;
-        
-        reviewTabState.isDragging = false;
-        filterSheet.classList.remove('dragging');
-        
-        const deltaY = reviewTabState.dragCurrentY - reviewTabState.dragStartY;
-        const sheetHeight = filterSheet.offsetHeight;
-        const peekHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--peek-height')) || 48;
-        const threshold = sheetHeight * 0.3; // 30% of sheet height
-        
-        // Determine if we should open or close based on drag distance and direction
-        if (reviewTabState.sheetOpen) {
-            // Sheet is open - close if dragged down enough
-            if (deltaY > threshold) {
-                closeFilterSheet();
-            } else {
-                // Snap back to open position
-                filterSheet.style.transform = '';
-            }
-        } else {
-            // Sheet is closed - open if dragged up enough
-            if (deltaY < -threshold) {
-                openFilterSheet();
-            } else {
-                // Snap back to closed position
-                filterSheet.style.transform = '';
-            }
-        }
-        
-        // Clear temporary transform after animation
-        setTimeout(() => {
-            filterSheet.style.transform = '';
-        }, 300);
-    };
-    
-    // Add event listeners
-    filterPeek.addEventListener('pointerdown', handlePointerDown, { passive: false });
-    filterSheet.addEventListener('pointerdown', handlePointerDown, { passive: false });
-    
-    document.addEventListener('pointermove', handlePointerMove, { passive: false });
-    document.addEventListener('pointerup', handlePointerUp, { passive: false });
-    
-    // Fallback for touch events on older devices
-    filterPeek.addEventListener('touchstart', handlePointerDown, { passive: false });
-    filterSheet.addEventListener('touchstart', handlePointerDown, { passive: false });
-    document.addEventListener('touchmove', handlePointerMove, { passive: false });
-    document.addEventListener('touchend', handlePointerUp, { passive: false });
-};
-
-const setupKeyboardNavigation = () => {
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && reviewTabState.sheetOpen) {
-            closeFilterSheet();
-        }
-    });
-};
-
-const setupFocusTrap = () => {
-    const filterSheet = document.getElementById('filter-sheet');
-    if (!filterSheet) return;
-    
-    const focusableElements = filterSheet.querySelectorAll(
-        'input, button, [tabindex]:not([tabindex="-1"])'
-    );
-    
-    if (focusableElements.length === 0) return;
-    
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
-    
-    const handleTabKey = (e) => {
-        if (e.key !== 'Tab') return;
-        
-        if (e.shiftKey) {
-            // Shift + Tab
-            if (document.activeElement === firstElement) {
-                e.preventDefault();
-                lastElement.focus();
-            }
-        } else {
-            // Tab
-            if (document.activeElement === lastElement) {
-                e.preventDefault();
-                firstElement.focus();
-            }
-        }
-    };
-    
-    document.addEventListener('keydown', handleTabKey);
-    
-    // Store the handler for cleanup
-    reviewTabState.focusTrapHandler = handleTabKey;
-};
-
-const removeFocusTrap = () => {
-    if (reviewTabState.focusTrapHandler) {
-        document.removeEventListener('keydown', reviewTabState.focusTrapHandler);
-        reviewTabState.focusTrapHandler = null;
-    }
-};
-
-const setupResizeListener = () => {
-    let resizeTimeout;
-    
-    const handleResize = () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-            resizePitch();
-        }, 100); // Debounce resize events
-    };
-    
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('orientationchange', handleResize);
-    
-    // Store the handler for cleanup if needed
-    reviewTabState.resizeHandler = handleResize;
 };
 
 // Allowing dynamic changes to player names
@@ -3348,48 +3021,7 @@ function highlightActiveTab(tabName) {
     });
 }
 
-// Toggle collapsible groups in Review tab
-function toggleGroup(groupName) {
-    const content = document.getElementById(`${groupName}-content`);
-    const icon = document.getElementById(`${groupName}-icon`);
-    
-    if (!content || !icon) return;
-    
-    // Prevent double-clicking issues
-    if (content.dataset.animating === 'true') return;
-    
-    const isCurrentlyCollapsed = content.classList.contains('collapsed');
-    
-    // Close all other groups first with animation
-    const allGroups = ['scoring', 'possession', 'errors', 'kickouts', 'against'];
-    allGroups.forEach(group => {
-        if (group !== groupName) {
-            const otherContent = document.getElementById(`${group}-content`);
-            const otherIcon = document.getElementById(`${group}-icon`);
-            if (otherContent && otherIcon && !otherContent.classList.contains('collapsed')) {
-                CollapsibleManager.toggle(otherContent, false);
-                otherIcon.textContent = '▶';
-                otherIcon.parentElement.classList.remove('expanded');
-            }
-        }
-    });
-    
-    // Toggle current group with animation
-    const shouldExpand = CollapsibleManager.toggle(content, isCurrentlyCollapsed);
-    
-    // Update icon and visual state
-    if (shouldExpand) {
-        icon.textContent = '▼';
-        icon.parentElement.classList.add('expanded', 'toggle-button-enhanced');
-    } else {
-        icon.textContent = '▶';
-        icon.parentElement.classList.remove('expanded');
-        icon.parentElement.classList.add('toggle-button-enhanced');
-    }
-    
-    // Remove focus to prevent stuck pressed state
-    icon.parentElement.blur();
-}
+// Toggle collapsible groups in Review tab - REMOVED (no longer needed with new filter layout)
 
 // Team switching functionality
 function switchTeamView(teamType) {
@@ -3444,6 +3076,21 @@ function switchMatchLogTeam(teamNumber) {
     } else {
         team2Toggle.classList.add('active');
         team1Toggle.classList.remove('active');
+    }
+    
+    // Update text colors for both toggles to ensure proper contrast
+    // Load team designs to get the correct colors
+    const team1Data = loadTeamSheetFromLocalStorage(1);
+    const team2Data = loadTeamSheetFromLocalStorage(2);
+    
+    if (team1Data) {
+        const team1TextColor = getContrastColor(team1Data.primaryColor);
+        team1Toggle.style.setProperty('color', team1TextColor, 'important');
+    }
+    
+    if (team2Data) {
+        const team2TextColor = getContrastColor(team2Data.primaryColor);
+        team2Toggle.style.setProperty('color', team2TextColor, 'important');
     }
     
     // Update action button borders to show selected team
@@ -3573,6 +3220,18 @@ function updateMatchLogTeamNames() {
             team2Name.textContent = team2Button.textContent.trim();
         }
         
+        // Update Review tab filter team names
+        const filterTeam1Name = document.getElementById('filter-team-1-name');
+        const filterTeam2Name = document.getElementById('filter-team-2-name');
+        
+        if (filterTeam1Name && team1Button) {
+            filterTeam1Name.textContent = team1Button.textContent.trim();
+        }
+        
+        if (filterTeam2Name && team2Button) {
+            filterTeam2Name.textContent = team2Button.textContent.trim();
+        }
+        
         // Update action button titles
         updateActionButtonTitles();
         
@@ -3691,6 +3350,14 @@ function confirmTeamCustomization() {
     
     // Apply customization to UI
     applyTeamCustomization(currentEditingTeam);
+    
+    // Also apply team design to Review tab filter pills
+    const teamData = {
+        pattern: pattern,
+        primaryColor: primaryColor,
+        secondaryColor: hasSecondary ? secondaryColor : primaryColor
+    };
+    applyTeamDesign(currentEditingTeam, teamData);
     
     closeTeamCustomizePopup();
 }
@@ -5091,6 +4758,23 @@ function applyTeamDesign(teamNumber, data) {
     teamButtons.forEach(button => {
         applyButtonCustomization(button, data);
     });
+    
+    // Apply colors and patterns to Review tab filter pills
+    const filterPill = document.getElementById(`filter-team-${teamNumber}-name`);
+    if (filterPill) {
+        console.log(`Applying team design to filter pill for team ${teamNumber}:`, data);
+        applyButtonCustomization(filterPill, data);
+    } else {
+        console.log(`Filter pill not found for team ${teamNumber}`);
+    }
+    
+    // Update team toggle button text color for proper contrast
+    const teamToggle = document.getElementById(`match-log-team-${teamNumber}-toggle`);
+    if (teamToggle) {
+        const textColor = getContrastColor(data.primaryColor);
+        teamToggle.style.setProperty('color', textColor, 'important');
+        console.log(`Updated team toggle text color for team ${teamNumber} to ${textColor}`);
+    }
 }
 
 // Apply button customization based on team data
@@ -5099,48 +4783,66 @@ function applyButtonCustomization(button, data) {
     const secondaryColor = data.secondaryColor;
     const pattern = data.pattern;
     
-    // Remove existing pattern classes
+    console.log(`Applying customization to button:`, button.id, 'Colors:', primaryColor, secondaryColor, 'Pattern:', pattern);
+    
+    // Remove existing pattern classes to avoid conflicts with CSS
     button.classList.remove('pattern-classic', 'pattern-hooped', 'pattern-vertical', 'pattern-sash', 'pattern-diagonal', 'pattern-solid', 'pattern-custom', 'pattern-checkered', 'pattern-horizontal');
     
-    // Apply pattern class
-    button.classList.add(`pattern-${pattern}`);
+    // Don't add pattern classes - use pure inline styles to avoid CSS conflicts
     
-    // Apply colors via inline styles
+    // Apply colors and patterns directly via inline styles (higher specificity than CSS classes)
     let backgroundStyle = '';
+    let borderStyle = '';
     
     switch (pattern) {
         case 'solid':
-            backgroundStyle = `background: ${primaryColor};`;
+            backgroundStyle = `background: ${primaryColor} !important;`;
+            borderStyle = `border: 2px solid ${primaryColor} !important;`;
             break;
         case 'diagonal':
-            backgroundStyle = `background: linear-gradient(45deg, ${primaryColor} 50%, ${secondaryColor} 50%);`;
+            backgroundStyle = `background: linear-gradient(45deg, ${primaryColor} 50%, ${secondaryColor} 50%) !important;`;
+            borderStyle = `border: 2px solid ${primaryColor} !important;`;
             break;
         case 'checkered':
-            backgroundStyle = `background: conic-gradient(${primaryColor} 90deg, ${secondaryColor} 90deg 180deg, ${primaryColor} 180deg 270deg, ${secondaryColor} 270deg);`;
+            backgroundStyle = `background: conic-gradient(${primaryColor} 90deg, ${secondaryColor} 90deg 180deg, ${primaryColor} 180deg 270deg, ${secondaryColor} 270deg) !important;`;
+            borderStyle = `border: 2px solid ${primaryColor} !important;`;
             break;
         case 'hooped':
-            backgroundStyle = `background: repeating-linear-gradient(0deg, ${primaryColor} 0px, ${primaryColor} 4px, ${secondaryColor} 4px, ${secondaryColor} 7px);`;
+            backgroundStyle = `background: repeating-linear-gradient(0deg, ${primaryColor} 0px, ${primaryColor} 4px, ${secondaryColor} 4px, ${secondaryColor} 7px) !important;`;
+            borderStyle = `border: 2px solid ${primaryColor} !important;`;
             break;
         case 'vertical':
-            backgroundStyle = `background: repeating-linear-gradient(90deg, ${primaryColor} 0px, ${primaryColor} 6px, ${secondaryColor} 6px, ${secondaryColor} 10px);`;
+            backgroundStyle = `background: repeating-linear-gradient(90deg, ${primaryColor} 0px, ${primaryColor} 6px, ${secondaryColor} 6px, ${secondaryColor} 10px) !important;`;
+            borderStyle = `border: 2px solid ${primaryColor} !important;`;
             break;
         case 'horizontal':
-            backgroundStyle = `background: repeating-linear-gradient(0deg, ${primaryColor} 0px, ${primaryColor} 4px, ${secondaryColor} 4px, ${secondaryColor} 7px);`;
+            backgroundStyle = `background: repeating-linear-gradient(0deg, ${primaryColor} 0px, ${primaryColor} 4px, ${secondaryColor} 4px, ${secondaryColor} 7px) !important;`;
+            borderStyle = `border: 2px solid ${primaryColor} !important;`;
             break;
         case 'sash':
-            backgroundStyle = `background: linear-gradient(135deg, ${primaryColor} 40%, ${secondaryColor} 40%, ${secondaryColor} 60%, ${primaryColor} 60%);`;
+            backgroundStyle = `background: linear-gradient(135deg, ${primaryColor} 40%, ${secondaryColor} 40%, ${secondaryColor} 60%, ${primaryColor} 60%) !important;`;
+            borderStyle = `border: 2px solid ${primaryColor} !important;`;
             break;
         case 'classic':
-            backgroundStyle = `background: ${primaryColor}; border: 2px solid ${secondaryColor};`;
+            backgroundStyle = `background: ${primaryColor} !important;`;
+            borderStyle = `border: 2px solid ${secondaryColor} !important;`;
             break;
         case 'custom':
-            backgroundStyle = `background: ${primaryColor};`;
+            backgroundStyle = `background: ${primaryColor} !important;`;
+            borderStyle = `border: 2px solid ${primaryColor} !important;`;
             break;
         default:
-            backgroundStyle = `background: ${primaryColor};`;
+            backgroundStyle = `background: ${primaryColor} !important;`;
+            borderStyle = `border: 2px solid ${primaryColor} !important;`;
     }
     
-    button.style.cssText = backgroundStyle + 'color: white; border: none;';
+    // Calculate proper text color for contrast
+    const textColor = getContrastColor(primaryColor);
+    
+    // Apply styles with !important to override CSS
+    const finalStyle = backgroundStyle + borderStyle + `color: ${textColor} !important;`;
+    button.style.cssText = finalStyle;
+    console.log(`Applied styles to ${button.id}:`, finalStyle);
 }
 
 // Save to localStorage
@@ -5171,11 +4873,148 @@ function loadTeamSheetFromLocalStorage(teamNumber) {
     try {
         const key = `teamSheet.team${teamNumber}`;
         const data = localStorage.getItem(key);
+        console.log(`Loading from localStorage key "${key}":`, data);
         return data ? JSON.parse(data) : null;
     } catch (error) {
         console.warn('Could not load from localStorage:', error);
         return null;
     }
+}
+
+// Load and apply team designs on startup
+function loadAndApplyTeamDesigns() {
+    // Load Team 1 design
+    const team1Data = loadTeamSheetFromLocalStorage(1);
+    if (team1Data) {
+        console.log('Loading Team 1 design:', team1Data);
+        applyTeamDesign(1, team1Data);
+    } else {
+        console.log('No Team 1 design found in localStorage');
+    }
+    
+    // Load Team 2 design
+    const team2Data = loadTeamSheetFromLocalStorage(2);
+    if (team2Data) {
+        console.log('Loading Team 2 design:', team2Data);
+        applyTeamDesign(2, team2Data);
+    } else {
+        console.log('No Team 2 design found in localStorage');
+    }
+}
+
+// Test function to manually apply team colors to filter pills
+function testFilterPillColors() {
+    console.log('Testing filter pill colors...');
+    
+    // Test with some sample colors
+    const testData1 = {
+        primaryColor: '#ff0000', // Red
+        secondaryColor: '#0000ff', // Blue
+        pattern: 'diagonal'
+    };
+    
+    const testData2 = {
+        primaryColor: '#00ff00', // Green
+        secondaryColor: '#ffff00', // Yellow
+        pattern: 'solid'
+    };
+    
+    // Apply test colors
+    applyTeamDesign(1, testData1);
+    applyTeamDesign(2, testData2);
+    
+    console.log('Test colors applied - check the filter pills!');
+}
+
+// Function to clear team designs and test with fresh data
+function clearTeamDesigns() {
+    console.log('Clearing team designs from localStorage...');
+    localStorage.removeItem('teamSheet.team1');
+    localStorage.removeItem('teamSheet.team2');
+    console.log('Team designs cleared. Refresh the page to see default colors.');
+}
+
+// Function to manually refresh filter pills with current team data
+function refreshFilterPills() {
+    console.log('Refreshing filter pills with current team data...');
+    
+    // Load current team designs and apply them
+    const team1Data = loadTeamSheetFromLocalStorage(1);
+    if (team1Data) {
+        applyTeamDesign(1, team1Data);
+        console.log('Applied Team 1 design to filter pills');
+    }
+    
+    const team2Data = loadTeamSheetFromLocalStorage(2);
+    if (team2Data) {
+        applyTeamDesign(2, team2Data);
+        console.log('Applied Team 2 design to filter pills');
+    }
+}
+
+// Function to handle collapsible filter groups
+function toggleFilterGroup(groupName) {
+    const targetGroup = document.querySelector(`[data-group="${groupName}"]`);
+    const allGroups = document.querySelectorAll('.filter-group');
+    
+    if (!targetGroup) {
+        console.error(`Filter group not found: ${groupName}`);
+        return;
+    }
+    
+    // Check if the target group is already expanded
+    const isExpanded = targetGroup.classList.contains('expanded');
+    
+    // Close all groups first (accordion behavior)
+    allGroups.forEach(group => {
+        group.classList.remove('expanded');
+    });
+    
+    // If the target group wasn't expanded, expand it
+    if (!isExpanded) {
+        targetGroup.classList.add('expanded');
+    }
+    
+    console.log(`Filter group ${groupName} ${isExpanded ? 'collapsed' : 'expanded'}`);
+}
+
+// Function to handle filter visibility toggles
+function toggleFilterVisibility(actionType, teamNumber) {
+    console.log(`Toggling filter: ${actionType} for Team ${teamNumber}`);
+    // Refresh the review tab to apply filter changes
+    filterActions();
+}
+
+
+// Test function for Point-Score filtering
+function testPointScoreFiltering() {
+    console.log('Testing Point-Score filtering...');
+    
+    // Create test entries
+    const testEntry1 = {
+        action: 'Point - Score',
+        team: 'Team 1',
+        coordinates1: '(20, 60)',
+        player: 'Test Player 1',
+        timestamp: new Date().toISOString()
+    };
+    
+    const testEntry2 = {
+        action: 'Point - Score',
+        team: 'Team 2', 
+        coordinates1: '(60, 80)',
+        player: 'Test Player 2',
+        timestamp: new Date().toISOString()
+    };
+    
+    // Add test entries to actions log
+    actionsLog.push(testEntry1, testEntry2);
+    
+    console.log('Added test Point-Score entries:', testEntry1, testEntry2);
+    console.log('Switch to Review tab and toggle filters to test functionality');
+    
+    // Switch to Review tab
+    switchTab('review');
 }
 
 // Show temporary message with type
